@@ -1,0 +1,49 @@
+{
+ "SoundBanksInfo": {
+  "Platform": "Windows",
+  "BasePlatform": "Windows",
+  "SchemaVersion": "12",
+  "SoundbankVersion": "140",
+  "RootPaths": {
+   "ProjectRoot": "E:\\0_PROJECTS\\TheVillage\\TheVillage_WwiseProject\\",
+   "SourceFilesRoot": "E:\\0_PROJECTS\\TheVillage\\TheVillage_WwiseProject\\.cache\\Windows\\",
+   "SoundBanksRoot": "E:\\0_PROJECTS\\TheVillage\\TheVillage_WwiseProject\\GeneratedSoundBanks\\Windows\\",
+   "ExternalSourcesInputFile": "",
+   "ExternalSourcesOutputRoot": "E:\\0_PROJECTS\\TheVillage\\TheVillage_WwiseProject\\GeneratedSoundBanks\\Windows"
+  },
+  "SoundBanks": [
+   {
+    "Id": "3161908922",
+    "GUID": "{5DA71B20-A6BC-46A1-831F-25AB6394F299}",
+    "Language": "SFX",
+    "Hash": "1517760226",
+    "ObjectPath": "\\SoundBanks\\Default Work Unit\\Main",
+    "ShortName": "Main",
+    "Path": "Main.bnk",
+    "IncludedEvents": [
+     {
+      "Id": "3731681489",
+      "Name": "IceSkill",
+      "ObjectPath": "\\Events\\Default Work Unit\\IceSkill",
+      "GUID": "{FD61AE50-E26A-4998-946F-5E1F4FF33916}",
+      "DurationType": "Infinite",
+      "IncludedMemoryFiles": [
+       {
+        "Id": "1018198658",
+        "Language": "SFX",
+        "ShortName": "Blizzard.wav",
+        "Path": "SFX\\Blizzard_07BCF7A5.wem"
+       },
+       {
+        "Id": "1047019580",
+        "Language": "SFX",
+        "ShortName": "Icicle.wav",
+        "Path": "SFX\\Icicle_BDA38A18.wem"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

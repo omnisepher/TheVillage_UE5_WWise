@@ -1,0 +1,26 @@
+{
+ "SoundBanksInfo": {
+  "Platform": "Mac",
+  "BasePlatform": "Mac",
+  "SchemaVersion": "12",
+  "SoundbankVersion": "140",
+  "RootPaths": {
+   "ProjectRoot": "E:\\0_PROJECTS\\TheVillage\\TheVillage_WwiseProject\\",
+   "SourceFilesRoot": "E:\\0_PROJECTS\\TheVillage\\TheVillage_WwiseProject\\.cache\\Mac\\",
+   "SoundBanksRoot": "E:\\0_PROJECTS\\TheVillage\\TheVillage_WwiseProject\\GeneratedSoundBanks\\Mac\\",
+   "ExternalSourcesInputFile": "",
+   "ExternalSourcesOutputRoot": "E:\\0_PROJECTS\\TheVillage\\TheVillage_WwiseProject\\GeneratedSoundBanks\\Mac"
+  },
+  "SoundBanks": [
+   {
+    "Id": "1355168291",
+    "GUID": "{701ECBBD-9C7B-4030-8CDB-749EE5D1C7B9}",
+    "Language": "SFX",
+    "Hash": "2754342975",
+    "ObjectPath": "Init",
+    "ShortName": "Init",
+    "Path": "Init.bnk"
+   }
+  ]
+ }
+}

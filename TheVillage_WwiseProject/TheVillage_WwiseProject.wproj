@@ -40,8 +40,8 @@
 				</Property>
 				<Property Name="SoundBankPostGenerateCustomCmdLines" Type="string">
 					<ValueList>
-						<Value Platform="Mac">"$(CopyStreamedFilesExePath)" -info "$(InfoFilePath)" -outputpath "$(SoundBankPath)" -banks "$(SoundBankListAsTextFile)" -languages "$(LanguageList)"</Value>
-						<Value Platform="Windows">"$(CopyStreamedFilesExePath)" -info "$(InfoFilePath)" -outputpath "$(SoundBankPath)" -banks "$(SoundBankListAsTextFile)" -languages "$(LanguageList)"</Value>
+						<Value Platform="Mac"></Value>
+						<Value Platform="Windows"></Value>
 					</ValueList>
 				</Property>
 				<Property Name="SoundBankPreGenerateCustomCmdDescription" Type="string">
@@ -854,7 +854,7 @@
 						</Property>
 						<Property Name="GenerateMainSoundBank" Type="bool">
 							<ValueList>
-								<Value>True</Value>
+								<Value>False</Value>
 							</ValueList>
 						</Property>
 						<Property Name="GenerateMultipleBanks" Type="bool">
@@ -869,7 +869,7 @@
 						</Property>
 						<Property Name="GenerateSoundBankXML" Type="bool">
 							<ValueList>
-								<Value>True</Value>
+								<Value>False</Value>
 							</ValueList>
 						</Property>
 						<Property Name="GlobalVoiceInstancesLimit" Type="int16">
@@ -11884,6 +11884,10 @@
 					</ObsOccCurve>
 				</ObsOccCurves>
 			</EnvironmentalSettings>
+			<LogCentralIgnoreList>
+				<IgnoreItem MessageId="MediaDuplicated"/>
+				<IgnoreItem MessageId="MediaNotFound"/>
+			</LogCentralIgnoreList>
 			<DefaultConversion Name="Default Conversion Settings" ID="{6D1B890C-9826-4384-BF07-C15223E9FB56}"/>
 			<PhysicalFolderList>
 				<PhysicalFolder Path="Actor-Mixer Hierarchy">

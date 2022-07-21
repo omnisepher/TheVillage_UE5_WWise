@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <WwiseDocument Type="WorkUnit" ID="{FA006691-4861-4837-92F2-0AD5F6239EDD}" SchemaVersion="103">
 	<SoundBanks>
-		<WorkUnit Name="Default Work Unit" ID="{FA006691-4861-4837-92F2-0AD5F6239EDD}" PersistMode="Standalone"/>
+		<WorkUnit Name="Default Work Unit" ID="{FA006691-4861-4837-92F2-0AD5F6239EDD}" PersistMode="Standalone">
+			<ChildrenList>
+				<SoundBank Name="Main" ID="{5DA71B20-A6BC-46A1-831F-25AB6394F299}">
+					<ObjectInclusionList>
+						<ObjectRef Name="IceSkill" ID="{FD61AE50-E26A-4998-946F-5E1F4FF33916}" WorkUnitID="{356907E4-944A-4278-8FD1-D59BFD4F4E7D}" Origin="Manual" Filter="7"/>
+					</ObjectInclusionList>
+					<ObjectExclusionList/>
+					<GameSyncExclusionList/>
+				</SoundBank>
+			</ChildrenList>
+		</WorkUnit>
 	</SoundBanks>
 </WwiseDocument>

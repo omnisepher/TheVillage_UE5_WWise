@@ -1,0 +1,7 @@
+Event	ID	Name			Wwise Object Path	Notes
+	3731681489	IceSkill			\Default Work Unit\IceSkill	
+
+In Memory Audio	ID	Name	Audio source file		Wwise Object Path	Notes	Data Size
+	1018198658	Blizzard	E:\0_PROJECTS\TheVillage\TheVillage_WwiseProject\.cache\Mac\SFX\Blizzard_07BCF7A5.wem		\Actor-Mixer Hierarchy\Default Work Unit\Blizzard		1000144
+	1047019580	Icycle	E:\0_PROJECTS\TheVillage\TheVillage_WwiseProject\.cache\Mac\SFX\Icicle_BDA38A18.wem		\Actor-Mixer Hierarchy\Default Work Unit\Icycle		438768
+

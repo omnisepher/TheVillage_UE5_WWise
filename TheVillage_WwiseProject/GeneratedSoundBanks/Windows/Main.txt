@@ -1,7 +1,11 @@
 Event	ID	Name			Wwise Object Path	Notes
 	3731681489	IceSkill			\Default Work Unit\IceSkill	
+	3757312786	FireBase			\Default Work Unit\FireBase	
+	4114431033	Meditation			\Default Work Unit\Meditation	
 
 In Memory Audio	ID	Name	Audio source file		Wwise Object Path	Notes	Data Size
+	404283777	FireBase	E:\0_PROJECTS\TheVillage\TheVillage_WwiseProject\.cache\Windows\SFX\FireBase_78217961.wem		\Actor-Mixer Hierarchy\Default Work Unit\FireBase		1903096
+	675718906	Meditation	E:\0_PROJECTS\TheVillage\TheVillage_WwiseProject\.cache\Windows\SFX\Meditation_EE4AB854.wem		\Actor-Mixer Hierarchy\Default Work Unit\Meditation		3660808
 	1018198658	Blizzard	E:\0_PROJECTS\TheVillage\TheVillage_WwiseProject\.cache\Windows\SFX\Blizzard_07BCF7A5.wem		\Actor-Mixer Hierarchy\Default Work Unit\Blizzard		1000144
 	1047019580	Icycle	E:\0_PROJECTS\TheVillage\TheVillage_WwiseProject\.cache\Windows\SFX\Icicle_BDA38A18.wem		\Actor-Mixer Hierarchy\Default Work Unit\Icycle		438768
 

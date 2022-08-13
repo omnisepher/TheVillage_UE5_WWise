@@ -16,16 +16,33 @@
     "Id": "3161908922",
     "GUID": "{5DA71B20-A6BC-46A1-831F-25AB6394F299}",
     "Language": "SFX",
-    "Hash": "1517760226",
+    "Hash": "2236107439",
     "ObjectPath": "\\SoundBanks\\Default Work Unit\\Main",
     "ShortName": "Main",
     "Path": "Main.bnk",
     "IncludedEvents": [
      {
+      "Id": "3757312786",
+      "Name": "FireBase",
+      "ObjectPath": "\\Events\\Default Work Unit\\FireBase",
+      "GUID": "{F67B1B74-ED1F-4EAB-A96A-32F9DD10E6E2}",
+      "MaxAttenuation": "600.",
+      "DurationType": "Infinite",
+      "IncludedMemoryFiles": [
+       {
+        "Id": "404283777",
+        "Language": "SFX",
+        "ShortName": "FireBase.wav",
+        "Path": "SFX\\FireBase_E321D2D2.wem"
+       }
+      ]
+     },
+     {
       "Id": "3731681489",
       "Name": "IceSkill",
       "ObjectPath": "\\Events\\Default Work Unit\\IceSkill",
       "GUID": "{FD61AE50-E26A-4998-946F-5E1F4FF33916}",
+      "MaxAttenuation": "1000.",
       "DurationType": "Infinite",
       "IncludedMemoryFiles": [
        {
@@ -39,6 +56,22 @@
         "Language": "SFX",
         "ShortName": "Icicle.wav",
         "Path": "SFX\\Icicle_BDA38A18.wem"
+       }
+      ]
+     },
+     {
+      "Id": "4114431033",
+      "Name": "Meditation",
+      "ObjectPath": "\\Events\\Default Work Unit\\Meditation",
+      "GUID": "{AADFD8F1-33ED-4B6F-8457-D30E615D9BE5}",
+      "MaxAttenuation": "800.",
+      "DurationType": "Infinite",
+      "IncludedMemoryFiles": [
+       {
+        "Id": "675718906",
+        "Language": "SFX",
+        "ShortName": "Meditation.wav",
+        "Path": "SFX\\Meditation_E0F51E96.wem"
        }
       ]
      }

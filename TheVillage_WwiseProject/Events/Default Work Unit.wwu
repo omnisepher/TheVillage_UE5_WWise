@@ -25,6 +25,28 @@
 						</Action>
 					</ChildrenList>
 				</Event>
+				<Event Name="Meditation" ID="{AADFD8F1-33ED-4B6F-8457-D30E615D9BE5}">
+					<ChildrenList>
+						<Action Name="" ID="{938EDADE-F0E2-45B2-B79C-AACC251B5A99}" ShortID="352322631">
+							<ReferenceList>
+								<Reference Name="Target">
+									<ObjectRef Name="Meditation" ID="{17FB979A-CAD1-4CE3-9751-6859D5155485}" WorkUnitID="{1DEC10FC-2733-4CA4-8FE4-C98B0139CC79}"/>
+								</Reference>
+							</ReferenceList>
+						</Action>
+					</ChildrenList>
+				</Event>
+				<Event Name="FireBase" ID="{F67B1B74-ED1F-4EAB-A96A-32F9DD10E6E2}">
+					<ChildrenList>
+						<Action Name="" ID="{098C5E41-4A7E-4B07-8E5C-7254CC56ACDF}" ShortID="159283557">
+							<ReferenceList>
+								<Reference Name="Target">
+									<ObjectRef Name="FireBase" ID="{421DF22A-1D0B-4A91-BA46-D68B5E2C22AF}" WorkUnitID="{1DEC10FC-2733-4CA4-8FE4-C98B0139CC79}"/>
+								</Reference>
+							</ReferenceList>
+						</Action>
+					</ChildrenList>
+				</Event>
 			</ChildrenList>
 		</WorkUnit>
 	</Events>

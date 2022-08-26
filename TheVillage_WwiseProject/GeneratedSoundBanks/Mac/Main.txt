@@ -1,11 +1,36 @@
 Event	ID	Name			Wwise Object Path	Notes
+	2385628198	Footsteps			\Default Work Unit\Footsteps	
 	3731681489	IceSkill			\Default Work Unit\IceSkill	
 	3757312786	FireBase			\Default Work Unit\FireBase	
 	4114431033	Meditation			\Default Work Unit\Meditation	
 
+Switch Group	ID	Name			Wwise Object Path	Notes
+	2385628198	Footsteps			\Default Work Unit\Footsteps	
+
+Switch	ID	Name	Switch Group			Notes
+	2144363834	Rock	Footsteps			
+	4248645337	Grass	Footsteps			
+
+Effect plug-ins	ID	Name	Type				Notes
+	1042844212	Wwise Time Stretch (Custom)	Wwise Time Stretch			
+
 In Memory Audio	ID	Name	Audio source file		Wwise Object Path	Notes	Data Size
-	404283777	FireBase	E:\0_PROJECTS\TheVillage\TheVillage_WwiseProject\.cache\Mac\SFX\FireBase_E321D2D2.wem		\Actor-Mixer Hierarchy\Default Work Unit\FireBase		1903096
-	675718906	Meditation	E:\0_PROJECTS\TheVillage\TheVillage_WwiseProject\.cache\Mac\SFX\Meditation_E0F51E96.wem		\Actor-Mixer Hierarchy\Default Work Unit\Meditation		3660808
+	25432987	FootstepsRock_0-07	E:\0_PROJECTS\TheVillage\TheVillage_WwiseProject\.cache\Mac\SFX\FootstepsRock_0-07_10C4C929.wem		\Actor-Mixer Hierarchy\Default Work Unit\Footsteps\Rock\FootstepsRock_0-07		16602
+	112367554	FootstepsRock_0-04	E:\0_PROJECTS\TheVillage\TheVillage_WwiseProject\.cache\Mac\SFX\FootstepsRock_0-04_10C4C929.wem		\Actor-Mixer Hierarchy\Default Work Unit\Footsteps\Rock\FootstepsRock_0-04		28176
+	245397966	FootstepsRock_0-01	E:\0_PROJECTS\TheVillage\TheVillage_WwiseProject\.cache\Mac\SFX\FootstepsRock_0-01_10C4C929.wem		\Actor-Mixer Hierarchy\Default Work Unit\Footsteps\Rock\FootstepsRock_0-01		27372
+	404283777	FireBase	E:\0_PROJECTS\TheVillage\TheVillage_WwiseProject\.cache\Mac\SFX\FireBase_78217961.wem		\Actor-Mixer Hierarchy\Default Work Unit\FireBase		1903096
+	437504527	FootstepsGrass_0-03	E:\0_PROJECTS\TheVillage\TheVillage_WwiseProject\.cache\Mac\SFX\FootstepsGrass_0-03_F1DBDA39.wem		\Actor-Mixer Hierarchy\Default Work Unit\Footsteps\Grass\FootstepsGrass_0-03		58386
+	589126567	FootstepsGrass_0-02	E:\0_PROJECTS\TheVillage\TheVillage_WwiseProject\.cache\Mac\SFX\FootstepsGrass_0-02_59965BEE.wem		\Actor-Mixer Hierarchy\Default Work Unit\Footsteps\Grass\FootstepsGrass_0-02		60864
+	596560865	FootstepsGrass_0-01	E:\0_PROJECTS\TheVillage\TheVillage_WwiseProject\.cache\Mac\SFX\FootstepsGrass_0-01_51066DB6.wem		\Actor-Mixer Hierarchy\Default Work Unit\Footsteps\Grass\FootstepsGrass_0-01		54922
+	639494320	FootstepsRock_0-03	E:\0_PROJECTS\TheVillage\TheVillage_WwiseProject\.cache\Mac\SFX\FootstepsRock_0-03_10C4C929.wem		\Actor-Mixer Hierarchy\Default Work Unit\Footsteps\Rock\FootstepsRock_0-03		17526
+	640964624	FootstepsRock_0-05	E:\0_PROJECTS\TheVillage\TheVillage_WwiseProject\.cache\Mac\SFX\FootstepsRock_0-05_10C4C929.wem		\Actor-Mixer Hierarchy\Default Work Unit\Footsteps\Rock\FootstepsRock_0-05		23630
+	675718906	Meditation	E:\0_PROJECTS\TheVillage\TheVillage_WwiseProject\.cache\Mac\SFX\Meditation_EE4AB854.wem		\Actor-Mixer Hierarchy\Default Work Unit\Meditation		3660808
+	684276788	FootstepsRock_0-02	E:\0_PROJECTS\TheVillage\TheVillage_WwiseProject\.cache\Mac\SFX\FootstepsRock_0-02_10C4C929.wem		\Actor-Mixer Hierarchy\Default Work Unit\Footsteps\Rock\FootstepsRock_0-02		32382
+	689077695	FootstepsRock_0	E:\0_PROJECTS\TheVillage\TheVillage_WwiseProject\.cache\Mac\SFX\FootstepsRock_0_10C4C929.wem		\Actor-Mixer Hierarchy\Default Work Unit\Footsteps\Rock\FootstepsRock_0		19756
+	729889432	FootstepsRock_0-06	E:\0_PROJECTS\TheVillage\TheVillage_WwiseProject\.cache\Mac\SFX\FootstepsRock_0-06_10C4C929.wem		\Actor-Mixer Hierarchy\Default Work Unit\Footsteps\Rock\FootstepsRock_0-06		25550
+	826639005	FootstepsGrass_0-06	E:\0_PROJECTS\TheVillage\TheVillage_WwiseProject\.cache\Mac\SFX\FootstepsGrass_0-06_5BDFD8B7.wem		\Actor-Mixer Hierarchy\Default Work Unit\Footsteps\Grass\FootstepsGrass_0-06		56068
+	834898865	FootstepsRock_0-08	E:\0_PROJECTS\TheVillage\TheVillage_WwiseProject\.cache\Mac\SFX\FootstepsRock_0-08_10C4C929.wem		\Actor-Mixer Hierarchy\Default Work Unit\Footsteps\Rock\FootstepsRock_0-08		19252
+	946848897	FootstepsGrass_0	E:\0_PROJECTS\TheVillage\TheVillage_WwiseProject\.cache\Mac\SFX\FootstepsGrass_0_49FBA96E.wem		\Actor-Mixer Hierarchy\Default Work Unit\Footsteps\Grass\FootstepsGrass_0		53350
 	1018198658	Blizzard	E:\0_PROJECTS\TheVillage\TheVillage_WwiseProject\.cache\Mac\SFX\Blizzard_07BCF7A5.wem		\Actor-Mixer Hierarchy\Default Work Unit\Blizzard		1000144
 	1047019580	Icycle	E:\0_PROJECTS\TheVillage\TheVillage_WwiseProject\.cache\Mac\SFX\Icicle_BDA38A18.wem		\Actor-Mixer Hierarchy\Default Work Unit\Icycle		438768
 

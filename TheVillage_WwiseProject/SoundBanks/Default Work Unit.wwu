@@ -8,6 +8,7 @@
 						<ObjectRef Name="IceSkill" ID="{FD61AE50-E26A-4998-946F-5E1F4FF33916}" WorkUnitID="{356907E4-944A-4278-8FD1-D59BFD4F4E7D}" Origin="Manual" Filter="7"/>
 						<ObjectRef Name="Meditation" ID="{AADFD8F1-33ED-4B6F-8457-D30E615D9BE5}" WorkUnitID="{356907E4-944A-4278-8FD1-D59BFD4F4E7D}" Origin="Manual" Filter="7"/>
 						<ObjectRef Name="FireBase" ID="{F67B1B74-ED1F-4EAB-A96A-32F9DD10E6E2}" WorkUnitID="{356907E4-944A-4278-8FD1-D59BFD4F4E7D}" Origin="Manual" Filter="7"/>
+						<ObjectRef Name="Footsteps" ID="{4BAB6B63-5D60-4FAC-8F6D-CDB9B4875450}" WorkUnitID="{356907E4-944A-4278-8FD1-D59BFD4F4E7D}" Origin="Manual" Filter="7"/>
 					</ObjectInclusionList>
 					<ObjectExclusionList/>
 					<GameSyncExclusionList/>

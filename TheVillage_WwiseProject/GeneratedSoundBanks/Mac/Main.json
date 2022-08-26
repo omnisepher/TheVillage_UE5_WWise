@@ -16,7 +16,7 @@
     "Id": "3161908922",
     "GUID": "{5DA71B20-A6BC-46A1-831F-25AB6394F299}",
     "Language": "SFX",
-    "Hash": "2236107439",
+    "Hash": "2346485426",
     "ObjectPath": "\\SoundBanks\\Default Work Unit\\Main",
     "ShortName": "Main",
     "Path": "Main.bnk",
@@ -33,7 +33,157 @@
         "Id": "404283777",
         "Language": "SFX",
         "ShortName": "FireBase.wav",
-        "Path": "SFX\\FireBase_E321D2D2.wem"
+        "Path": "SFX\\FireBase_78217961.wem"
+       }
+      ]
+     },
+     {
+      "Id": "2385628198",
+      "Name": "Footsteps",
+      "ObjectPath": "\\Events\\Default Work Unit\\Footsteps",
+      "GUID": "{4BAB6B63-5D60-4FAC-8F6D-CDB9B4875450}",
+      "DurationType": "OneShot",
+      "DurationMin": "0.160178",
+      "DurationMax": "0.633328",
+      "IncludedMemoryFiles": [
+       {
+        "Id": "25432987",
+        "Language": "SFX",
+        "ShortName": "FootstepsRock_0-07.wav",
+        "Path": "SFX\\FootstepsRock_0-07_10C4C929.wem"
+       },
+       {
+        "Id": "112367554",
+        "Language": "SFX",
+        "ShortName": "FootstepsRock_0-04.wav",
+        "Path": "SFX\\FootstepsRock_0-04_10C4C929.wem"
+       },
+       {
+        "Id": "245397966",
+        "Language": "SFX",
+        "ShortName": "FootstepsRock_0-01.wav",
+        "Path": "SFX\\FootstepsRock_0-01_10C4C929.wem"
+       },
+       {
+        "Id": "437504527",
+        "Language": "SFX",
+        "ShortName": "FootstepsGrass_0-03.wav",
+        "Path": "SFX\\FootstepsGrass_0-03_F1DBDA39.wem"
+       },
+       {
+        "Id": "589126567",
+        "Language": "SFX",
+        "ShortName": "FootstepsGrass_0-02.wav",
+        "Path": "SFX\\FootstepsGrass_0-02_59965BEE.wem"
+       },
+       {
+        "Id": "596560865",
+        "Language": "SFX",
+        "ShortName": "FootstepsGrass_0-01.wav",
+        "Path": "SFX\\FootstepsGrass_0-01_51066DB6.wem"
+       },
+       {
+        "Id": "639494320",
+        "Language": "SFX",
+        "ShortName": "FootstepsRock_0-03.wav",
+        "Path": "SFX\\FootstepsRock_0-03_10C4C929.wem"
+       },
+       {
+        "Id": "640964624",
+        "Language": "SFX",
+        "ShortName": "FootstepsRock_0-05.wav",
+        "Path": "SFX\\FootstepsRock_0-05_10C4C929.wem"
+       },
+       {
+        "Id": "684276788",
+        "Language": "SFX",
+        "ShortName": "FootstepsRock_0-02.wav",
+        "Path": "SFX\\FootstepsRock_0-02_10C4C929.wem"
+       },
+       {
+        "Id": "689077695",
+        "Language": "SFX",
+        "ShortName": "FootstepsRock_0.wav",
+        "Path": "SFX\\FootstepsRock_0_10C4C929.wem"
+       },
+       {
+        "Id": "729889432",
+        "Language": "SFX",
+        "ShortName": "FootstepsRock_0-06.wav",
+        "Path": "SFX\\FootstepsRock_0-06_10C4C929.wem"
+       },
+       {
+        "Id": "826639005",
+        "Language": "SFX",
+        "ShortName": "FootstepsGrass_0-06.wav",
+        "Path": "SFX\\FootstepsGrass_0-06_5BDFD8B7.wem"
+       },
+       {
+        "Id": "834898865",
+        "Language": "SFX",
+        "ShortName": "FootstepsRock_0-08.wav",
+        "Path": "SFX\\FootstepsRock_0-08_10C4C929.wem"
+       },
+       {
+        "Id": "946848897",
+        "Language": "SFX",
+        "ShortName": "FootstepsGrass_0.wav",
+        "Path": "SFX\\FootstepsGrass_0_49FBA96E.wem"
+       }
+      ],
+      "DefaultSwitchValue": "{1848EBE6-F9FA-45AA-B9AC-7F15A0F4333A}",
+      "SwitchContainers": [
+       {
+        "SwitchValue": "{25AFDC05-D62B-4E59-8023-4F9E374CDC6C}",
+        "Media": [
+         {
+          "Id": "25432987"
+         },
+         {
+          "Id": "112367554"
+         },
+         {
+          "Id": "245397966"
+         },
+         {
+          "Id": "639494320"
+         },
+         {
+          "Id": "640964624"
+         },
+         {
+          "Id": "684276788"
+         },
+         {
+          "Id": "689077695"
+         },
+         {
+          "Id": "729889432"
+         },
+         {
+          "Id": "834898865"
+         }
+        ]
+       },
+       {
+        "SwitchValue": "{1848EBE6-F9FA-45AA-B9AC-7F15A0F4333A}",
+        "Media": [
+         {
+          "Id": "437504527"
+         },
+         {
+          "Id": "589126567"
+         },
+         {
+          "Id": "596560865"
+         },
+         {
+          "Id": "826639005"
+         },
+         {
+          "Id": "946848897"
+         }
+        ]
        }
       ]
      },
@@ -71,7 +221,29 @@
         "Id": "675718906",
         "Language": "SFX",
         "ShortName": "Meditation.wav",
-        "Path": "SFX\\Meditation_E0F51E96.wem"
+        "Path": "SFX\\Meditation_EE4AB854.wem"
+       }
+      ]
+     }
+    ],
+    "SwitchGroups": [
+     {
+      "Id": "2385628198",
+      "Name": "Footsteps",
+      "ObjectPath": "\\Switches\\Default Work Unit\\Footsteps",
+      "GUID": "{6A19E9B8-B410-4FF6-A18D-F495AD02A8D5}",
+      "Switches": [
+       {
+        "Id": "2144363834",
+        "Name": "Rock",
+        "ObjectPath": "\\Switches\\Default Work Unit\\Footsteps\\Rock",
+        "GUID": "{25AFDC05-D62B-4E59-8023-4F9E374CDC6C}"
+       },
+       {
+        "Id": "4248645337",
+        "Name": "Grass",
+        "ObjectPath": "\\Switches\\Default Work Unit\\Footsteps\\Grass",
+        "GUID": "{1848EBE6-F9FA-45AA-B9AC-7F15A0F4333A}"
        }
       ]
      }

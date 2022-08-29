@@ -3,6 +3,30 @@
 
 #include "WizardAnimInstance.h"
 
+UWizardAnimInstance::UWizardAnimInstance()
+{
+	Speed = 0.0f;
+}
+
+void UWizardAnimInstance::NativeInitializeAnimation()
+{
+	Super::NativeInitializeAnimation();
+	OwningCharacter = Cast<AWizardChar>(GetOwningActor());
+}
+
+void UWizardAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
+{
+	Super::NativeUpdateAnimation(DeltaSeconds);
+
+
+	if (OwningCharacter != nullptr) {
+		Speed = OwningCharacter->GetVelocity().Size();
+		Direction = CalculateDirection(OwningCharacter->GetVelocity(),OwningCharacter->GetActorRotation());
+		IsFalling = OwningCharacter->GetMovementComponent()->IsFalling();
+	}
+
+}
+
 void UWizardAnimInstance::PlayFootsteps(AActor* StepActor)
 {
 	if (StepActor != nullptr) {
@@ -17,8 +41,6 @@ void UWizardAnimInstance::PlayFootsteps(AActor* StepActor)
 		TArray<FAkExternalSourceInfo> nullSources;
 
 		UAkGameplayStatics::PostEvent(nullptr, GetOwningActor(), int32(0), nullCallback, nullSources,false,(FString)("Footsteps"));
-
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Test steps from C++!"));
 	}
 
 }

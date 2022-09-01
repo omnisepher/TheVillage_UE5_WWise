@@ -37,5 +37,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Generic")
 		bool IsFalling;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Generic")
+		bool IsAttacking;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Generic")
+		bool IsAlive;
+
+
 	
 };

@@ -33,9 +33,14 @@ void USkillEventComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 }
 
 void USkillEventComponent::PlaySkill() {
-	FOnAkPostEventCallback nullCallback;
+	/*FOnAkPostEventCallback nullCallback;
 
-	skillEventID = UAkGameplayStatics::PostEvent(SkillEvent, GetOwner(), int32(0), nullCallback);
+	skillEventID = UAkGameplayStatics::PostEvent(SkillEvent, GetOwner(), int32(0), nullCallback);*/
+
+	FOnAkPostEventCallback nullCallback;
+	TArray<FAkExternalSourceInfo> nullSources;
+
+	skillEventID =  UAkGameplayStatics::PostEvent(nullptr, GetOwner(), int32(0), nullCallback, nullSources, false, (FString)("IceSkill"));
 }
 
 void USkillEventComponent::StopSkill() {

@@ -23,6 +23,8 @@ void UWizardAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		Speed = OwningCharacter->GetVelocity().Size();
 		Direction = CalculateDirection(OwningCharacter->GetVelocity(),OwningCharacter->GetActorRotation());
 		IsFalling = OwningCharacter->GetMovementComponent()->IsFalling();
+		IsAttacking = OwningCharacter->IsAttacking;
+		IsAlive = OwningCharacter->Health > 0 ? true : false;
 	}
 
 }
@@ -33,7 +35,7 @@ void UWizardAnimInstance::PlayFootsteps(AActor* StepActor)
 		if (StepActor->ActorHasTag("Rock")) {
 			UAkGameplayStatics::SetSwitch(nullptr, GetOwningActor(), "Footsteps", "Rock");
 		}
-		else {
+		else if (StepActor->ActorHasTag("Terrain")) {
 			UAkGameplayStatics::SetSwitch(nullptr, GetOwningActor(), "Footsteps", "Grass");
 		}
 

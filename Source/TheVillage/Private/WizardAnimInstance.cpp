@@ -12,6 +12,7 @@ void UWizardAnimInstance::NativeInitializeAnimation()
 {
 	Super::NativeInitializeAnimation();
 	OwningCharacter = Cast<AWizardChar>(GetOwningActor());
+	IsAlive = true;
 }
 
 void UWizardAnimInstance::NativeUpdateAnimation(float DeltaSeconds)

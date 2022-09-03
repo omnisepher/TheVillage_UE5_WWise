@@ -30,7 +30,16 @@
 				<Property Name="GenerateSoundBanks\x64_SelectedPlatforms" Type="string" Value="0UTFyf4DQUWtCYspHxzpvBnfZUrKd6dLjpfLD8cEBrg="/>
 				<Property Name="GenerateSoundBanks\x64_SelectedSoundBanks" Type="string" Value="IBunXbymoUaDHyWrY5TymQ=="/>
 				<Property Name="HardwareController\CurrentSession" Type="string" Value="{2451DD2E-A7B2-45E6-B93B-6F49B9B887AD}"/>
+<<<<<<< HEAD
+				<Property Name="HardwareController\{2451DD2E-A7B2-45E6-B93B-6F49B9B887AD}\x64_ActiveGroups" Type="string" Value="yabY7D86UUKH++KE276fsQEr9jf/////69TPBv4RC0qaVGosXEHHPAEr9jf/////"/>
+				<Property Name="Interactive Music\x64_{4658E72F-5882-46F5-8AB7-32FE1AC08C9C} - SegmentEditorZoomInfo" Type="string" Value="AAAAAAAA8D8AAAAAAADwPwAAAAAAzHFAAAAAAAAA8D8AAAAAAAAAAAAAAAAAAAAA"/>
+				<Property Name="Interactive Music\x64_{57CCDB8B-06F6-490B-B05F-9FD4B35FCBDA} - SegmentEditorZoomInfo" Type="string" Value="AAAAAAAA8D8AAAAAAADwP4zF3JOtmQJAAAAAAAAA8D8AAAAAAAAAAAAAAAAAAAAA"/>
+				<Property Name="Interactive Music\x64_{697A986D-2C06-4B27-9501-1B092CAA155C} - SegmentEditorZoomInfo" Type="string" Value="AAAAAAAA8D8AAAAAAADwP76IYQtobSBAAAAAAAAA8D8AAAAAAAAAAAAAAAAAAAAA"/>
+				<Property Name="Interactive Music\x64_{D98C9A55-5463-4B6E-BEF4-D330548A0033} - SegmentEditorZoomInfo" Type="string" Value="AAAAAAAA8D8AAAAAAADwPwAAAAAAzHFAAAAAAAAA8D8AAAAAAAAAAAAAAAAAAAAA"/>
+				<Property Name="Interactive Music\x64_{F300D33F-ED0C-4B25-AB39-C29CE3ED2D5F} - SegmentEditorZoomInfo" Type="string" Value="AAAAAAAA8D8AAAAAAADwPwAAAAAAzHFAAAAAAAAA8D8AAAAAAAAAAAAAAAAAAAAA"/>
+=======
 				<Property Name="HardwareController\{2451DD2E-A7B2-45E6-B93B-6F49B9B887AD}\x64_ActiveGroups" Type="string" Value="69TPBv4RC0qaVGosXEHHPAErC5n/////yabY7D86UUKH++KE276fsQErC5n/////"/>
+>>>>>>> parent of 2e19642 (L04 State)
 				<Property Name="MeterView\LastObject1" Type="string" Value="{1514A4D8-1DA6-412A-A17E-75CA0C2149F3}"/>
 				<Property Name="MeterView\MeterMode1" Type="int32" Value="1"/>
 				<Property Name="MeterView\MeterMode1Viewpoint0" Type="int32" Value="1"/>
@@ -54,14 +63,18 @@
 				<Property Name="ProjectExplorer\x64_Expanded_15_1" Type="string" Value=""/>
 				<Property Name="ProjectExplorer\x64_Expanded_16_1" Type="string" Value=""/>
 				<Property Name="ProjectExplorer\x64_Expanded_17_1" Type="string" Value=""/>
-				<Property Name="ProjectExplorer\x64_Expanded_18_1" Type="string" Value=""/>
+				<Property Name="ProjectExplorer\x64_Expanded_18_1" Type="string" Value="gHgvd6BuPUSxZtMIL6vqDQ=="/>
 				<Property Name="ProjectExplorer\x64_Expanded_19_1" Type="string" Value=""/>
 				<Property Name="ProjectExplorer\x64_Expanded_1_1" Type="string" Value=""/>
 				<Property Name="ProjectExplorer\x64_Expanded_20_1" Type="string" Value=""/>
 				<Property Name="ProjectExplorer\x64_Expanded_21_1" Type="string" Value=""/>
 				<Property Name="ProjectExplorer\x64_Expanded_22_1" Type="string" Value=""/>
 				<Property Name="ProjectExplorer\x64_Expanded_2_1" Type="string" Value=""/>
+<<<<<<< HEAD
+				<Property Name="ProjectExplorer\x64_Expanded_3_1" Type="string" Value="/BDsHTMnpEyP5MmLATnMeQ=="/>
+=======
 				<Property Name="ProjectExplorer\x64_Expanded_3_1" Type="string" Value="Fqiimgz0QkCM92lULuBVpyjhbEKWiitDvrn5fByjXFpQjSO/MwnxSpTnBCfd6R8w/BDsHTMnpEyP5MmLATnMeQ=="/>
+>>>>>>> parent of 2e19642 (L04 State)
 				<Property Name="ProjectExplorer\x64_Expanded_4_1" Type="string" Value="5AdpNUqUeEKP0dWb/U9OfQ=="/>
 				<Property Name="ProjectExplorer\x64_Expanded_5_1" Type="string" Value="UGDjOfiu1EKTYDQxr0Tip7jpGWoQtPZPoY30la0CqNU="/>
 				<Property Name="ProjectExplorer\x64_Expanded_6_1" Type="string" Value=""/>

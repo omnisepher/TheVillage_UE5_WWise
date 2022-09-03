@@ -16,7 +16,11 @@
     "Id": "3161908922",
     "GUID": "{5DA71B20-A6BC-46A1-831F-25AB6394F299}",
     "Language": "SFX",
+<<<<<<< HEAD
+    "Hash": "452919638",
+=======
     "Hash": "2346485426",
+>>>>>>> parent of 2e19642 (L04 State)
     "ObjectPath": "\\SoundBanks\\Default Work Unit\\Main",
     "ShortName": "Main",
     "Path": "Main.bnk",
@@ -33,7 +37,7 @@
         "Id": "404283777",
         "Language": "SFX",
         "ShortName": "FireBase.wav",
-        "Path": "SFX\\FireBase_78217961.wem"
+        "Path": "SFX\\FireBase_76A08671.wem"
        }
       ]
      },
@@ -50,85 +54,105 @@
         "Id": "25432987",
         "Language": "SFX",
         "ShortName": "FootstepsRock_0-07.wav",
-        "Path": "SFX\\FootstepsRock_0-07_10C4C929.wem"
+        "Path": "SFX\\FootstepsRock_0-07_3F75BDB9.wem"
        },
        {
         "Id": "112367554",
         "Language": "SFX",
         "ShortName": "FootstepsRock_0-04.wav",
-        "Path": "SFX\\FootstepsRock_0-04_10C4C929.wem"
+        "Path": "SFX\\FootstepsRock_0-04_3F75BDB9.wem"
        },
        {
         "Id": "245397966",
         "Language": "SFX",
         "ShortName": "FootstepsRock_0-01.wav",
-        "Path": "SFX\\FootstepsRock_0-01_10C4C929.wem"
+        "Path": "SFX\\FootstepsRock_0-01_3F75BDB9.wem"
        },
        {
         "Id": "437504527",
         "Language": "SFX",
         "ShortName": "FootstepsGrass_0-03.wav",
+<<<<<<< HEAD
+        "Path": "SFX\\FootstepsGrass_0-03_D2EE257A.wem"
+=======
         "Path": "SFX\\FootstepsGrass_0-03_F1DBDA39.wem"
+>>>>>>> parent of 2e19642 (L04 State)
        },
        {
         "Id": "589126567",
         "Language": "SFX",
         "ShortName": "FootstepsGrass_0-02.wav",
+<<<<<<< HEAD
+        "Path": "SFX\\FootstepsGrass_0-02_A54A3FBF.wem"
+=======
         "Path": "SFX\\FootstepsGrass_0-02_59965BEE.wem"
+>>>>>>> parent of 2e19642 (L04 State)
        },
        {
         "Id": "596560865",
         "Language": "SFX",
         "ShortName": "FootstepsGrass_0-01.wav",
+<<<<<<< HEAD
+        "Path": "SFX\\FootstepsGrass_0-01_91AB6837.wem"
+=======
         "Path": "SFX\\FootstepsGrass_0-01_51066DB6.wem"
+>>>>>>> parent of 2e19642 (L04 State)
        },
        {
         "Id": "639494320",
         "Language": "SFX",
         "ShortName": "FootstepsRock_0-03.wav",
-        "Path": "SFX\\FootstepsRock_0-03_10C4C929.wem"
+        "Path": "SFX\\FootstepsRock_0-03_3F75BDB9.wem"
        },
        {
         "Id": "640964624",
         "Language": "SFX",
         "ShortName": "FootstepsRock_0-05.wav",
-        "Path": "SFX\\FootstepsRock_0-05_10C4C929.wem"
+        "Path": "SFX\\FootstepsRock_0-05_3F75BDB9.wem"
        },
        {
         "Id": "684276788",
         "Language": "SFX",
         "ShortName": "FootstepsRock_0-02.wav",
-        "Path": "SFX\\FootstepsRock_0-02_10C4C929.wem"
+        "Path": "SFX\\FootstepsRock_0-02_3F75BDB9.wem"
        },
        {
         "Id": "689077695",
         "Language": "SFX",
         "ShortName": "FootstepsRock_0.wav",
-        "Path": "SFX\\FootstepsRock_0_10C4C929.wem"
+        "Path": "SFX\\FootstepsRock_0_3F75BDB9.wem"
        },
        {
         "Id": "729889432",
         "Language": "SFX",
         "ShortName": "FootstepsRock_0-06.wav",
-        "Path": "SFX\\FootstepsRock_0-06_10C4C929.wem"
+        "Path": "SFX\\FootstepsRock_0-06_3F75BDB9.wem"
        },
        {
         "Id": "826639005",
         "Language": "SFX",
         "ShortName": "FootstepsGrass_0-06.wav",
+<<<<<<< HEAD
+        "Path": "SFX\\FootstepsGrass_0-06_C201657D.wem"
+=======
         "Path": "SFX\\FootstepsGrass_0-06_5BDFD8B7.wem"
+>>>>>>> parent of 2e19642 (L04 State)
        },
        {
         "Id": "834898865",
         "Language": "SFX",
         "ShortName": "FootstepsRock_0-08.wav",
-        "Path": "SFX\\FootstepsRock_0-08_10C4C929.wem"
+        "Path": "SFX\\FootstepsRock_0-08_3F75BDB9.wem"
        },
        {
         "Id": "946848897",
         "Language": "SFX",
         "ShortName": "FootstepsGrass_0.wav",
+<<<<<<< HEAD
+        "Path": "SFX\\FootstepsGrass_0_D2A913CE.wem"
+=======
         "Path": "SFX\\FootstepsGrass_0_49FBA96E.wem"
+>>>>>>> parent of 2e19642 (L04 State)
        }
       ],
       "DefaultSwitchValue": "{1848EBE6-F9FA-45AA-B9AC-7F15A0F4333A}",
@@ -188,6 +212,48 @@
       ]
      },
      {
+<<<<<<< HEAD
+      "Id": "1750343382",
+      "Name": "GameTheme",
+      "ObjectPath": "\\Events\\Default Work Unit\\GameTheme",
+      "GUID": "{94EC0F8B-9E88-4F67-859E-75DCC5C75BB3}",
+      "DurationType": "Infinite",
+      "IncludedMemoryFiles": [
+       {
+        "Id": "567347023",
+        "Language": "SFX",
+        "ShortName": "meditation.wav",
+        "Path": "SFX\\meditation_9EDFC787.wem"
+       },
+       {
+        "Id": "976436975",
+        "Language": "SFX",
+        "ShortName": "forest_lullaby.wav",
+        "Path": "SFX\\forest_lullaby_9EDFC787.wem"
+       }
+      ],
+      "SwitchContainers": [
+       {
+        "SwitchValue": "{71AC2EE6-F9C6-43E0-AA64-2F803DEED1FB}",
+        "Media": [
+         {
+          "Id": "567347023"
+         }
+        ]
+       },
+       {
+        "SwitchValue": "{B19A3E5B-3CE3-4278-9C1C-D7C36523B386}",
+        "Media": [
+         {
+          "Id": "976436975"
+         }
+        ]
+       }
+      ]
+     },
+     {
+=======
+>>>>>>> parent of 2e19642 (L04 State)
       "Id": "3731681489",
       "Name": "IceSkill",
       "ObjectPath": "\\Events\\Default Work Unit\\IceSkill",
@@ -199,13 +265,13 @@
         "Id": "1018198658",
         "Language": "SFX",
         "ShortName": "Blizzard.wav",
-        "Path": "SFX\\Blizzard_07BCF7A5.wem"
+        "Path": "SFX\\Blizzard_CF435735.wem"
        },
        {
         "Id": "1047019580",
         "Language": "SFX",
         "ShortName": "Icicle.wav",
-        "Path": "SFX\\Icicle_BDA38A18.wem"
+        "Path": "SFX\\Icicle_13D721A8.wem"
        }
       ]
      },
@@ -221,7 +287,7 @@
         "Id": "675718906",
         "Language": "SFX",
         "ShortName": "Meditation.wav",
-        "Path": "SFX\\Meditation_EE4AB854.wem"
+        "Path": "SFX\\Meditation_EE09B944.wem"
        }
       ]
      }

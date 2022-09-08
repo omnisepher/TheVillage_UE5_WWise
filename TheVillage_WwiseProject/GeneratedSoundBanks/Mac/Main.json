@@ -16,11 +16,7 @@
     "Id": "3161908922",
     "GUID": "{5DA71B20-A6BC-46A1-831F-25AB6394F299}",
     "Language": "SFX",
-<<<<<<< HEAD
-    "Hash": "452919638",
-=======
-    "Hash": "2346485426",
->>>>>>> parent of 2e19642 (L04 State)
+    "Hash": "340331011",
     "ObjectPath": "\\SoundBanks\\Default Work Unit\\Main",
     "ShortName": "Main",
     "Path": "Main.bnk",
@@ -72,31 +68,19 @@
         "Id": "437504527",
         "Language": "SFX",
         "ShortName": "FootstepsGrass_0-03.wav",
-<<<<<<< HEAD
         "Path": "SFX\\FootstepsGrass_0-03_D2EE257A.wem"
-=======
-        "Path": "SFX\\FootstepsGrass_0-03_F1DBDA39.wem"
->>>>>>> parent of 2e19642 (L04 State)
        },
        {
         "Id": "589126567",
         "Language": "SFX",
         "ShortName": "FootstepsGrass_0-02.wav",
-<<<<<<< HEAD
         "Path": "SFX\\FootstepsGrass_0-02_A54A3FBF.wem"
-=======
-        "Path": "SFX\\FootstepsGrass_0-02_59965BEE.wem"
->>>>>>> parent of 2e19642 (L04 State)
        },
        {
         "Id": "596560865",
         "Language": "SFX",
         "ShortName": "FootstepsGrass_0-01.wav",
-<<<<<<< HEAD
         "Path": "SFX\\FootstepsGrass_0-01_91AB6837.wem"
-=======
-        "Path": "SFX\\FootstepsGrass_0-01_51066DB6.wem"
->>>>>>> parent of 2e19642 (L04 State)
        },
        {
         "Id": "639494320",
@@ -132,11 +116,7 @@
         "Id": "826639005",
         "Language": "SFX",
         "ShortName": "FootstepsGrass_0-06.wav",
-<<<<<<< HEAD
         "Path": "SFX\\FootstepsGrass_0-06_C201657D.wem"
-=======
-        "Path": "SFX\\FootstepsGrass_0-06_5BDFD8B7.wem"
->>>>>>> parent of 2e19642 (L04 State)
        },
        {
         "Id": "834898865",
@@ -148,11 +128,7 @@
         "Id": "946848897",
         "Language": "SFX",
         "ShortName": "FootstepsGrass_0.wav",
-<<<<<<< HEAD
         "Path": "SFX\\FootstepsGrass_0_D2A913CE.wem"
-=======
-        "Path": "SFX\\FootstepsGrass_0_49FBA96E.wem"
->>>>>>> parent of 2e19642 (L04 State)
        }
       ],
       "DefaultSwitchValue": "{1848EBE6-F9FA-45AA-B9AC-7F15A0F4333A}",
@@ -212,21 +188,20 @@
       ]
      },
      {
-<<<<<<< HEAD
       "Id": "1750343382",
       "Name": "GameTheme",
       "ObjectPath": "\\Events\\Default Work Unit\\GameTheme",
-      "GUID": "{94EC0F8B-9E88-4F67-859E-75DCC5C75BB3}",
+      "GUID": "{E5DEFE67-BD9D-48EB-8A47-BF49D1DC7ADB}",
       "DurationType": "Infinite",
       "IncludedMemoryFiles": [
        {
-        "Id": "567347023",
+        "Id": "35883341",
         "Language": "SFX",
         "ShortName": "meditation.wav",
         "Path": "SFX\\meditation_9EDFC787.wem"
        },
        {
-        "Id": "976436975",
+        "Id": "357953543",
         "Language": "SFX",
         "ShortName": "forest_lullaby.wav",
         "Path": "SFX\\forest_lullaby_9EDFC787.wem"
@@ -234,26 +209,24 @@
       ],
       "SwitchContainers": [
        {
-        "SwitchValue": "{71AC2EE6-F9C6-43E0-AA64-2F803DEED1FB}",
+        "SwitchValue": "{8222F9E8-8988-4CD3-901C-9234FF7F0224}",
         "Media": [
          {
-          "Id": "567347023"
+          "Id": "35883341"
          }
         ]
        },
        {
-        "SwitchValue": "{B19A3E5B-3CE3-4278-9C1C-D7C36523B386}",
+        "SwitchValue": "{7BE93782-AA95-46E2-A57E-E6AE31B98FF0}",
         "Media": [
          {
-          "Id": "976436975"
+          "Id": "357953543"
          }
         ]
        }
       ]
      },
      {
-=======
->>>>>>> parent of 2e19642 (L04 State)
       "Id": "3731681489",
       "Name": "IceSkill",
       "ObjectPath": "\\Events\\Default Work Unit\\IceSkill",
@@ -288,6 +261,34 @@
         "Language": "SFX",
         "ShortName": "Meditation.wav",
         "Path": "SFX\\Meditation_EE09B944.wem"
+       }
+      ]
+     }
+    ],
+    "StateGroups": [
+     {
+      "Id": "1750343382",
+      "Name": "GameTheme",
+      "ObjectPath": "\\States\\Default Work Unit\\GameTheme",
+      "GUID": "{65E50ED9-78B7-4D93-BECF-822D8329B004}",
+      "States": [
+       {
+        "Id": "748895195",
+        "Name": "None",
+        "ObjectPath": "\\States\\Default Work Unit\\GameTheme\\None",
+        "GUID": "{99C9662F-2AF0-426F-AA08-A8B6FA86496E}"
+       },
+       {
+        "Id": "1160234136",
+        "Name": "Normal",
+        "ObjectPath": "\\States\\Default Work Unit\\GameTheme\\Normal",
+        "GUID": "{8222F9E8-8988-4CD3-901C-9234FF7F0224}"
+       },
+       {
+        "Id": "3625060726",
+        "Name": "Success",
+        "ObjectPath": "\\States\\Default Work Unit\\GameTheme\\Success",
+        "GUID": "{7BE93782-AA95-46E2-A57E-E6AE31B98FF0}"
        }
       ]
      }

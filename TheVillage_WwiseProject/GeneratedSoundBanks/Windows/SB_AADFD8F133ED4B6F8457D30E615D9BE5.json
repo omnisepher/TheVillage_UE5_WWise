@@ -16,7 +16,7 @@
     "Id": "3321253104",
     "GUID": "{C5F64CF0-4CF0-1CF0-F0F0-F0F0F0F0F0F0}",
     "Language": "SFX",
-    "Hash": "1044665443",
+    "Hash": "463502616",
     "ObjectPath": "\\SoundBanks\\Default Work Unit\\SB_AADFD8F133ED4B6F8457D30E615D9BE5",
     "ShortName": "SB_AADFD8F133ED4B6F8457D30E615D9BE5",
     "Path": "SB_AADFD8F133ED4B6F8457D30E615D9BE5.bnk",
@@ -33,7 +33,7 @@
         "Id": "675718906",
         "Language": "SFX",
         "ShortName": "Meditation.wav",
-        "Path": "SFX\\Meditation_EE4AB854.wem"
+        "Path": "SFX\\Meditation_EE09B944.wem"
        }
       ]
      }

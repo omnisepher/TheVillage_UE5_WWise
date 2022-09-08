@@ -28,6 +28,8 @@ void AWizardChar::BeginPlay()
 
 	SkillIceManaCost = 10.f;
 	SkillIceManaCostPerSecond = 4.f;
+
+	ExtinguishedFlameCount = 0;
 }
 
 // Called every frame

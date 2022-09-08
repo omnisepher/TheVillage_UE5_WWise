@@ -1,0 +1,95 @@
+{
+ "SoundBanksInfo": {
+  "Platform": "Windows",
+  "BasePlatform": "Windows",
+  "SchemaVersion": "12",
+  "SoundbankVersion": "140",
+  "RootPaths": {
+   "ProjectRoot": "E:\\0_PROJECTS\\TheVillage\\TheVillage_WwiseProject\\",
+   "SourceFilesRoot": "E:\\0_PROJECTS\\TheVillage\\TheVillage_WwiseProject\\.cache\\Windows\\",
+   "SoundBanksRoot": "E:\\0_PROJECTS\\TheVillage\\TheVillage_WwiseProject\\GeneratedSoundBanks\\Windows\\",
+   "ExternalSourcesInputFile": "",
+   "ExternalSourcesOutputRoot": "E:\\0_PROJECTS\\TheVillage\\TheVillage_WwiseProject\\GeneratedSoundBanks\\Windows"
+  },
+  "SoundBanks": [
+   {
+    "Id": "82093999",
+    "GUID": "{04E4A7AF-A7AF-17AF-AFAF-AFAFAFAFAFAF}",
+    "Language": "SFX",
+    "Hash": "3006849260",
+    "ObjectPath": "\\SoundBanks\\Default Work Unit\\SB_E5DEFE67BD9D48EB8A47BF49D1DC7ADB",
+    "ShortName": "SB_E5DEFE67BD9D48EB8A47BF49D1DC7ADB",
+    "Path": "SB_E5DEFE67BD9D48EB8A47BF49D1DC7ADB.bnk",
+    "IncludedEvents": [
+     {
+      "Id": "1750343382",
+      "Name": "GameTheme",
+      "ObjectPath": "\\Events\\Default Work Unit\\GameTheme",
+      "GUID": "{E5DEFE67-BD9D-48EB-8A47-BF49D1DC7ADB}",
+      "DurationType": "Infinite",
+      "ExcludedMemoryFiles": [
+       {
+        "Id": "35883341",
+        "Language": "SFX",
+        "ShortName": "meditation.wav",
+        "Path": "SFX\\meditation_9EDFC787.wem"
+       },
+       {
+        "Id": "357953543",
+        "Language": "SFX",
+        "ShortName": "forest_lullaby.wav",
+        "Path": "SFX\\forest_lullaby_9EDFC787.wem"
+       }
+      ],
+      "SwitchContainers": [
+       {
+        "SwitchValue": "{8222F9E8-8988-4CD3-901C-9234FF7F0224}",
+        "Media": [
+         {
+          "Id": "35883341"
+         }
+        ]
+       },
+       {
+        "SwitchValue": "{7BE93782-AA95-46E2-A57E-E6AE31B98FF0}",
+        "Media": [
+         {
+          "Id": "357953543"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "StateGroups": [
+     {
+      "Id": "1750343382",
+      "Name": "GameTheme",
+      "ObjectPath": "\\States\\Default Work Unit\\GameTheme",
+      "GUID": "{65E50ED9-78B7-4D93-BECF-822D8329B004}",
+      "States": [
+       {
+        "Id": "748895195",
+        "Name": "None",
+        "ObjectPath": "\\States\\Default Work Unit\\GameTheme\\None",
+        "GUID": "{99C9662F-2AF0-426F-AA08-A8B6FA86496E}"
+       },
+       {
+        "Id": "1160234136",
+        "Name": "Normal",
+        "ObjectPath": "\\States\\Default Work Unit\\GameTheme\\Normal",
+        "GUID": "{8222F9E8-8988-4CD3-901C-9234FF7F0224}"
+       },
+       {
+        "Id": "3625060726",
+        "Name": "Success",
+        "ObjectPath": "\\States\\Default Work Unit\\GameTheme\\Success",
+        "GUID": "{7BE93782-AA95-46E2-A57E-E6AE31B98FF0}"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

@@ -56,4 +56,7 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Skill")
 		float SkillIceManaCostPerSecond;
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Quest")
+		int ExtinguishedFlameCount;
+
 };

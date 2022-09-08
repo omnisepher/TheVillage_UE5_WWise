@@ -58,6 +58,17 @@
 						</Action>
 					</ChildrenList>
 				</Event>
+				<Event Name="GameTheme" ID="{E5DEFE67-BD9D-48EB-8A47-BF49D1DC7ADB}">
+					<ChildrenList>
+						<Action Name="" ID="{23BECFFB-04BB-4822-BB5F-43CFFC4FB784}" ShortID="974062087">
+							<ReferenceList>
+								<Reference Name="Target">
+									<ObjectRef Name="Theme" ID="{71F3488E-C46E-4941-8B3E-9E539F599EB9}" WorkUnitID="{1A407F1A-0020-4C01-9690-169712B42CFB}"/>
+								</Reference>
+							</ReferenceList>
+						</Action>
+					</ChildrenList>
+				</Event>
 			</ChildrenList>
 		</WorkUnit>
 	</Events>

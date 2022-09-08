@@ -40,7 +40,12 @@ void AWizardChar::Tick(float DeltaTime)
 	Mana = (Mana >= ManaMax) ? ManaMax : Mana + (ManaRegen * DeltaTime);
 
 	if (IsAttacking) {
-		Mana = (Mana <= 0) ? 0 : Mana - (SkillIceManaCostPerSecond * DeltaTime);
+		if (Mana >= SkillIceManaCostPerSecond) {
+			Mana = (Mana <= 0) ? 0 : Mana - (SkillIceManaCostPerSecond * DeltaTime);
+		}
+		else {
+			StopSpellCasting();
+		}
 	}
 
 }
@@ -50,5 +55,35 @@ void AWizardChar::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+	PlayerInputComponent->BindAction("Attack",IE_Pressed,this,&AWizardChar::StartSpellCasting);
+	PlayerInputComponent->BindAction("Attack", IE_Released, this, &AWizardChar::StopSpellCasting);
+
+}
+
+
+void AWizardChar::StartSpellCasting()
+{
+	if (GetCharacterMovement()->IsFalling() != true && Mana > SkillIceManaCost) {
+		IsAttacking = true;
+		GetCharacterMovement()->DisableMovement();
+
+		StartSpellEffect();
+
+		FOnAkPostEventCallback nullCallback;
+		TArray<FAkExternalSourceInfo> nullSources;
+
+		IceSkillEventID = UAkGameplayStatics::PostEvent(nullptr, this, int32(0), nullCallback, nullSources, false, (FString)("IceSkill"));
+		Mana = Mana - SkillIceManaCost;
+	}
+}
+
+void AWizardChar::StopSpellCasting()
+{
+	IsAttacking = false;
+	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+
+	StopSpellEffect();
+
+	UAkGameplayStatics::ExecuteActionOnPlayingID(AkActionOnEventType::Stop, IceSkillEventID, int32(200));
 }
 

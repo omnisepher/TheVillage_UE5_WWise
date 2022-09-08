@@ -16,8 +16,6 @@ void AJukebox::BeginPlay()
 {
 	Super::BeginPlay();
 
-
-
 	MainCharacter = Cast<AWizardChar>(UGameplayStatics::GetPlayerCharacter(GetWorld(),0));
 
 	if (MainCharacter != nullptr) {

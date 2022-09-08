@@ -3,7 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "../Plugins/Wwise/Source/AkAudio/Classes/AkGameplayStatics.h"
+#include "Components/InputComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/Controller.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 #include "WizardChar.generated.h"
 
 UCLASS()
@@ -14,6 +20,13 @@ class THEVILLAGE_API AWizardChar : public ACharacter
 public:
 	// Sets default values for this character's properties
 	AWizardChar();
+
+private:
+	int32 IceSkillEventID;
+
+	void StartSpellCasting();
+	void StopSpellCasting();
+
 
 protected:
 	// Called when the game starts or when spawned
@@ -58,5 +71,11 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Quest")
 		int ExtinguishedFlameCount;
+
+
+	UFUNCTION(BlueprintImplementableEvent)
+		void StartSpellEffect();
+	UFUNCTION(BlueprintImplementableEvent)
+		void StopSpellEffect();
 
 };

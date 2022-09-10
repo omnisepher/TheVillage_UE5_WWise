@@ -5,6 +5,7 @@
 			<ChildrenList>
 				<SoundBank Name="Main" ID="{5DA71B20-A6BC-46A1-831F-25AB6394F299}">
 					<ObjectInclusionList>
+						<ObjectRef Name="Heartbeat" ID="{3FF918C6-8C48-461D-86E2-5A3135CF12D4}" WorkUnitID="{356907E4-944A-4278-8FD1-D59BFD4F4E7D}" Origin="Manual" Filter="7"/>
 						<ObjectRef Name="GameTheme" ID="{E5DEFE67-BD9D-48EB-8A47-BF49D1DC7ADB}" WorkUnitID="{356907E4-944A-4278-8FD1-D59BFD4F4E7D}" Origin="Manual" Filter="7"/>
 						<ObjectRef Name="IceSkill" ID="{FD61AE50-E26A-4998-946F-5E1F4FF33916}" WorkUnitID="{356907E4-944A-4278-8FD1-D59BFD4F4E7D}" Origin="Manual" Filter="7"/>
 						<ObjectRef Name="Meditation" ID="{AADFD8F1-33ED-4B6F-8457-D30E615D9BE5}" WorkUnitID="{356907E4-944A-4278-8FD1-D59BFD4F4E7D}" Origin="Manual" Filter="7"/>

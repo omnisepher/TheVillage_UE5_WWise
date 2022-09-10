@@ -16,7 +16,7 @@
     "Id": "82093999",
     "GUID": "{04E4A7AF-A7AF-17AF-AFAF-AFAFAFAFAFAF}",
     "Language": "SFX",
-    "Hash": "3006849260",
+    "Hash": "2859500944",
     "ObjectPath": "\\SoundBanks\\Default Work Unit\\SB_E5DEFE67BD9D48EB8A47BF49D1DC7ADB",
     "ShortName": "SB_E5DEFE67BD9D48EB8A47BF49D1DC7ADB",
     "Path": "SB_E5DEFE67BD9D48EB8A47BF49D1DC7ADB.bnk",
@@ -29,16 +29,16 @@
       "DurationType": "Infinite",
       "ExcludedMemoryFiles": [
        {
-        "Id": "35883341",
-        "Language": "SFX",
-        "ShortName": "meditation.wav",
-        "Path": "SFX\\meditation_9EDFC787.wem"
-       },
-       {
         "Id": "357953543",
         "Language": "SFX",
         "ShortName": "forest_lullaby.wav",
         "Path": "SFX\\forest_lullaby_9EDFC787.wem"
+       },
+       {
+        "Id": "970040310",
+        "Language": "SFX",
+        "ShortName": "meditation_theme.wav",
+        "Path": "SFX\\meditation_theme_9EDFC787.wem"
        }
       ],
       "SwitchContainers": [
@@ -46,7 +46,7 @@
         "SwitchValue": "{8222F9E8-8988-4CD3-901C-9234FF7F0224}",
         "Media": [
          {
-          "Id": "35883341"
+          "Id": "970040310"
          }
         ]
        },
@@ -59,6 +59,14 @@
         ]
        }
       ]
+     }
+    ],
+    "GameParameters": [
+     {
+      "Id": "3677180323",
+      "Name": "Health",
+      "ObjectPath": "\\Game Parameters\\Default Work Unit\\Health",
+      "GUID": "{683C9794-F153-48DE-A501-55539AA28BF0}"
      }
     ],
     "StateGroups": [

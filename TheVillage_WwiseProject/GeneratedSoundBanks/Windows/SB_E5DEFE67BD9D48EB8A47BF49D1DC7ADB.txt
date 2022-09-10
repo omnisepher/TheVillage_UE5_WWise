@@ -9,3 +9,6 @@ State	ID	Name	State Group			Notes
 	1160234136	Normal	GameTheme			
 	3625060726	Success	GameTheme			
 
+Game Parameter	ID	Name			Wwise Object Path	Notes
+	3677180323	Health			\Default Work Unit\Health	
+

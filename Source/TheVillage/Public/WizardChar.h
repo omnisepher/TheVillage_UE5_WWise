@@ -27,6 +27,8 @@ private:
 	void StartSpellCasting();
 	void StopSpellCasting();
 
+	float IceSkillCastTime;
+
 
 protected:
 	// Called when the game starts or when spawned
@@ -71,7 +73,6 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Quest")
 		int ExtinguishedFlameCount;
-
 
 	UFUNCTION(BlueprintImplementableEvent)
 		void StartSpellEffect();

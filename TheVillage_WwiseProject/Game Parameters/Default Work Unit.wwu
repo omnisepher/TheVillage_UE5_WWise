@@ -1,6 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <WwiseDocument Type="WorkUnit" ID="{8D6C56E5-2675-4C66-AD96-6B129EC6E745}" SchemaVersion="103">
 	<GameParameters>
-		<WorkUnit Name="Default Work Unit" ID="{8D6C56E5-2675-4C66-AD96-6B129EC6E745}" PersistMode="Standalone"/>
+		<WorkUnit Name="Default Work Unit" ID="{8D6C56E5-2675-4C66-AD96-6B129EC6E745}" PersistMode="Standalone">
+			<ChildrenList>
+				<GameParameter Name="IceSkillCastTime" ID="{BC9FDEE6-CE2B-451A-B4A4-7ECD5AAF20D4}">
+					<PropertyList>
+						<Property Name="InitialValue" Type="Real64" Value="0"/>
+						<Property Name="Max" Type="Real64" Value="5"/>
+						<Property Name="RTPCRamping" Type="int16" Value="1"/>
+					</PropertyList>
+				</GameParameter>
+				<GameParameter Name="Health" ID="{683C9794-F153-48DE-A501-55539AA28BF0}">
+					<PropertyList>
+						<Property Name="InitialValue" Type="Real64" Value="100"/>
+						<Property Name="RTPCRamping" Type="int16" Value="1"/>
+					</PropertyList>
+				</GameParameter>
+			</ChildrenList>
+		</WorkUnit>
 	</GameParameters>
 </WwiseDocument>

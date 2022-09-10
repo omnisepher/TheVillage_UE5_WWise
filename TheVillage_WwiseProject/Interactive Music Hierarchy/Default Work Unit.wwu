@@ -4,6 +4,50 @@
 		<WorkUnit Name="Default Work Unit" ID="{1A407F1A-0020-4C01-9690-169712B42CFB}" PersistMode="Standalone">
 			<ChildrenList>
 				<MusicSwitchContainer Name="Theme" ID="{71F3488E-C46E-4941-8B3E-9E539F599EB9}" ShortID="703104112">
+					<PropertyList>
+						<Property Name="Volume" Type="Real64">
+							<ValueList>
+								<Value>-10</Value>
+							</ValueList>
+							<RTPCList>
+								<RTPC Name="" ID="{AA538512-93E3-40C0-9884-225BE5B3236E}" ShortID="2497706">
+									<ReferenceList>
+										<Reference Name="ControlInput">
+											<ObjectRef Name="Health" ID="{683C9794-F153-48DE-A501-55539AA28BF0}" WorkUnitID="{8D6C56E5-2675-4C66-AD96-6B129EC6E745}"/>
+										</Reference>
+									</ReferenceList>
+									<Curve Name="" ID="{3430EDFA-6F31-498E-A5BA-B04837135028}">
+										<PropertyList>
+											<Property Name="Flags" Type="int32" Value="3"/>
+										</PropertyList>
+										<PointList>
+											<Point>
+												<XPos>0</XPos>
+												<YPos>-200</YPos>
+												<Flags>5</Flags>
+											</Point>
+											<Point>
+												<XPos>10.23069</XPos>
+												<YPos>-30</YPos>
+												<Flags>0</Flags>
+												<SegmentShape>Exp1</SegmentShape>
+											</Point>
+											<Point>
+												<XPos>40</XPos>
+												<YPos>0</YPos>
+												<Flags>0</Flags>
+											</Point>
+											<Point>
+												<XPos>100</XPos>
+												<YPos>0</YPos>
+												<Flags>37</Flags>
+											</Point>
+										</PointList>
+									</Curve>
+								</RTPC>
+							</RTPCList>
+						</Property>
+					</PropertyList>
 					<ReferenceList>
 						<Reference Name="Conversion">
 							<ObjectRef Name="Default Conversion Settings" ID="{6D1B890C-9826-4384-BF07-C15223E9FB56}" WorkUnitID="{772F7880-6EA0-443D-B166-D3082FABEA0D}"/>
@@ -13,7 +57,7 @@
 						</Reference>
 					</ReferenceList>
 					<ChildrenList>
-						<MusicSegment Name="forest_lullaby" ID="{D7E129ED-6766-4AD0-BDA5-7C4BD5A35037}" ShortID="190644594">
+						<MusicSegment Name="ForestTheme" ID="{D7E129ED-6766-4AD0-BDA5-7C4BD5A35037}" ShortID="190644594">
 							<PropertyList>
 								<Property Name="EndPosition" Type="Real64" Value="136126.598015353"/>
 							</PropertyList>
@@ -156,9 +200,9 @@
 								</ObjectList>
 							</ObjectLists>
 						</MusicSegment>
-						<MusicSegment Name="meditation" ID="{1AED191E-D12E-4701-9C99-BD13C7CCAD3C}" ShortID="494151237">
+						<MusicSegment Name="MeditationTheme" ID="{1AED191E-D12E-4701-9C99-BD13C7CCAD3C}" ShortID="494151237">
 							<PropertyList>
-								<Property Name="EndPosition" Type="Real64" Value="480487.161523492"/>
+								<Property Name="EndPosition" Type="Real64" Value="489884.444444444"/>
 							</PropertyList>
 							<ReferenceList>
 								<Reference Name="Conversion">
@@ -169,23 +213,23 @@
 								</Reference>
 							</ReferenceList>
 							<ChildrenList>
-								<MusicTrack Name="meditation" ID="{4766A636-2329-4E60-BF41-7BC0436FCCAF}" ShortID="858801605">
+								<MusicTrack Name="meditation_theme" ID="{2A991C32-49A0-4572-9B80-18F5FB6D6C9C}" ShortID="702129148">
 									<ReferenceList>
 										<Reference Name="OutputBus">
 											<ObjectRef Name="Master Audio Bus" ID="{1514A4D8-1DA6-412A-A17E-75CA0C2149F3}" WorkUnitID="{F35516A2-1238-4A22-B717-087F7A5BF494}"/>
 										</Reference>
 									</ReferenceList>
 									<ChildrenList>
-										<AudioFileSource Name="meditation" ID="{7815F535-0403-4898-A7B9-B146A73769B7}">
+										<AudioFileSource Name="meditation_theme" ID="{22EF28F7-E729-49DB-BDA2-CCA3DD97007E}">
 											<Language>SFX</Language>
-											<AudioFile>meditation.wav</AudioFile>
+											<AudioFile>meditation_theme.wav</AudioFile>
 											<MediaIDList>
-												<MediaID ID="35883341"/>
+												<MediaID ID="970040310"/>
 											</MediaIDList>
 										</AudioFileSource>
 									</ChildrenList>
 									<TransitionList>
-										<MusicTransition Name="Root" ID="{24B79695-8E5C-4732-82AC-5259EFB89D06}">
+										<MusicTransition Name="Root" ID="{46473A0A-C52C-442D-95E7-9C978376913F}">
 											<PropertyList>
 												<Property Name="IsFolder" Type="bool" Value="True"/>
 											</PropertyList>
@@ -196,77 +240,18 @@
 										<ObjectList Name="Sequences">
 											<Reference>
 												<Local>
-													<MusicTrackSequence Name="" ID="{1085CEF4-E90D-4B5E-816E-9C6447528852}">
+													<MusicTrackSequence Name="" ID="{8B568AA3-67DF-44E4-954C-655FBAA6C020}">
 														<ObjectLists>
 															<ObjectList Name="Clips">
 																<Reference>
 																	<Local>
-																		<MusicClip Name="meditation" ID="{258232FE-E6FE-41EE-B9CD-32D4DAF80BBF}">
+																		<MusicClip Name="meditation_theme" ID="{239FC891-40A3-4DF7-8470-077FDAD25964}">
 																			<PropertyList>
-																				<Property Name="EndTrimOffset" Type="Real64" Value="480000"/>
-																				<Property Name="FadeInDuration" Type="Real64" Value="10214.4379575572"/>
-																				<Property Name="FadeOutDuration" Type="Real64" Value="15117.3681771847"/>
+																				<Property Name="EndTrimOffset" Type="Real64" Value="489884.444444444"/>
+																				<Property Name="FadeInMode" Type="int16" Value="0"/>
+																				<Property Name="FadeOutMode" Type="int16" Value="0"/>
 																			</PropertyList>
-																			<AudioSourceRef Name="meditation" ID="{7815F535-0403-4898-A7B9-B146A73769B7}"/>
-																			<PropertyCurveList>
-																				<PropertyCurve PropertyName="Highpass">
-																					<Curve Name="" ID="{677396BD-C7C5-447F-98AD-C2F49D72A40C}">
-																						<PropertyList>
-																							<Property Name="Flags" Type="int32" Value="1"/>
-																						</PropertyList>
-																						<PointList>
-																							<Point>
-																								<XPos>0</XPos>
-																								<YPos>0</YPos>
-																								<Flags>5</Flags>
-																							</Point>
-																							<Point>
-																								<XPos>480</XPos>
-																								<YPos>0</YPos>
-																								<Flags>37</Flags>
-																							</Point>
-																						</PointList>
-																					</Curve>
-																				</PropertyCurve>
-																				<PropertyCurve PropertyName="Lowpass">
-																					<Curve Name="" ID="{9217BC74-12F2-4DC8-B62E-E439B5DB0DA4}">
-																						<PropertyList>
-																							<Property Name="Flags" Type="int32" Value="1"/>
-																						</PropertyList>
-																						<PointList>
-																							<Point>
-																								<XPos>0</XPos>
-																								<YPos>0</YPos>
-																								<Flags>5</Flags>
-																							</Point>
-																							<Point>
-																								<XPos>480</XPos>
-																								<YPos>0</YPos>
-																								<Flags>37</Flags>
-																							</Point>
-																						</PointList>
-																					</Curve>
-																				</PropertyCurve>
-																				<PropertyCurve PropertyName="Volume">
-																					<Curve Name="" ID="{AC5E6BFB-DC07-40BE-A6B0-E45646A31D5F}">
-																						<PropertyList>
-																							<Property Name="Flags" Type="int32" Value="3"/>
-																						</PropertyList>
-																						<PointList>
-																							<Point>
-																								<XPos>0</XPos>
-																								<YPos>0</YPos>
-																								<Flags>5</Flags>
-																							</Point>
-																							<Point>
-																								<XPos>480</XPos>
-																								<YPos>0</YPos>
-																								<Flags>37</Flags>
-																							</Point>
-																						</PointList>
-																					</Curve>
-																				</PropertyCurve>
-																			</PropertyCurveList>
+																			<AudioSourceRef Name="meditation_theme" ID="{22EF28F7-E729-49DB-BDA2-CCA3DD97007E}"/>
 																		</MusicClip>
 																	</Local>
 																</Reference>
@@ -364,7 +349,7 @@
 								<PathElementRef Name="Normal" ID="{8222F9E8-8988-4CD3-901C-9234FF7F0224}"/>
 							</Path>
 							<AudioNodeInfo>
-								<AudioNodeRef Name="meditation" ID="{1AED191E-D12E-4701-9C99-BD13C7CCAD3C}" WorkUnitID="{1A407F1A-0020-4C01-9690-169712B42CFB}" Platform="Linked"/>
+								<AudioNodeRef Name="MeditationTheme" ID="{1AED191E-D12E-4701-9C99-BD13C7CCAD3C}" WorkUnitID="{1A407F1A-0020-4C01-9690-169712B42CFB}" Platform="Linked"/>
 							</AudioNodeInfo>
 						</Entry>
 						<Entry>
@@ -372,7 +357,7 @@
 								<PathElementRef Name="Success" ID="{7BE93782-AA95-46E2-A57E-E6AE31B98FF0}"/>
 							</Path>
 							<AudioNodeInfo>
-								<AudioNodeRef Name="forest_lullaby" ID="{D7E129ED-6766-4AD0-BDA5-7C4BD5A35037}" WorkUnitID="{1A407F1A-0020-4C01-9690-169712B42CFB}" Platform="Linked"/>
+								<AudioNodeRef Name="ForestTheme" ID="{D7E129ED-6766-4AD0-BDA5-7C4BD5A35037}" WorkUnitID="{1A407F1A-0020-4C01-9690-169712B42CFB}" Platform="Linked"/>
 							</AudioNodeInfo>
 						</Entry>
 					</EntryList>

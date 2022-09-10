@@ -15,14 +15,15 @@ AJukebox::AJukebox()
 void AJukebox::BeginPlay()
 {
 	Super::BeginPlay();
+	FOnAkPostEventCallback nullCallback;
+	TArray<FAkExternalSourceInfo> nullSources;
+
+	UAkGameplayStatics::PostEvent(nullptr, this, int32(0), nullCallback, nullSources, false, (FString)("Heartbeat"));
 
 	MainCharacter = Cast<AWizardChar>(UGameplayStatics::GetPlayerCharacter(GetWorld(),0));
 
 	if (MainCharacter != nullptr) {
 		UAkGameplayStatics::SetOcclusionRefreshInterval(0.f, this);
-
-		FOnAkPostEventCallback nullCallback;
-		TArray<FAkExternalSourceInfo> nullSources;
 
 		UAkGameplayStatics::PostEvent(nullptr, this, int32(0), nullCallback, nullSources, false, (FString)("GameTheme"));
 	}

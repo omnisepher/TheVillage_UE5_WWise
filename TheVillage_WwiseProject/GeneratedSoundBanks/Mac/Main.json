@@ -16,7 +16,7 @@
     "Id": "3161908922",
     "GUID": "{5DA71B20-A6BC-46A1-831F-25AB6394F299}",
     "Language": "SFX",
-    "Hash": "340331011",
+    "Hash": "1916978325",
     "ObjectPath": "\\SoundBanks\\Default Work Unit\\Main",
     "ShortName": "Main",
     "Path": "Main.bnk",
@@ -195,16 +195,16 @@
       "DurationType": "Infinite",
       "IncludedMemoryFiles": [
        {
-        "Id": "35883341",
-        "Language": "SFX",
-        "ShortName": "meditation.wav",
-        "Path": "SFX\\meditation_9EDFC787.wem"
-       },
-       {
         "Id": "357953543",
         "Language": "SFX",
         "ShortName": "forest_lullaby.wav",
         "Path": "SFX\\forest_lullaby_9EDFC787.wem"
+       },
+       {
+        "Id": "970040310",
+        "Language": "SFX",
+        "ShortName": "meditation_theme.wav",
+        "Path": "SFX\\meditation_theme_9EDFC787.wem"
        }
       ],
       "SwitchContainers": [
@@ -212,7 +212,7 @@
         "SwitchValue": "{8222F9E8-8988-4CD3-901C-9234FF7F0224}",
         "Media": [
          {
-          "Id": "35883341"
+          "Id": "970040310"
          }
         ]
        },
@@ -227,11 +227,25 @@
       ]
      },
      {
+      "Id": "2179486487",
+      "Name": "Heartbeat",
+      "ObjectPath": "\\Events\\Default Work Unit\\Heartbeat",
+      "GUID": "{3FF918C6-8C48-461D-86E2-5A3135CF12D4}",
+      "DurationType": "Infinite",
+      "IncludedMemoryFiles": [
+       {
+        "Id": "508935826",
+        "Language": "SFX",
+        "ShortName": "Heartbeat.wav",
+        "Path": "SFX\\Heartbeat_9EDFC787.wem"
+       }
+      ]
+     },
+     {
       "Id": "3731681489",
       "Name": "IceSkill",
       "ObjectPath": "\\Events\\Default Work Unit\\IceSkill",
       "GUID": "{FD61AE50-E26A-4998-946F-5E1F4FF33916}",
-      "MaxAttenuation": "1000.",
       "DurationType": "Infinite",
       "IncludedMemoryFiles": [
        {
@@ -244,7 +258,7 @@
         "Id": "1047019580",
         "Language": "SFX",
         "ShortName": "Icicle.wav",
-        "Path": "SFX\\Icicle_13D721A8.wem"
+        "Path": "SFX\\Icicle_F0F619C8.wem"
        }
       ]
      },
@@ -263,6 +277,20 @@
         "Path": "SFX\\Meditation_EE09B944.wem"
        }
       ]
+     }
+    ],
+    "GameParameters": [
+     {
+      "Id": "1351491183",
+      "Name": "IceSkillCastTime",
+      "ObjectPath": "\\Game Parameters\\Default Work Unit\\IceSkillCastTime",
+      "GUID": "{BC9FDEE6-CE2B-451A-B4A4-7ECD5AAF20D4}"
+     },
+     {
+      "Id": "3677180323",
+      "Name": "Health",
+      "ObjectPath": "\\Game Parameters\\Default Work Unit\\Health",
+      "GUID": "{683C9794-F153-48DE-A501-55539AA28BF0}"
      }
     ],
     "StateGroups": [

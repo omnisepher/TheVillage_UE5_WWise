@@ -5,6 +5,12 @@
   "BasePlatform": "Mac",
   "Plugins": [
    {
+    "Name": "Wwise Guitar Distortion",
+    "ID": "8257539",
+    "DLL": "AkGuitarDistortion",
+    "StaticLib": "AkGuitarDistortionFX"
+   },
+   {
     "Name": "Wwise Time Stretch",
     "ID": "8519683",
     "DLL": "AkTimeStretch",

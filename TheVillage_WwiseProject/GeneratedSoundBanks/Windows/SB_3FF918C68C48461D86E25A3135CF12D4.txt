@@ -1,0 +1,6 @@
+Event	ID	Name			Wwise Object Path	Notes
+	2179486487	Heartbeat			\Default Work Unit\Heartbeat	
+
+Game Parameter	ID	Name			Wwise Object Path	Notes
+	3677180323	Health			\Default Work Unit\Health	
+

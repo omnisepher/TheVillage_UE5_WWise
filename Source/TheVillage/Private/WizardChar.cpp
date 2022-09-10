@@ -30,6 +30,7 @@ void AWizardChar::BeginPlay()
 	SkillIceManaCostPerSecond = 4.f;
 
 	ExtinguishedFlameCount = 0;
+	IceSkillCastTime = 0.f;
 }
 
 // Called every frame
@@ -39,9 +40,20 @@ void AWizardChar::Tick(float DeltaTime)
 	Health = (Health >= HealthMax) ? HealthMax : Health + (HealthRegen * DeltaTime);
 	Mana = (Mana >= ManaMax) ? ManaMax : Mana + (ManaRegen * DeltaTime);
 
+	UAkGameplayStatics::SetRTPCValue(nullptr, Health, 0, nullptr, "Health");
+
 	if (IsAttacking) {
 		if (Mana >= SkillIceManaCostPerSecond) {
 			Mana = (Mana <= 0) ? 0 : Mana - (SkillIceManaCostPerSecond * DeltaTime);
+
+			IceSkillCastTime = (IceSkillCastTime >= 5.f) ? 5.f : IceSkillCastTime + DeltaTime;
+			UAkGameplayStatics::SetRTPCValue(nullptr, IceSkillCastTime, 0, this, "IceSkillCastTime");
+
+			float TempVal;
+			ERTPCValueType TempType = ERTPCValueType::PlayingID;
+			UAkGameplayStatics::GetRTPCValue(nullptr, IceSkillEventID, TempType, TempVal, TempType, this, "IceSkillCastTime");
+
+			//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::SanitizeFloat(TempVal));
 		}
 		else {
 			StopSpellCasting();
@@ -66,6 +78,8 @@ void AWizardChar::StartSpellCasting()
 	if (GetCharacterMovement()->IsFalling() != true && Mana > SkillIceManaCost) {
 		IsAttacking = true;
 		GetCharacterMovement()->DisableMovement();
+
+		IceSkillCastTime = 0.f;
 
 		StartSpellEffect();
 

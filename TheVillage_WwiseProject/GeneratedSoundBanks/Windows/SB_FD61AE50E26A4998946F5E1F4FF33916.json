@@ -16,7 +16,7 @@
     "Id": "1921547283",
     "GUID": "{72887C13-7C13-1C13-1313-131313131313}",
     "Language": "SFX",
-    "Hash": "2367304801",
+    "Hash": "2734417142",
     "ObjectPath": "\\SoundBanks\\Default Work Unit\\SB_FD61AE50E26A4998946F5E1F4FF33916",
     "ShortName": "SB_FD61AE50E26A4998946F5E1F4FF33916",
     "Path": "SB_FD61AE50E26A4998946F5E1F4FF33916.bnk",
@@ -26,7 +26,6 @@
       "Name": "IceSkill",
       "ObjectPath": "\\Events\\Default Work Unit\\IceSkill",
       "GUID": "{FD61AE50-E26A-4998-946F-5E1F4FF33916}",
-      "MaxAttenuation": "1000.",
       "DurationType": "Infinite",
       "ExcludedMemoryFiles": [
        {
@@ -39,9 +38,17 @@
         "Id": "1047019580",
         "Language": "SFX",
         "ShortName": "Icicle.wav",
-        "Path": "SFX\\Icicle_13D721A8.wem"
+        "Path": "SFX\\Icicle_14EE2265.wem"
        }
       ]
+     }
+    ],
+    "GameParameters": [
+     {
+      "Id": "1351491183",
+      "Name": "IceSkillCastTime",
+      "ObjectPath": "\\Game Parameters\\Default Work Unit\\IceSkillCastTime",
+      "GUID": "{BC9FDEE6-CE2B-451A-B4A4-7ECD5AAF20D4}"
      }
     ]
    }

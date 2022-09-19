@@ -16,7 +16,7 @@
     "Id": "3161908922",
     "GUID": "{5DA71B20-A6BC-46A1-831F-25AB6394F299}",
     "Language": "SFX",
-    "Hash": "201344200",
+    "Hash": "963504745",
     "ObjectPath": "\\SoundBanks\\Default Work Unit\\Main",
     "ShortName": "Main",
     "Path": "Main.bnk",
@@ -33,7 +33,7 @@
         "Id": "404283777",
         "Language": "SFX",
         "ShortName": "FireBase.wav",
-        "Path": "SFX\\FireBase_76A08671.wem"
+        "Path": "SFX\\FireBase_B0900A3A.wem"
        }
       ]
      },

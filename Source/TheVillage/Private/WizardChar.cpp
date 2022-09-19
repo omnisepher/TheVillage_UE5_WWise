@@ -51,7 +51,7 @@ void AWizardChar::Tick(float DeltaTime)
 
 			float TempVal;
 			ERTPCValueType TempType = ERTPCValueType::PlayingID;
-			UAkGameplayStatics::GetRTPCValue(nullptr, IceSkillEventID, TempType, TempVal, TempType, this, "IceSkillCastTime");
+			UAkGameplayStatics::GetRTPCValue(nullptr, IceSkillEventID, ERTPCValueType::Default, TempVal, TempType, this, "IceSkillCastTime");
 
 			//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::SanitizeFloat(TempVal));
 		}

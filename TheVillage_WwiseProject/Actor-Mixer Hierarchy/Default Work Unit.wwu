@@ -984,7 +984,7 @@
 																</Point>
 																<Point>
 																	<XPos>201.03093</XPos>
-																	<YPos>-0</YPos>
+																	<YPos>0</YPos>
 																	<Flags>0</Flags>
 																	<SegmentShape>Exp1</SegmentShape>
 																</Point>
@@ -1145,15 +1145,32 @@
 									<PropertyList>
 										<Property Name="FadeInDuration" Type="Real64" Value="1.46838978302337"/>
 										<Property Name="FadeOutDuration" Type="Real64" Value="1.57327476752504"/>
+										<Property Name="MarkerInputMode" Type="int16" Value="2"/>
 										<Property Name="OverrideWavLoop" Type="bool" Value="True"/>
 										<Property Name="TrimBegin" Type="Real64" Value="1.04884984501669"/>
-										<Property Name="TrimEnd" Type="Real64" Value="20.8721119158321"/>
+										<Property Name="TrimEnd" Type="Real64" Value="11.4324633106819"/>
 									</PropertyList>
 									<Language>SFX</Language>
 									<AudioFile>FireBase.wav</AudioFile>
 									<MediaIDList>
 										<MediaID ID="404283777"/>
 									</MediaIDList>
+									<PluginInnerObjectList>
+										<List Name="Markers">
+											<PluginInnerObject Name="" ID="{3ED2C549-658B-4EF3-9563-3B23FAC21DFF}" PluginName="Marker" CompanyID="0" PluginID="993">
+												<PropertyList>
+													<Property Name="Label" Type="string" Value="BlueFireOn"/>
+													<Property Name="Time" Type="Real64" Value="3.88074442656175"/>
+												</PropertyList>
+											</PluginInnerObject>
+											<PluginInnerObject Name="" ID="{A0110FC2-D06E-4400-B3A1-A0C1D6EB7536}" PluginName="Marker" CompanyID="0" PluginID="993">
+												<PropertyList>
+													<Property Name="Label" Type="string" Value="BlueFireOff"/>
+													<Property Name="Time" Type="Real64" Value="8.60056872913686"/>
+												</PropertyList>
+											</PluginInnerObject>
+										</List>
+									</PluginInnerObjectList>
 								</AudioFileSource>
 							</ChildrenList>
 							<ObjectLists/>

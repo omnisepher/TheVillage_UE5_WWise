@@ -26,7 +26,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	UPROPERTY(EditAnywhere)
-		class UAkAudioEvent* SkillEvent;
+	class UAkAudioEvent* SkillEvent;
 
 	int32 skillEventID;
 

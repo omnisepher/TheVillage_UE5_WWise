@@ -460,18 +460,8 @@
 								<Property Name="ObjectType" Type="int32" Value="200"/>
 							</PropertyList>
 							<ChildrenList>
-								<SearchCriteria Name="PropertyValue" ID="{F584549F-0CD1-4B62-874A-C477EF188173}" SearchOperationID="{560736B7-4F5C-4EF7-9354-8D8DC6BBD70A}">
-									<PropertyList>
-										<Property Name="LeftValue" Type="Real64" Value="2"/>
-										<Property Name="PropertyName" Type="string" Value="3DPositionSource"/>
-									</PropertyList>
-								</SearchCriteria>
-								<SearchCriteria Name="PropertyValue" ID="{D65DDE6B-1E28-427C-A989-6FFDCEB08D67}" SearchOperationID="{560736B7-4F5C-4EF7-9354-8D8DC6BBD70A}">
-									<PropertyList>
-										<Property Name="LeftValue" Type="Real64" Value="1"/>
-										<Property Name="PropertyName" Type="string" Value="3DPositionSource"/>
-									</PropertyList>
-								</SearchCriteria>
+								<SearchCriteria Name="PropertyValue" ID="{F584549F-0CD1-4B62-874A-C477EF188173}" SearchOperationID="{560736B7-4F5C-4EF7-9354-8D8DC6BBD70A}"/>
+								<SearchCriteria Name="PropertyValue" ID="{D65DDE6B-1E28-427C-A989-6FFDCEB08D67}" SearchOperationID="{560736B7-4F5C-4EF7-9354-8D8DC6BBD70A}"/>
 							</ChildrenList>
 						</Query>
 						<Query Name="3D Spatialization" ID="{4CD5A13D-3ECB-4359-BD07-B6B79530D180}">

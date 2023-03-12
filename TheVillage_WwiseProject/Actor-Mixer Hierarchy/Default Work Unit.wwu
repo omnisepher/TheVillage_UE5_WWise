@@ -4,6 +4,10 @@
 		<WorkUnit Name="Default Work Unit" ID="{1DEC10FC-2733-4CA4-8FE4-C98B0139CC79}" PersistMode="Standalone">
 			<ChildrenList>
 				<Folder Name="Character" ID="{C59AD504-EB65-4C9B-8CA8-99069D85E949}" ShortID="354525779">
+					<PropertyList>
+						<Property Name="Color" Type="int16" Value="19"/>
+						<Property Name="OverrideColor" Type="bool" Value="True"/>
+					</PropertyList>
 					<ChildrenList>
 						<SwitchContainer Name="Footsteps" ID="{426CE128-8A96-432B-BEB9-F97C1CA35C5A}" ShortID="258301147">
 							<PropertyList>
@@ -612,6 +616,7 @@
 					<ChildrenList>
 						<ActorMixer Name="IceSkill" ID="{9FF47CE2-8778-403C-A455-85052140C1E5}" ShortID="936349666">
 							<PropertyList>
+								<Property Name="Color" Type="int16" Value="2"/>
 								<Property Name="MakeUpGain" Type="Real64">
 									<RTPCList>
 										<RTPC Name="" ID="{3F117CF2-3B41-4877-B834-39230F8E3CDE}" ShortID="712433545">
@@ -640,6 +645,7 @@
 										</RTPC>
 									</RTPCList>
 								</Property>
+								<Property Name="OverrideColor" Type="bool" Value="True"/>
 								<Property Name="Volume" Type="Real64">
 									<ValueList>
 										<Value>-2</Value>
@@ -935,6 +941,10 @@
 					</ChildrenList>
 				</Folder>
 				<Folder Name="Environment" ID="{C752C3C9-4951-4B1F-B78B-3B5B5AB19613}" ShortID="214052430">
+					<PropertyList>
+						<Property Name="Color" Type="int16" Value="5"/>
+						<Property Name="OverrideColor" Type="bool" Value="True"/>
+					</PropertyList>
 					<ChildrenList>
 						<Sound Name="Meditation" ID="{17FB979A-CAD1-4CE3-9751-6859D5155485}" ShortID="924641451">
 							<PropertyList>

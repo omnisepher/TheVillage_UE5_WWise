@@ -22,7 +22,7 @@ void AFireBase::BeginPlay()
 
 	TArray<FAkExternalSourceInfo> nullSources;
 
-	UAkGameplayStatics::PostEvent(nullptr, this, 4, BindCallback, nullSources, false, (FString)("FireBase"));
+	UAkGameplayStatics::PostEvent(nullptr, this, int32(AkCallbackType::AK_Marker), BindCallback, nullSources, false, (FString)("FireBase"));
 
 	BlueFireFX->Deactivate();
 	
@@ -32,7 +32,9 @@ void AFireBase::BeginPlay()
 
 void AFireBase::BlueFireCallback(EAkCallbackType CallbackType, UAkCallbackInfo* CallbackInfo)
 {
-	UAkMarkerCallbackInfo* CBInfo = Cast<UAkMarkerCallbackInfo>(CallbackInfo);
+	const UAkMarkerCallbackInfo* CBInfo = Cast<UAkMarkerCallbackInfo>(CallbackInfo);
+	if (CBInfo == nullptr) return;
+
 	if (CBInfo->Label == "BlueFireOn") {
 		BlueFireFX->Activate();
 	}

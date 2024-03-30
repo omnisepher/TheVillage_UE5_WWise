@@ -18,7 +18,7 @@
 //   NURBSHalfCircleDegree3 implements equation (12)
 //   NURBSFullCircleDegree3 implements Section 2.3
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class NURBSQuarterCircleDegree2 : public NURBSCurve<2, Real>

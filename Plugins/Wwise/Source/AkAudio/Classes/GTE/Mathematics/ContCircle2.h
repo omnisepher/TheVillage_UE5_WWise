@@ -11,7 +11,7 @@
 #include <Mathematics/Vector2.h>
 #include <vector>
 
-namespace gte
+namespace WwiseGTE
 {
     // Compute the smallest bounding circle whose center is the average of
     // the input points.

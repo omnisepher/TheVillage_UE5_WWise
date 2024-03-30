@@ -14,7 +14,7 @@
 
 // The queries consider the spheres to be solids.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, Sphere3<Real>, Sphere3<Real>>

@@ -1,16 +1,18 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #include "AkWaapiUMG/Components/AkCheckBox.h"
@@ -18,7 +20,6 @@ Copyright (c) 2021 Audiokinetic Inc.
 #include "Widgets/SNullWidget.h"
 #include "Widgets/DeclarativeSyntaxSupport.h"
 #include "Widgets/Input/SCheckBox.h"
-#include "Slate/SlateBrushAsset.h"
 #include "AkWaapiUMG/Components/AkBoolPropertyToControlCustomization.h"
 #include "AkWaapiUMG/Components/WwiseBoolPropertyDragDropOp.h"
 #include "AkWaapiUtils.h"
@@ -28,14 +29,11 @@ Copyright (c) 2021 Audiokinetic Inc.
 #include "WaapiPicker/SWaapiPicker.h"
 
 #if WITH_EDITOR
-#include "Editor.h"
 #include "Modules/ModuleManager.h"
 #include "PropertyEditorModule.h"
 #endif
 
 #define LOCTEXT_NAMESPACE "AkWaapiUMG"
-
-DEFINE_LOG_CATEGORY(LogAkCheckBoxUMG);
 
 ////////////////////////////////////////////////
 // SCheckBoxDropHandler
@@ -224,7 +222,7 @@ void UAkCheckBox::SetAkItemId(const FGuid& ItemId)
 			const TSharedPtr<FJsonObject>& ItemInfoObj = StructJsonArray[0]->AsObject();
 			SetAkItemControlled(ItemInfoObj->GetStringField(WwiseWaapiHelper::NAME));
 		}
-
+#if AK_SUPPORT_WAAPI
 		/** UnSubscribe to object renamed to be notified from Wwise using WAAPI, so we can maintain the name of the item controlled up to date dynamically. */
 		// Connect to Wwise Authoring on localhost.
 		if (SubscriptionIdNameChanged != 0)
@@ -253,6 +251,7 @@ void UAkCheckBox::SetAkItemId(const FGuid& ItemId)
 			waapiClient->Subscribe(ak::wwise::core::object::nameChanged, in_options, wampEventCallback, SubscriptionIdNameChanged, outJsonResult);
 		}
 		SynchronizePropertyWithWwise();
+#endif
 	}
 }
 
@@ -390,7 +389,7 @@ void UAkCheckBox::SlateOnCheckStateChangedCallback(ECheckBoxState NewState)
 
 	if (ItemControlled.IsEmpty() || BoolPropertyToControl.IsEmpty() || IdItemToControl.IsEmpty())
 	{
-		UE_LOG(LogAkCheckBoxUMG, Log, TEXT("No item or property to control"));
+		UE_LOG(LogAkAudio, Log, TEXT("No item or property to control"));
 		return;
 	}
 	// Construct the arguments Json object : setting configs
@@ -408,6 +407,7 @@ void UAkCheckBox::SlateOnCheckStateChangedCallback(ECheckBoxState NewState)
 	FAkWaapiClient* waapiClient = FAkWaapiClient::Get();
 	if (waapiClient)
 	{
+#if AK_SUPPORT_WAAPI
 		TSharedPtr<FJsonObject> outJsonResult;
 		// Request data from Wwise using WAAPI
 		if (waapiClient->Call(ak::wwise::core::object::setProperty, args, options, outJsonResult))
@@ -415,17 +415,18 @@ void UAkCheckBox::SlateOnCheckStateChangedCallback(ECheckBoxState NewState)
 		}
 		else
 		{
-			UE_LOG(LogAkCheckBoxUMG, Log, TEXT("Call Failed"));
+			UE_LOG(LogAkAudio, Log, TEXT("Call Failed"));
 			return;
 		}
+#endif
 	}
 	else
 	{
-		UE_LOG(LogAkCheckBoxUMG, Log, TEXT("Unable to connect to localhost"));
+		UE_LOG(LogAkAudio, Log, TEXT("Unable to connect to localhost"));
 		return;
 	}
 
-	//@TODO: Choosing to treat Undetermined as Checked
+	// Choosing to treat Undetermined as Checked
 	const bool bWantsToBeChecked = NewState != ECheckBoxState::Unchecked;
 	AkOnCheckStateChanged.Broadcast(bWantsToBeChecked);
 }

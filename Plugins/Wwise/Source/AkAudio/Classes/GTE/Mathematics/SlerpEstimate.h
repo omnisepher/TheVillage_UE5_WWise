@@ -26,7 +26,7 @@
 // form an acute angle A in [0,pi/2].  Other preprocessing can help with
 // performance.  See the function comments in the SLERP class.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class SLERP

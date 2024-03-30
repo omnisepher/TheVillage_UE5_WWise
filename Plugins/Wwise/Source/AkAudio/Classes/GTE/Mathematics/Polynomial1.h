@@ -12,7 +12,7 @@
 #include <initializer_list>
 #include <vector>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class Polynomial1

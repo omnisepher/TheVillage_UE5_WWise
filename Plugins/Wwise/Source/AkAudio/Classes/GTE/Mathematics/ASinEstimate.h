@@ -14,7 +14,7 @@
 // maximum{|acos(x)/sqrt(1-x) - p(x)| : x in [0,1]} over all
 // polynomials of degree D.  We use the identity asin(x) = pi/2 - acos(x).
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class ASinEstimate

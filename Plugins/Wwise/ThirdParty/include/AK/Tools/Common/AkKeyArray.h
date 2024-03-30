@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-Version: v2021.1.9  Build: 7847
-Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #ifndef _KEYARRAY_H_
@@ -161,6 +160,26 @@ template <class T_KEY, class T_ITEM> struct AkGetArrayKey
 	}
 };
 
+template <class T_KEY, class T_ITEM> struct AkGetArrayKeyFunc
+{
+	/// Default policy.
+	static AkForceInline T_KEY& Get(T_ITEM& in_item)
+	{
+		return in_item.Key();
+	}
+};
+
+/// Trivial key policy for AkSortedKeyArray, when T_KEY is T_ITEM.
+struct AkGetArrayKeyTrivial
+{
+	/// Default policy.
+	template <class T_KEY>
+	static AkForceInline T_KEY& Get(T_KEY& in_item)
+	{
+		return in_item;
+	}
+};
+
 //Default comparison policy for AkSortedKeyArray.
 template <class T_KEY> struct AkDefaultSortedKeyCompare
 {
@@ -180,10 +199,13 @@ public:
 
 /// Array of items, sorted by key. Uses binary search for lookups. BEWARE WHEN
 /// MODIFYING THE ARRAY USING BASE CLASS METHODS.
-template <class T_KEY, class T_ITEM, class U_POOL, class U_KEY = AkGetArrayKey< T_KEY, T_ITEM >, class TGrowBy = AkGrowByPolicy_DEFAULT, class TMovePolicy = AkAssignmentMovePolicy<T_ITEM>, class TComparePolicy = AkDefaultSortedKeyCompare<T_KEY> >
+template <class T_KEY, class T_ITEM, class U_POOL = ArrayPoolDefault, class U_KEY = AkGetArrayKey< T_KEY, T_ITEM >, class TGrowBy = AkGrowByPolicy_DEFAULT, class TMovePolicy = AkAssignmentMovePolicy<T_ITEM>, class TComparePolicy = AkDefaultSortedKeyCompare<T_KEY> >
 class AkSortedKeyArray : public AkArray< T_ITEM, const T_ITEM &, U_POOL, TGrowBy, TMovePolicy >
 {
 public:	
+	using base = AkArray<T_ITEM, const T_ITEM&, U_POOL, TGrowBy, TMovePolicy>;
+	using Iterator = typename base::Iterator;
+
 	AkForceInline bool Lesser(T_KEY &a, T_KEY &b) const
 	{
 		return TComparePolicy::Lesser((void*)this, a, b);
@@ -219,7 +241,12 @@ public:
 	T_ITEM * AddNoSetKey(T_KEY in_key)
 	{
 		bool bFound;
-		T_ITEM * pItem = BinarySearch(in_key, bFound);
+		return AddNoSetKey(in_key, bFound);
+	}
+
+	T_ITEM * AddNoSetKey(T_KEY in_key, bool& out_bFound)
+	{
+		T_ITEM * pItem = BinarySearch(in_key, out_bFound);
 		if (pItem)
 		{
 			unsigned int uIdx = (unsigned int)(pItem - this->m_pItems);
@@ -269,7 +296,7 @@ public:
 		T_ITEM * pItem = Exists(in_key);
 		if (pItem)
 		{
-			typename AkArray< T_ITEM, const T_ITEM &, U_POOL, TGrowBy, TMovePolicy >::Iterator it;
+			Iterator it;
 			it.pItem = pItem;
 			this->Erase(it);
 			return true;
@@ -413,7 +440,7 @@ public:
 		}
 	}	
 	
-	//If found, returns the item, if not, returns the insertion point.
+	// If found, returns the first item it encounters, if not, returns the insertion point.
 	T_ITEM * BinarySearch( T_KEY in_key, bool & out_bFound ) const
 	{
 		AkUInt32 uNumToSearch = this->Length();
@@ -440,6 +467,35 @@ public:
 
 		out_bFound = false;
 		return this->m_pItems + iBase;
+	}
+
+	T_ITEM* LowerBounds(T_KEY in_key) const
+	{
+		return LowerBounds(in_key, this->Begin(), this->End());
+	}
+
+	// Returns the first item in the array that is not less than the key,
+	// or the insertion point, if no key is less then in_key.
+	T_ITEM* LowerBounds(T_KEY in_key, Iterator in_from, Iterator in_to) const
+	{
+		AKASSERT(in_to.pItem >= in_from.pItem);
+		AkUInt32 uBase = (AkUInt32)(in_from.pItem - this->m_pItems);
+		AkInt64 uNumToSearch = (AkInt64)(in_to.pItem - in_from.pItem);
+		AkUInt32 uPivot;
+
+		while (uNumToSearch > 0)
+		{
+			uPivot = uBase + (AkUInt32)(uNumToSearch >> 1);
+			T_KEY pivotKey = U_KEY::Get(this->m_pItems[uPivot]);
+			if (Lesser(pivotKey, in_key))
+			{
+				uBase = uPivot + 1;
+				uNumToSearch--;
+			}
+			uNumToSearch >>= 1;
+		}
+
+		return this->m_pItems + uBase;
 	}
 
 	AkForceInline void Swap(T_ITEM * in_ItemA, T_ITEM * in_ItemB)

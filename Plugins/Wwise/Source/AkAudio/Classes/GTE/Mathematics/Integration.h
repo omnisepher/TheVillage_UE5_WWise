@@ -11,7 +11,7 @@
 #include <array>
 #include <functional>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class Integration

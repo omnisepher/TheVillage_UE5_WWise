@@ -23,7 +23,7 @@
 //
 // The matrix A is symmetric.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class QuadricSurface

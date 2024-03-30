@@ -29,7 +29,7 @@
 // ordered so that element[0] < element[1].  The Real type must be chosen
 // to guarantee exact computation of edge-edge intersections.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class IsPlanarGraph

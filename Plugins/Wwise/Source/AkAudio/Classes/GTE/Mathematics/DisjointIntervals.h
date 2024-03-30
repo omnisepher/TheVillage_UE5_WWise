@@ -9,7 +9,7 @@
 
 #include <vector>
 
-namespace gte
+namespace WwiseGTE
 {
     // Compute Boolean operations of disjoint sets of half-open intervals of
     // the form [xmin,xmax) with xmin < xmax.

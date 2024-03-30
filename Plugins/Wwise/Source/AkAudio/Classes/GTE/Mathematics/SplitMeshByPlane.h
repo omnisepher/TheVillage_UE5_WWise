@@ -18,7 +18,7 @@
 // triangulated faces to the mesh, where the those faces live in
 // the splitting plane.  (TODO: Add this code.)
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class SplitMeshByPlane

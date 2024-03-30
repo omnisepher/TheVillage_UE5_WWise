@@ -10,7 +10,7 @@
 #include <Mathematics/Logger.h>
 #include <fstream>
 
-namespace gte
+namespace WwiseGTE
 {
     class LogToFile : public Logger::Listener
     {

@@ -18,7 +18,7 @@
 // is unique). The mParameters value is a line with (P,D) =
 // (origin,direction). The error for S = (x0,y0) is (S-P)^T*(I - D*D^T)*(S-P).
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class ApprOrthogonalLine2 : public ApprQuery<Real, Vector2<Real>>

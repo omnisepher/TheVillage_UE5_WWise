@@ -2,38 +2,227 @@
  "SoundBanksInfo": {
   "Platform": "Mac",
   "BasePlatform": "Mac",
-  "SchemaVersion": "12",
-  "SoundbankVersion": "140",
-  "RootPaths": {
-   "ProjectRoot": "E:\\0_PROJECTS\\TheVillage\\TheVillage_WwiseProject\\",
-   "SourceFilesRoot": "E:\\0_PROJECTS\\TheVillage\\TheVillage_WwiseProject\\.cache\\Mac\\",
-   "SoundBanksRoot": "E:\\0_PROJECTS\\TheVillage\\TheVillage_WwiseProject\\GeneratedSoundBanks\\Mac\\",
-   "ExternalSourcesInputFile": "",
-   "ExternalSourcesOutputRoot": "E:\\0_PROJECTS\\TheVillage\\TheVillage_WwiseProject\\GeneratedSoundBanks\\Mac"
-  },
+  "SchemaVersion": "16",
+  "SoundBankVersion": "150",
   "SoundBanks": [
    {
     "Id": "3161908922",
+    "Type": "User",
     "GUID": "{5DA71B20-A6BC-46A1-831F-25AB6394F299}",
     "Language": "SFX",
-    "Hash": "1979445423",
+    "Hash": "{13E1BB24-7241-4297-0CA7-3DB08F2CD86B}",
     "ObjectPath": "\\SoundBanks\\Default Work Unit\\Main",
     "ShortName": "Main",
     "Path": "Main.bnk",
-    "IncludedEvents": [
+    "Media": [
+     {
+      "Id": "25432987",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "FootstepsRock_0-07.wav",
+      "CachePath": "SFX/FootstepsRock_0-07_8E324C96.wem"
+     },
+     {
+      "Id": "112367554",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "FootstepsRock_0-04.wav",
+      "CachePath": "SFX/FootstepsRock_0-04_8E324C96.wem"
+     },
+     {
+      "Id": "245397966",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "FootstepsRock_0-01.wav",
+      "CachePath": "SFX/FootstepsRock_0-01_8E324C96.wem"
+     },
+     {
+      "Id": "357953543",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "forest_lullaby.wav",
+      "CachePath": "SFX/forest_lullaby_56CEF360.wem"
+     },
+     {
+      "Id": "404283777",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "FireBase.wav",
+      "CachePath": "SFX/FireBase_100382D9.wem"
+     },
+     {
+      "Id": "437504527",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "FootstepsGrass_0-03.wav",
+      "CachePath": "SFX/FootstepsGrass_0-03_6FB759F1.wem"
+     },
+     {
+      "Id": "508935826",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "Heartbeat.wav",
+      "CachePath": "SFX/Heartbeat_56CEF360.wem"
+     },
+     {
+      "Id": "537116116",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "stinger.wav",
+      "CachePath": "SFX/stinger_56CEF360.wem"
+     },
+     {
+      "Id": "589126567",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "FootstepsGrass_0-02.wav",
+      "CachePath": "SFX/FootstepsGrass_0-02_0F95E75C.wem"
+     },
+     {
+      "Id": "596560865",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "FootstepsGrass_0-01.wav",
+      "CachePath": "SFX/FootstepsGrass_0-01_1E42E93C.wem"
+     },
+     {
+      "Id": "639494320",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "FootstepsRock_0-03.wav",
+      "CachePath": "SFX/FootstepsRock_0-03_8E324C96.wem"
+     },
+     {
+      "Id": "640964624",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "FootstepsRock_0-05.wav",
+      "CachePath": "SFX/FootstepsRock_0-05_8E324C96.wem"
+     },
+     {
+      "Id": "675718906",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "Meditation.wav",
+      "CachePath": "SFX/Meditation_4F22C137.wem"
+     },
+     {
+      "Id": "684276788",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "FootstepsRock_0-02.wav",
+      "CachePath": "SFX/FootstepsRock_0-02_8E324C96.wem"
+     },
+     {
+      "Id": "689077695",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "FootstepsRock_0.wav",
+      "CachePath": "SFX/FootstepsRock_0_8E324C96.wem"
+     },
+     {
+      "Id": "729889432",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "FootstepsRock_0-06.wav",
+      "CachePath": "SFX/FootstepsRock_0-06_8E324C96.wem"
+     },
+     {
+      "Id": "826639005",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "FootstepsGrass_0-06.wav",
+      "CachePath": "SFX/FootstepsGrass_0-06_137C5572.wem"
+     },
+     {
+      "Id": "834898865",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "FootstepsRock_0-08.wav",
+      "CachePath": "SFX/FootstepsRock_0-08_8E324C96.wem"
+     },
+     {
+      "Id": "946848897",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "FootstepsGrass_0.wav",
+      "CachePath": "SFX/FootstepsGrass_0_F3FE389D.wem"
+     },
+     {
+      "Id": "970040310",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "meditation_theme.wav",
+      "CachePath": "SFX/meditation_theme_56CEF360.wem"
+     },
+     {
+      "Id": "1018198658",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "Blizzard.wav",
+      "CachePath": "SFX/Blizzard_77538206.wem"
+     },
+     {
+      "Id": "1047019580",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "Icicle.wav",
+      "CachePath": "SFX/Icicle_9DBAB02A.wem"
+     }
+    ],
+    "Plugins": {
+     "Custom": [
+      {
+       "Id": "547688741",
+       "Name": "Wwise Guitar Distortion (Custom)",
+       "ObjectPath": "\\Actor-Mixer Hierarchy\\Default Work Unit\\Skill\\IceSkill\\[Effect Slot [0]: (Guitar Distortion)]\\Wwise Guitar Distortion (Custom)",
+       "GUID": "{A7DCBC3D-4E74-4184-A97F-541270CB8488}",
+       "LibName": "Wwise Guitar Distortion",
+       "LibId": "8257539"
+      },
+      {
+       "Id": "1042844212",
+       "Name": "Wwise Time Stretch (Custom)",
+       "ObjectPath": "\\Actor-Mixer Hierarchy\\Default Work Unit\\Character\\Footsteps\\Grass\\[Effect Slot [0]: (Time Stretch)]\\Wwise Time Stretch (Custom)",
+       "GUID": "{F438A0DA-C760-4C0E-83CC-41F10E29046D}",
+       "LibName": "Wwise Time Stretch",
+       "LibId": "8519683"
+      }
+     ]
+    },
+    "Events": [
      {
       "Id": "3757312786",
       "Name": "FireBase",
       "ObjectPath": "\\Events\\Default Work Unit\\FireBase",
       "GUID": "{F67B1B74-ED1F-4EAB-A96A-32F9DD10E6E2}",
-      "MaxAttenuation": "600.",
+      "MaxAttenuation": "600",
       "DurationType": "Infinite",
-      "IncludedMemoryFiles": [
+      "MediaRefs": [
        {
-        "Id": "404283777",
-        "Language": "SFX",
-        "ShortName": "FireBase.wav",
-        "Path": "SFX\\FireBase_9D1618F6.wem"
+        "Id": "404283777"
        }
       ]
      },
@@ -43,99 +232,17 @@
       "ObjectPath": "\\Events\\Default Work Unit\\Footsteps",
       "GUID": "{4BAB6B63-5D60-4FAC-8F6D-CDB9B4875450}",
       "DurationType": "OneShot",
-      "DurationMin": "0.160178",
-      "DurationMax": "0.633328",
-      "IncludedMemoryFiles": [
-       {
-        "Id": "25432987",
-        "Language": "SFX",
-        "ShortName": "FootstepsRock_0-07.wav",
-        "Path": "SFX\\FootstepsRock_0-07_3F75BDB9.wem"
-       },
-       {
-        "Id": "112367554",
-        "Language": "SFX",
-        "ShortName": "FootstepsRock_0-04.wav",
-        "Path": "SFX\\FootstepsRock_0-04_3F75BDB9.wem"
-       },
-       {
-        "Id": "245397966",
-        "Language": "SFX",
-        "ShortName": "FootstepsRock_0-01.wav",
-        "Path": "SFX\\FootstepsRock_0-01_3F75BDB9.wem"
-       },
-       {
-        "Id": "437504527",
-        "Language": "SFX",
-        "ShortName": "FootstepsGrass_0-03.wav",
-        "Path": "SFX\\FootstepsGrass_0-03_D2EE257A.wem"
-       },
-       {
-        "Id": "589126567",
-        "Language": "SFX",
-        "ShortName": "FootstepsGrass_0-02.wav",
-        "Path": "SFX\\FootstepsGrass_0-02_A54A3FBF.wem"
-       },
-       {
-        "Id": "596560865",
-        "Language": "SFX",
-        "ShortName": "FootstepsGrass_0-01.wav",
-        "Path": "SFX\\FootstepsGrass_0-01_91AB6837.wem"
-       },
-       {
-        "Id": "639494320",
-        "Language": "SFX",
-        "ShortName": "FootstepsRock_0-03.wav",
-        "Path": "SFX\\FootstepsRock_0-03_3F75BDB9.wem"
-       },
-       {
-        "Id": "640964624",
-        "Language": "SFX",
-        "ShortName": "FootstepsRock_0-05.wav",
-        "Path": "SFX\\FootstepsRock_0-05_3F75BDB9.wem"
-       },
-       {
-        "Id": "684276788",
-        "Language": "SFX",
-        "ShortName": "FootstepsRock_0-02.wav",
-        "Path": "SFX\\FootstepsRock_0-02_3F75BDB9.wem"
-       },
-       {
-        "Id": "689077695",
-        "Language": "SFX",
-        "ShortName": "FootstepsRock_0.wav",
-        "Path": "SFX\\FootstepsRock_0_3F75BDB9.wem"
-       },
-       {
-        "Id": "729889432",
-        "Language": "SFX",
-        "ShortName": "FootstepsRock_0-06.wav",
-        "Path": "SFX\\FootstepsRock_0-06_3F75BDB9.wem"
-       },
-       {
-        "Id": "826639005",
-        "Language": "SFX",
-        "ShortName": "FootstepsGrass_0-06.wav",
-        "Path": "SFX\\FootstepsGrass_0-06_C201657D.wem"
-       },
-       {
-        "Id": "834898865",
-        "Language": "SFX",
-        "ShortName": "FootstepsRock_0-08.wav",
-        "Path": "SFX\\FootstepsRock_0-08_3F75BDB9.wem"
-       },
-       {
-        "Id": "946848897",
-        "Language": "SFX",
-        "ShortName": "FootstepsGrass_0.wav",
-        "Path": "SFX\\FootstepsGrass_0_D2A913CE.wem"
-       }
-      ],
-      "DefaultSwitchValue": "{1848EBE6-F9FA-45AA-B9AC-7F15A0F4333A}",
+      "DurationMin": "0.16017827",
+      "DurationMax": "0.63332784",
       "SwitchContainers": [
        {
-        "SwitchValue": "{25AFDC05-D62B-4E59-8023-4F9E374CDC6C}",
-        "Media": [
+        "SwitchValue": {
+         "GroupType": "Switch",
+         "GroupId": "2385628198",
+         "Id": "2144363834",
+         "GUID": "{25AFDC05-D62B-4E59-8023-4F9E374CDC6C}"
+        },
+        "MediaRefs": [
          {
           "Id": "25432987"
          },
@@ -166,8 +273,14 @@
         ]
        },
        {
-        "SwitchValue": "{1848EBE6-F9FA-45AA-B9AC-7F15A0F4333A}",
-        "Media": [
+        "SwitchValue": {
+         "GroupType": "Switch",
+         "GroupId": "2385628198",
+         "Id": "4248645337",
+         "GUID": "{1848EBE6-F9FA-45AA-B9AC-7F15A0F4333A}",
+         "Default": "true"
+        },
+        "MediaRefs": [
          {
           "Id": "437504527"
          },
@@ -183,7 +296,14 @@
          {
           "Id": "946848897"
          }
-        ]
+        ],
+        "PluginRefs": {
+         "Custom": [
+          {
+           "Id": "1042844212"
+          }
+         ]
+        }
        }
       ]
      },
@@ -193,32 +313,33 @@
       "ObjectPath": "\\Events\\Default Work Unit\\GameTheme",
       "GUID": "{E5DEFE67-BD9D-48EB-8A47-BF49D1DC7ADB}",
       "DurationType": "Infinite",
-      "IncludedMemoryFiles": [
+      "MediaRefs": [
        {
-        "Id": "357953543",
-        "Language": "SFX",
-        "ShortName": "forest_lullaby.wav",
-        "Path": "SFX\\forest_lullaby_9EDFC787.wem"
-       },
-       {
-        "Id": "970040310",
-        "Language": "SFX",
-        "ShortName": "meditation_theme.wav",
-        "Path": "SFX\\meditation_theme_9EDFC787.wem"
+        "Id": "537116116"
        }
       ],
       "SwitchContainers": [
        {
-        "SwitchValue": "{8222F9E8-8988-4CD3-901C-9234FF7F0224}",
-        "Media": [
+        "SwitchValue": {
+         "GroupType": "State",
+         "GroupId": "1750343382",
+         "Id": "1160234136",
+         "GUID": "{8222F9E8-8988-4CD3-901C-9234FF7F0224}"
+        },
+        "MediaRefs": [
          {
           "Id": "970040310"
          }
         ]
        },
        {
-        "SwitchValue": "{7BE93782-AA95-46E2-A57E-E6AE31B98FF0}",
-        "Media": [
+        "SwitchValue": {
+         "GroupType": "State",
+         "GroupId": "1750343382",
+         "Id": "3625060726",
+         "GUID": "{7BE93782-AA95-46E2-A57E-E6AE31B98FF0}"
+        },
+        "MediaRefs": [
          {
           "Id": "357953543"
          }
@@ -232,12 +353,9 @@
       "ObjectPath": "\\Events\\Default Work Unit\\Heartbeat",
       "GUID": "{3FF918C6-8C48-461D-86E2-5A3135CF12D4}",
       "DurationType": "Infinite",
-      "IncludedMemoryFiles": [
+      "MediaRefs": [
        {
-        "Id": "508935826",
-        "Language": "SFX",
-        "ShortName": "Heartbeat.wav",
-        "Path": "SFX\\Heartbeat_9EDFC787.wem"
+        "Id": "508935826"
        }
       ]
      },
@@ -247,36 +365,53 @@
       "ObjectPath": "\\Events\\Default Work Unit\\IceSkill",
       "GUID": "{FD61AE50-E26A-4998-946F-5E1F4FF33916}",
       "DurationType": "Infinite",
-      "IncludedMemoryFiles": [
+      "MediaRefs": [
        {
-        "Id": "1018198658",
-        "Language": "SFX",
-        "ShortName": "Blizzard.wav",
-        "Path": "SFX\\Blizzard_CF435735.wem"
+        "Id": "1018198658"
        },
        {
-        "Id": "1047019580",
-        "Language": "SFX",
-        "ShortName": "Icicle.wav",
-        "Path": "SFX\\Icicle_14EE2265.wem"
+        "Id": "1047019580"
        }
-      ]
+      ],
+      "PluginRefs": {
+       "Custom": [
+        {
+         "Id": "547688741"
+        }
+       ]
+      }
      },
      {
       "Id": "4114431033",
       "Name": "Meditation",
       "ObjectPath": "\\Events\\Default Work Unit\\Meditation",
       "GUID": "{AADFD8F1-33ED-4B6F-8457-D30E615D9BE5}",
-      "MaxAttenuation": "800.",
+      "MaxAttenuation": "800",
       "DurationType": "Infinite",
-      "IncludedMemoryFiles": [
+      "MediaRefs": [
        {
-        "Id": "675718906",
-        "Language": "SFX",
-        "ShortName": "Meditation.wav",
-        "Path": "SFX\\Meditation_EE09B944.wem"
+        "Id": "675718906"
        }
       ]
+     },
+     {
+      "Id": "38624190",
+      "Name": "TestSound",
+      "ObjectPath": "\\Events\\Default Work Unit\\TestSound",
+      "GUID": "{158E83B7-EE45-4C36-805A-5797E7D87BD6}",
+      "DurationType": "Infinite",
+      "MediaRefs": [
+       {
+        "Id": "1018198658"
+       }
+      ],
+      "PluginRefs": {
+       "Custom": [
+        {
+         "Id": "547688741"
+        }
+       ]
+      }
      }
     ],
     "GameParameters": [
@@ -342,8 +477,17 @@
        }
       ]
      }
+    ],
+    "Triggers": [
+     {
+      "Id": "78360149",
+      "Name": "Stinger",
+      "ObjectPath": "\\Triggers\\Default Work Unit\\Stinger",
+      "GUID": "{FA29AE7A-9117-4938-AD85-A6BBBCCF78D1}"
+     }
     ]
    }
-  ]
+  ],
+  "FileHash": "{C9D601C4-467B-745B-F8D8-6835A100C3C5}"
  }
 }

@@ -14,7 +14,7 @@
 // invalid construction where e0 > e1.
 #define GTE_THROW_ON_INVALID_APINTERVAL
 
-namespace gte
+namespace WwiseGTE
 {
     // The APType must be an arbitrary-precision type.
     template <typename APType>
@@ -28,28 +28,28 @@ namespace gte
             :
             mEndpoints{ static_cast<APType>(0), static_cast<APType>(0) }
         {
-            static_assert(gte::is_arbitrary_precision<APType>::value, "Invalid type.");
+            static_assert(WwiseGTE::is_arbitrary_precision<APType>::value, "Invalid type.");
         }
 
         APInterval(APInterval const& other)
             :
             mEndpoints(other.mEndpoints)
         {
-            static_assert(gte::is_arbitrary_precision<APType>::value, "Invalid type.");
+            static_assert(WwiseGTE::is_arbitrary_precision<APType>::value, "Invalid type.");
         }
 
         explicit APInterval(APType e)
             :
             mEndpoints{ e, e }
         {
-            static_assert(gte::is_arbitrary_precision<APType>::value, "Invalid type.");
+            static_assert(WwiseGTE::is_arbitrary_precision<APType>::value, "Invalid type.");
         }
 
         APInterval(APType e0, APType e1)
             :
             mEndpoints{ e0, e1 }
         {
-            static_assert(gte::is_arbitrary_precision<APType>::value, "Invalid type.");
+            static_assert(WwiseGTE::is_arbitrary_precision<APType>::value, "Invalid type.");
 #if defined(GTE_THROW_ON_INVALID_APINTERVAL)
             LogAssert(mEndpoints[0] <= mEndpoints[1], "Invalid interval.");
 #endif
@@ -59,7 +59,7 @@ namespace gte
             :
             mEndpoints(endpoint)
         {
-            static_assert(gte::is_arbitrary_precision<APType>::value, "Invalid type.");
+            static_assert(WwiseGTE::is_arbitrary_precision<APType>::value, "Invalid type.");
 #if defined(GTE_THROW_ON_INVALID_APINTERVAL)
             LogAssert(mEndpoints[0] <= mEndpoints[1], "Invalid interval.");
 #endif
@@ -67,7 +67,7 @@ namespace gte
 
         APInterval& operator=(APInterval const& other)
         {
-            static_assert(gte::is_arbitrary_precision<APType>::value, "Invalid type.");
+            static_assert(WwiseGTE::is_arbitrary_precision<APType>::value, "Invalid type.");
             mEndpoints = other.mEndpoints;
             return *this;
         }

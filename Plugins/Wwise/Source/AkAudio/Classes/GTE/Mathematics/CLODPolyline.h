@@ -19,7 +19,7 @@
 // polyline (open or closed).  The sequence of vertex collapses is based on
 // vertex weights associated with distance from vertices to polyline segments.
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class CLODPolyline

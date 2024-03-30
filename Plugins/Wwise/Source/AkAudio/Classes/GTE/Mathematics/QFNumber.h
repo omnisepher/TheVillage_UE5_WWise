@@ -18,7 +18,7 @@
 // same value d
 #define GTE_ASSERT_ON_QFNUMBER_MISMATCHED_D
 
-namespace gte
+namespace WwiseGTE
 {
     // Arithmetic for quadratic fields with N >= 2 square root terms. The
     // d-term is rational and the x-coefficients are elements in a quadratic

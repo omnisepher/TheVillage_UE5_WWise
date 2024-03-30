@@ -30,7 +30,7 @@
 // want to ensure a correct output.  (Floating-point rounding errors
 // potentially can lead to an incorrect output.)
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class MinimalCycleBasis

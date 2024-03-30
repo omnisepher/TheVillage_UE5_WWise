@@ -2,25 +2,112 @@
  "SoundBanksInfo": {
   "Platform": "Mac",
   "BasePlatform": "Mac",
-  "SchemaVersion": "12",
-  "SoundbankVersion": "140",
-  "RootPaths": {
-   "ProjectRoot": "E:\\0_PROJECTS\\TheVillage\\TheVillage_WwiseProject\\",
-   "SourceFilesRoot": "E:\\0_PROJECTS\\TheVillage\\TheVillage_WwiseProject\\.cache\\Mac\\",
-   "SoundBanksRoot": "E:\\0_PROJECTS\\TheVillage\\TheVillage_WwiseProject\\GeneratedSoundBanks\\Mac\\",
-   "ExternalSourcesInputFile": "",
-   "ExternalSourcesOutputRoot": "E:\\0_PROJECTS\\TheVillage\\TheVillage_WwiseProject\\GeneratedSoundBanks\\Mac"
-  },
+  "SchemaVersion": "16",
+  "SoundBankVersion": "150",
   "SoundBanks": [
    {
     "Id": "1355168291",
+    "Type": "User",
     "GUID": "{701ECBBD-9C7B-4030-8CDB-749EE5D1C7B9}",
     "Language": "SFX",
-    "Hash": "1250781889",
+    "Hash": "{3C44173A-718F-68DD-F0FE-CF517F4B489A}",
     "ObjectPath": "Init",
     "ShortName": "Init",
-    "Path": "Init.bnk"
+    "Path": "Init.bnk",
+    "Plugins": {
+     "AudioDevices": [
+      {
+       "Id": "2317455096",
+       "Name": "No_Output",
+       "ObjectPath": "\\Audio Devices\\Default Work Unit\\No_Output",
+       "GUID": "{3FC6125E-6D5D-47EA-B956-1C951C52C40A}",
+       "LibName": "No Output",
+       "LibId": "11862023"
+      },
+      {
+       "Id": "3859886410",
+       "Name": "System",
+       "ObjectPath": "\\Audio Devices\\Default Work Unit\\System",
+       "GUID": "{7E77FC5D-3E11-4B62-BB31-AC04CFF7B181}",
+       "LibName": "System",
+       "LibId": "11403271"
+      }
+     ]
+    },
+    "Busses": [
+     {
+      "Id": "3803692087",
+      "Name": "Master Audio Bus",
+      "ObjectPath": "\\Master-Mixer Hierarchy\\Default Work Unit\\Master Audio Bus",
+      "GUID": "{1514A4D8-1DA6-412A-A17E-75CA0C2149F3}"
+     }
+    ],
+    "GameParameters": [
+     {
+      "Id": "1351491183",
+      "Name": "IceSkillCastTime",
+      "ObjectPath": "\\Game Parameters\\Default Work Unit\\IceSkillCastTime",
+      "GUID": "{BC9FDEE6-CE2B-451A-B4A4-7ECD5AAF20D4}"
+     },
+     {
+      "Id": "3677180323",
+      "Name": "Health",
+      "ObjectPath": "\\Game Parameters\\Default Work Unit\\Health",
+      "GUID": "{683C9794-F153-48DE-A501-55539AA28BF0}"
+     }
+    ],
+    "StateGroups": [
+     {
+      "Id": "1750343382",
+      "Name": "GameTheme",
+      "ObjectPath": "\\States\\Default Work Unit\\GameTheme",
+      "GUID": "{65E50ED9-78B7-4D93-BECF-822D8329B004}",
+      "States": [
+       {
+        "Id": "748895195",
+        "Name": "None",
+        "ObjectPath": "\\States\\Default Work Unit\\GameTheme\\None",
+        "GUID": "{99C9662F-2AF0-426F-AA08-A8B6FA86496E}"
+       },
+       {
+        "Id": "1160234136",
+        "Name": "Normal",
+        "ObjectPath": "\\States\\Default Work Unit\\GameTheme\\Normal",
+        "GUID": "{8222F9E8-8988-4CD3-901C-9234FF7F0224}"
+       },
+       {
+        "Id": "3625060726",
+        "Name": "Success",
+        "ObjectPath": "\\States\\Default Work Unit\\GameTheme\\Success",
+        "GUID": "{7BE93782-AA95-46E2-A57E-E6AE31B98FF0}"
+       }
+      ]
+     }
+    ],
+    "SwitchGroups": [
+     {
+      "Id": "2385628198",
+      "Name": "Footsteps",
+      "ObjectPath": "\\Switches\\Default Work Unit\\Footsteps",
+      "GUID": "{6A19E9B8-B410-4FF6-A18D-F495AD02A8D5}",
+      "Switches": [
+       {
+        "Id": "2144363834",
+        "Name": "Rock",
+        "ObjectPath": "\\Switches\\Default Work Unit\\Footsteps\\Rock",
+        "GUID": "{25AFDC05-D62B-4E59-8023-4F9E374CDC6C}"
+       },
+       {
+        "Id": "4248645337",
+        "Name": "Grass",
+        "ObjectPath": "\\Switches\\Default Work Unit\\Footsteps\\Grass",
+        "GUID": "{1848EBE6-F9FA-45AA-B9AC-7F15A0F4333A}"
+       }
+      ]
+     }
+    ]
    }
-  ]
+  ],
+  "FileHash": "{83F3D4F0-0105-B518-0813-1C2353B5649C}"
  }
 }

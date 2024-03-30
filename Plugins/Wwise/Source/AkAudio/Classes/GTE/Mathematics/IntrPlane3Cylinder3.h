@@ -16,7 +16,7 @@
 #include <Mathematics/Ellipse3.h>
 #include <Mathematics/Line.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, Plane3<Real>, Cylinder3<Real>>

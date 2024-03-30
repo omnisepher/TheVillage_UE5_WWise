@@ -15,7 +15,7 @@
 // maximum{|cos(x) - p(x)| : x in [-pi/2,pi/2]} over all polynomials of
 // degree D subject to the constraints mentioned.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class CosEstimate

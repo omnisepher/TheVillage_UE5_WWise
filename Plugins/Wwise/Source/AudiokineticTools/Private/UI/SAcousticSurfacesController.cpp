@@ -1,16 +1,18 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #include "SAcousticSurfacesController.h"
@@ -22,10 +24,9 @@ Copyright (c) 2021 Audiokinetic Inc.
 #include "EditorModes.h"
 #include "Engine/Selection.h"
 #include "Editor/TransBuffer.h"
-#include "EditorStyleSet.h"
 #include "EditorSupportDelegates.h"
 #include "PropertyCustomizationHelpers.h"
-#include "SlateCore/Public/Widgets/SBoxPanel.h"
+#include "Widgets/SBoxPanel.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Input/SCheckBox.h"
 #include "Widgets/Input/SNumericEntryBox.h"
@@ -120,7 +121,7 @@ void SAcousticSurfacesLabels::Construct(const FArguments& InArgs, TArray<TWeakOb
 					.WidthOverride(AkAcousticSurfacesUI::LabelWidth)
 					[
 						SNew(STextBlock)
-						.ToolTipText(FText::FromString("The Audiokinetic Texture associated with the selected faces."))
+						.ToolTipText(FText::FromString("The Acoustic Texture associated with the selected surfaces. When set to None, the texture is completely reflective. If the Surface Reflector component is disabled, the geometry is not used for reflections or diffractions. In this case, Acoustic Textures are used exclusively to measure Environment Decay and HFDamping as part of the Reverb Estimation process."))
 						.Text(FText::FromString(FString(TEXT("AkAcousticTexture"))))
 						.Font(IDetailLayoutBuilder::GetDetailFont())
 					]
@@ -142,7 +143,7 @@ void SAcousticSurfacesLabels::Construct(const FArguments& InArgs, TArray<TWeakOb
 						.WidthOverride(AkAcousticSurfacesUI::LabelWidth)
 						[
 							SNew(STextBlock)
-							.ToolTipText(FText::FromString("Indicates how much sound is transmitted through the surface."))
+							.ToolTipText(FText::FromString("Indicates how much sound is transmitted through the selected surfaces. With a Transmission Loss value of 0, all sounds pass through the surface, and the Acoustic Texture has no effect. With a value of 1, 100% Transmission Loss is applied to sounds that pass through the selected surfaces."))
 							.Text(FText::FromString(FString(TEXT("Transmission Loss"))))
 							.Font(IDetailLayoutBuilder::GetDetailFont())
 						]
@@ -162,7 +163,7 @@ void SAcousticSurfacesLabels::Construct(const FArguments& InArgs, TArray<TWeakOb
 					.WidthOverride(AkAcousticSurfacesUI::LabelWidth)
 					[
 						SNew(STextBlock)
-						.ToolTipText(FText::FromString("Indicates whether the selected faces are sent to the Spatial Audio engine."))
+						.ToolTipText(FText::FromString("An enabled surface is associated with the selected Acoustic Texture and Transmission Loss value above. A disabled surface is not associated with an Acoustic Texture, and has a Transmission Loss value of 0 (sound passes through the surface). If Surface Reflector Set is disabled, there is no Transmission Loss property to customize. In this case, enabled surfaces do not let sound pass through (equivalent to a Transmission Loss value of 1) and disabled surfaces let sound pass through (equivalent to a Transmission Loss value of 0)."))
 						.Text(FText::FromString(FString(TEXT("Enable Surface"))))
 						.Font(IDetailLayoutBuilder::GetDetailFont())
 					]
@@ -189,7 +190,7 @@ EVisibility SAcousticSurfacesLabels::TransmissionLossEnableSurfaceVisibility()
 // SAcousticSurfacesController
 // ==================================================
 
-void SAcousticSurfacesController::Construct(const FArguments& InArgs, TArray<TWeakObjectPtr<UObject>> ObjectsBeingCustomized, IDetailLayoutBuilder* InLayoutBuilder)
+void SAcousticSurfacesController::Construct(const FArguments& InArgs, TArray<TWeakObjectPtr<UObject>> ObjectsBeingCustomized, const TSharedPtr<IDetailLayoutBuilder>& InLayoutBuilder)
 {
 	ensure(ObjectsBeingCustomized.Num() > 0);
 
@@ -230,14 +231,18 @@ void SAcousticSurfacesController::Construct(const FArguments& InArgs, TArray<TWe
 
 	InitReflectorSetsFacesToEdit();
 	UpdateCurrentValues();
+#if AK_SUPPORT_WAAPI
 	RegisterTextureDeletedCallback();
+#endif
 
 	BuildSlate();
 }
 
 SAcousticSurfacesController::~SAcousticSurfacesController()
 {
+#if AK_SUPPORT_WAAPI
 	RemoveTextureDeletedCallback();
+#endif
 	FCoreUObjectDelegates::OnObjectPropertyChanged.Remove(OnPropertyChangedHandle);
 	GLevelEditorModeTools().OnEditorModeIDChanged().RemoveAll(this);
 }
@@ -296,8 +301,25 @@ void SAcousticSurfacesController::RefreshEditor(bool reinitVisualizers /*= false
 		}
 	}
 
-	if (LayoutBuilder != nullptr)
-		LayoutBuilder->ForceRefreshDetails();
+	RefreshLayout();
+}
+
+void SAcousticSurfacesController::RefreshLayout() const
+{
+	if (!LayoutBuilder.IsValid())
+	{
+		return;
+	}
+
+	IDetailLayoutBuilder* Layout = nullptr;
+	if (auto LockedLayoutBuilder = LayoutBuilder.Pin())
+	{
+		Layout = LockedLayoutBuilder.Get();
+	}
+	if (LIKELY(Layout))
+	{
+		Layout->ForceRefreshDetails();
+	}
 }
 
 void SAcousticSurfacesController::BeginModify(FText TransactionText)
@@ -334,10 +356,18 @@ void SAcousticSurfacesController::OnPropertyChanged(UObject* ObjectBeingModified
 		UAkSurfaceReflectorSetComponent* ReflectorSetComponent = elem.Key;
 		if (ObjectBeingModified == ReflectorSetComponent)
 		{
-			const FName memberPropertyName = (PropertyChangedEvent.MemberProperty != nullptr) ? PropertyChangedEvent.MemberProperty->GetFName() : NAME_None;
-			if (memberPropertyName == GET_MEMBER_NAME_CHECKED(UAkSurfaceReflectorSetComponent, AcousticPolys))
+			if (PropertyChangedEvent.MemberProperty == nullptr)
 			{
-				UpdateCurrentValues();
+				// OnPropertyChanged is called with a null MemberProperty when undoing
+				RefreshLayout();
+			}
+			else
+			{
+				const FName memberPropertyName = PropertyChangedEvent.MemberProperty->GetFName();
+				if (memberPropertyName == GET_MEMBER_NAME_CHECKED(UAkSurfaceReflectorSetComponent, AcousticPolys))
+				{
+					UpdateCurrentValues();
+				}
 			}
 			return;
 		}
@@ -568,6 +598,16 @@ TOptional<float> SAcousticSurfacesController::GetOcclusionSliderValue() const
 
 void SAcousticSurfacesController::OnOcclusionSliderChanged(float NewValue, ETextCommit::Type Commit)
 {
+	// TODO: Remove this when fixed.
+	// There is a bug in UE5.1 when modifying numerical properties and pressing Enter.
+	// This is the case for the occlusion(transmission loss) value of acoustic surfaces.
+	// This function is getting called a second time with a wrong occlusion value.
+	// When that happens, LayoutBuilder is invalid, so we check it to make sure the value is valid as well.
+	if (!LayoutBuilder.IsValid())
+	{
+		return;
+	}
+
 	// Only apply valid values
 	if (NewValue >= 0.0f && NewValue <= 1.0f)
 	{
@@ -670,7 +710,7 @@ void SAcousticSurfacesController::RegisterTextureDeletedCallback()
 				const FString itemIdString = itemObj->GetStringField(WwiseWaapiHelper::ID);
 				FGuid itemID = FGuid::NewGuid();
 				FGuid::ParseExact(itemIdString, EGuidFormats::DigitsWithHyphensInBraces, itemID);
-				if (CurrentTexture != nullptr && itemID == CurrentTexture->ID)
+				if (CurrentTexture != nullptr && itemID == CurrentTexture->AcousticTextureInfo.WwiseGuid)
 				{
 					AsyncTask(ENamedThreads::GameThread, [this, itemID]
 					{
@@ -703,7 +743,15 @@ void SAcousticSurfacesController::RemoveTextureDeletedCallback()
 
 void SAcousticSurfacesController::BuildSlate()
 {
-	FSlateFontInfo selectionInfoFont = LayoutBuilder != nullptr ? LayoutBuilder->GetDetailFontItalic() : FEditorStyle::GetFontStyle("TinyText");
+	FSlateFontInfo SelectionInfoFont = FAkAppStyle::Get().GetFontStyle("TinyText");
+
+	if (LayoutBuilder.IsValid())
+	{
+		if (auto LockedDetailBuilder = LayoutBuilder.Pin())
+		{
+			SelectionInfoFont = LockedDetailBuilder->GetDetailFontItalic();
+		}
+	}
 
 	ChildSlot
 	[
@@ -813,7 +861,7 @@ void SAcousticSurfacesController::BuildSlate()
 				SNew(STextBlock)
 				.Text(this, &SAcousticSurfacesController::GetSelectionText)
 				.ToolTipText(this, &SAcousticSurfacesController::GetSelectionTextTooltip)
-				.Font(selectionInfoFont)
+				.Font(SelectionInfoFont)
 			]
 			+ SVerticalBox::Slot() // Occlusion
 			.FillHeight(0.33f)
@@ -826,7 +874,7 @@ void SAcousticSurfacesController::BuildSlate()
 					SNew(STextBlock)
 					.Text(this, &SAcousticSurfacesController::GetSelectionText)
 					.ToolTipText(this, &SAcousticSurfacesController::GetSelectionTextTooltip)
-					.Font(selectionInfoFont)
+					.Font(SelectionInfoFont)
 				]
 			]
 			+ SVerticalBox::Slot() // EnableSurface
@@ -837,8 +885,10 @@ void SAcousticSurfacesController::BuildSlate()
 				SNew(STextBlock)
 				.Text(this, &SAcousticSurfacesController::GetSelectionText)
 				.ToolTipText(this, &SAcousticSurfacesController::GetSelectionTextTooltip)
-				.Font(selectionInfoFont)
+				.Font(SelectionInfoFont)
 			]
 		]
 	];
 }
+
+#undef LOCTEXT_NAMESPACE

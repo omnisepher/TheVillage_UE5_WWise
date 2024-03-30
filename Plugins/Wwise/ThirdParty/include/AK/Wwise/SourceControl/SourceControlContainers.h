@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 /// \file AK/Wwise/SourceControl/SourceControlContainers.h
@@ -60,33 +59,53 @@ namespace AK
 			class IAkList
 			{
 			public:
-				virtual unsigned int GetCount() const = 0;
+				virtual void Reserve(size_t in_capacity) {}
+				[[deprecated("Use GetSize() instead.")]]
+				unsigned int GetCount() const { return GetSize(); }
 				virtual unsigned int GetSize() const = 0;
 				virtual bool IsEmpty() const = 0;
 
-				virtual AkPos AddHead( Arg_Type in_newElement ) = 0;
-				virtual AkPos AddTail( Arg_Type in_newElement ) = 0;
+				/// \warning Invalidates previously obtained AkPos
+				[[deprecated("Use InsertBefore(GetHeadPosition(), in_newElement) instead.")]]
+				virtual void AddHead( Arg_Type in_newElement ) = 0;
+				/// \warning Invalidates previously obtained AkPos
+				virtual void AddTail( Arg_Type in_newElement ) = 0;
 
+				/// \warning Invalidates previously obtained AkPos
+				[[deprecated("Use RemoveAt(GetHeadPosition()) instead.")]]
 				virtual void RemoveHead() = 0;
+				/// \warning Invalidates previously obtained AkPos
 				virtual void RemoveTail() = 0;
+				/// \warning Invalidates previously obtained AkPos
 				virtual void RemoveAt( AkPos in_position ) = 0;
+				/// \warning Invalidates previously obtained AkPos
 				virtual void RemoveAll() = 0;
 
 				virtual Type& GetHead() = 0;
 				virtual const Type& GetHead() const = 0;
 				virtual Type& GetTail() = 0;
 				virtual const Type& GetTail() const = 0;
+				/// \warning Invalidates previously obtained AkPos (do not call while iterating)
 				virtual AkPos GetHeadPosition() const = 0;
+				/// \warning Invalidates previously obtained AkPos (do not call while iterating)
 				virtual AkPos GetTailPosition() const = 0;
+				/// \warning Must be called with a AkPos obtained from the same container instance
 				virtual Type& GetNext( AkPos& in_rPosition ) = 0;
+				/// \warning Must be called with a AkPos obtained from the same container instance
 				virtual const Type& GetNext( AkPos& in_rPosition ) const = 0;
+				/// \warning Must be called with a AkPos obtained from the same container instance
 				virtual Type& GetPrev( AkPos& in_rPosition ) = 0;
+				/// \warning Must be called with a AkPos obtained from the same container instance
 				virtual const Type& GetPrev( AkPos& in_rPosition ) const = 0;
 				virtual Type& GetAt( AkPos in_position ) = 0;
 				virtual const Type& GetAt( AkPos in_position ) const = 0;
+				virtual Type& GetAt( unsigned int in_index ) = 0;
+				virtual const Type& GetAt( unsigned int in_index ) const = 0;
 
 				virtual void SetAt( AkPos in_pos, Arg_Type in_newElement ) = 0;
+				/// \warning Invalidates previously obtained AkPos
 				virtual AkPos InsertBefore( AkPos in_position, Arg_Type in_newElement ) = 0;
+				/// \warning Invalidates previously obtained AkPos
 				virtual AkPos InsertAfter( AkPos in_position, Arg_Type in_newElement ) = 0;
 			};
 
@@ -107,7 +126,8 @@ namespace AK
 			class IAkMap
 			{
 			public:
-				virtual unsigned int GetCount() const = 0;
+				[[deprecated("Use GetSize() instead.")]]
+				unsigned int GetCount() const { return GetSize(); }
 				virtual unsigned int GetSize() const = 0;
 				virtual bool IsEmpty() const = 0;
 
@@ -121,7 +141,7 @@ namespace AK
 
 				virtual AkPos GetStartPosition() const = 0;
 				virtual void GetNextAssoc( AkPos& in_rNextPosition, Key& in_rKey, Value& in_rValue ) const = 0;
-			};		
+			};
 		};
 	}
 }

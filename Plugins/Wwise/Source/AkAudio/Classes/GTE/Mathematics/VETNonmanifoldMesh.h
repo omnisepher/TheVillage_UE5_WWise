@@ -13,7 +13,7 @@
 // The VETNonmanifoldMesh class represents an edge-triangle nonmanifold mesh
 // but additionally stores vertex adjacency information.
 
-namespace gte
+namespace WwiseGTE
 {
     class VETNonmanifoldMesh : public ETNonmanifoldMesh
     {

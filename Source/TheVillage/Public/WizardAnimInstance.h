@@ -42,7 +42,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Generic")
 		bool IsAlive;
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+		UAkAudioEvent* m_FootstepsEvent;
 
 	
 };

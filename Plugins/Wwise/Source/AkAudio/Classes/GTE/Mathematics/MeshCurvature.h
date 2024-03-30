@@ -15,7 +15,7 @@
 // is described in
 // https://www.geometrictools.com/Documentation/MeshDifferentialGeometry.pdf
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class MeshCurvature

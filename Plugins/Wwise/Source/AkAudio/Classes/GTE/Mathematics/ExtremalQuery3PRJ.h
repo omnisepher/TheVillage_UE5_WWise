@@ -9,7 +9,7 @@
 
 #include <Mathematics/ExtremalQuery3.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class ExtremalQuery3PRJ : public ExtremalQuery3<Real>

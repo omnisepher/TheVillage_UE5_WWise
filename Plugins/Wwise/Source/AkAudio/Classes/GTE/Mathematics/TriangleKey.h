@@ -21,7 +21,7 @@
 // An unordered triangle stores a permutation of (v0, v1, v2) so that
 // V[0] < V[1] < V[2].
 
-namespace gte
+namespace WwiseGTE
 {
     template <bool Ordered>
     class TriangleKey : public FeatureKey<3, Ordered>

@@ -9,7 +9,7 @@
 
 #include <Mathematics/ApprGaussian2.h>
 
-namespace gte
+namespace WwiseGTE
 {
     // Compute an oriented bounding box of the points.  The box center is the
     // average of the points.  The box axes are the eigenvectors of the

@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-Version: v2021.1.9  Build: 7847
-Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 // AkAtomic.h
@@ -31,7 +30,11 @@ Copyright (c) 2006-2022 Audiokinetic Inc.
 
 #include <Windows.h>
 
-#define AkThreadYield() SwitchToThread()
+
+// Sleep of 1 is as close as we can get on Microsoft platforms
+// SwitchToThread() is liable to cause the current thread to be unscheduled for 10-30ms
+#define AkThreadYield() Sleep(1);
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -51,12 +54,10 @@ typedef volatile void*		AkAtomicPtr;
 
 #if defined( _M_ARM ) || defined( _M_ARM64 )
 __forceinline	long		AkAtomicLoad32( AkAtomic32* pSrc )											{ long tmp; tmp = *pSrc; AK_ATOMIC_FENCE_FULL_BARRIER(); return tmp; }
-__forceinline	void		AkAtomicStore32( AkAtomic32* pDest, long value )							{ AK_ATOMIC_FENCE_FULL_BARRIER(); *pDest = value; }
 #else
 __forceinline	long		AkAtomicLoad32( AkAtomic32* pSrc )											{ return *pSrc; }
-__forceinline	void		AkAtomicStore32( AkAtomic32* pDest, long value )							{ *pDest = value; }
 #endif
-
+__forceinline	void		AkAtomicStore32( AkAtomic32* pDest, long value )							{ InterlockedExchange(pDest, value); }
 __forceinline	long		AkAtomicInc32( AkAtomic32* pValue )											{ return InterlockedExchangeAdd( pValue, 1 ) + 1; }
 __forceinline	long		AkAtomicDec32( AkAtomic32* pValue )											{ return InterlockedExchangeAdd( pValue, -1 ) - 1; }
 __forceinline	long		AkAtomicExchange32( AkAtomic32* pDest, long value )							{ return InterlockedExchange( pDest, value ); }
@@ -69,16 +70,14 @@ __forceinline	int			AkAtomicCas32( AkAtomic32* pDest, long proposed, long expect
 #ifdef _WIN64
 #if defined( _M_ARM ) || defined( _M_ARM64 )
 __forceinline	long long	AkAtomicLoad64( AkAtomic64* pSrc )											{ long long tmp; tmp = *pSrc; AK_ATOMIC_FENCE_FULL_BARRIER(); return tmp; }
-__forceinline	void		AkAtomicStore64( AkAtomic64* pDest, long long value )						{ AK_ATOMIC_FENCE_FULL_BARRIER(); *pDest = value; }
 #else
 __forceinline	long long	AkAtomicLoad64( AkAtomic64* pSrc )											{ return *pSrc; }
-__forceinline	void		AkAtomicStore64( AkAtomic64* pDest, long long value )						{ *pDest = value; }
 #endif
 #else
 __forceinline	long long	AkAtomicLoad64( AkAtomic64* pSrc )											{ return InterlockedCompareExchange64( pSrc, 0, 0 ); }
-__forceinline	void		AkAtomicStore64( AkAtomic64* pDest, long long value )						{ long long tmp; do { tmp = *pDest; } while ( InterlockedCompareExchange64( pDest, value, tmp ) != tmp ); }
 #endif
 
+__forceinline	void		AkAtomicStore64( AkAtomic64* pDest, long long value )						{ InterlockedExchange64(pDest, value); }
 __forceinline	long long	AkAtomicInc64( AkAtomic64* pValue )											{ return InterlockedExchangeAdd64( pValue, 1 ) + 1; }
 __forceinline	long long	AkAtomicDec64( AkAtomic64* pValue )											{ return InterlockedExchangeAdd64( pValue, - 1 ) - 1; }
 __forceinline	long long	AkAtomicExchange64( AkAtomic64* pDest, long long value )					{ return InterlockedExchange64( pDest, value ); }
@@ -90,18 +89,31 @@ __forceinline	int			AkAtomicCas64( AkAtomic64* pDest, long long proposed, long l
 
 #if defined( _M_ARM ) || defined( _M_ARM64 )
 __forceinline	void*		AkAtomicLoadPtr( AkAtomicPtr* pSrc )										{ void* tmp; tmp = ( void* )*pSrc; AK_ATOMIC_FENCE_FULL_BARRIER(); return tmp; }
-__forceinline	void		AkAtomicStorePtr( AkAtomicPtr* pDest, void* value )							{ AK_ATOMIC_FENCE_FULL_BARRIER(); *pDest = value; }
 #else
 __forceinline	void*		AkAtomicLoadPtr( AkAtomicPtr* pSrc )										{ return ( void* )*pSrc; }
-__forceinline	void		AkAtomicStorePtr( AkAtomicPtr* pDest, void* value )							{ *pDest = value; }
 #endif
 
 #ifdef _WIN64
+__forceinline	void		AkAtomicStorePtr( AkAtomicPtr* pDest, void* value )							{ InterlockedExchangePointer( ( volatile PVOID* )pDest, value ); }
 __forceinline	void*		AkAtomicExchangePtr( AkAtomicPtr* pDest, void* value )						{ return InterlockedExchangePointer( ( volatile PVOID* )pDest, value ); }
 __forceinline	int			AkAtomicCasPtr( AkAtomicPtr* pDest, void* proposed, void* expected )		{ return InterlockedCompareExchangePointer( ( volatile PVOID* )pDest, proposed, expected ) == expected ? 1 : 0; }
 #else
+__forceinline	void		AkAtomicStorePtr( AkAtomicPtr* pDest, void* value )							{ InterlockedExchangePointer( ( void** )pDest, value );  }
 __forceinline	void*		AkAtomicExchangePtr(AkAtomicPtr* pDest, void* value)						{ return InterlockedExchangePointer( ( void** )pDest, value ); }
 __forceinline	int			AkAtomicCasPtr(AkAtomicPtr* pDest, void* proposed, void* expected)			{ return InterlockedCompareExchangePointer( ( void** )pDest, proposed, expected ) == expected ? 1 : 0; }
+#endif
+
+#if defined(_MSC_VER)
+__forceinline void AkSpinHint(void)
+{
+#if defined(_M_IX86) || defined(_M_X64)
+	_mm_pause();
+#elif defined( _M_ARM ) || defined( _M_ARM64 )
+	__yield();
+#else
+	#error Unsupported platform for AkSpinHint
+#endif
+}
 #endif
 
 #ifdef __cplusplus

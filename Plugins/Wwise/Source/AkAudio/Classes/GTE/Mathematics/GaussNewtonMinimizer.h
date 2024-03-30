@@ -50,7 +50,7 @@
 // vectors that can be manipulated using an already existing mathematics
 // library.  The implementation here supports both approaches.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class GaussNewtonMinimizer

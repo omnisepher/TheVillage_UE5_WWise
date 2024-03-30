@@ -10,7 +10,7 @@
 #include <Mathematics/Logger.h>
 #include <iostream>
 
-namespace gte
+namespace WwiseGTE
 {
     class LogToStdout : public Logger::Listener
     {

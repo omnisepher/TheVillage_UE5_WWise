@@ -12,7 +12,7 @@
 // An ordered edge has (V[0], V[1]) = (v0, v1).  An unordered edge has
 // (V[0], V[1]) = (min(V[0],V[1]), max(V[0],V[1])).
 
-namespace gte
+namespace WwiseGTE
 {
     template <bool Ordered>
     class EdgeKey : public FeatureKey<2, Ordered>

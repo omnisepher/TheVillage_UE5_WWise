@@ -11,7 +11,7 @@
 #include <Mathematics/Rectangle.h>
 #include <Mathematics/Vector3.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class DCPQuery<Real, Vector3<Real>, Rectangle3<Real>>

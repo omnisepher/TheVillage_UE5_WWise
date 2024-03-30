@@ -17,7 +17,7 @@
 // least-squares fitting algorithm is used, but the input data is first
 // mapped to (x,w) in [-1,1]^2 for numerical robustness.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class ApprPolynomialSpecial2 : public ApprQuery<Real, std::array<Real, 2>>

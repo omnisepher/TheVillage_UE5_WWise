@@ -19,7 +19,7 @@
 // The find-intersection queries use parametric clipping against the four
 // edges of the box.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, Segment2<Real>, AlignedBox2<Real>>

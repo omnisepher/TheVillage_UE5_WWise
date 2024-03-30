@@ -1,16 +1,18 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #pragma once
@@ -18,6 +20,7 @@ Copyright (c) 2021 Audiokinetic Inc.
 #include "Components/Widget.h"
 #include "SAkItemProperties.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "Widgets/Text/STextBlock.h"
 #include "AkItemProperties.generated.h"
 
 class IMenu;
@@ -38,7 +41,7 @@ FAkPropertyToControl
 USTRUCT(BlueprintType)
 struct AKAUDIO_API FAkPropertyToControl
 {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 
 		/**
 		* The name of the item to control
@@ -54,7 +57,10 @@ UAkItemPropertiesConv
 UCLASS()
 class AKAUDIO_API UAkItemPropertiesConv : public UBlueprintFunctionLibrary
 {
-	GENERATED_UCLASS_BODY()
+	GENERATED_BODY()
+
+public:
+	UAkItemPropertiesConv(const class FObjectInitializer& ObjectInitializer);
 
 	/** Converts an AkPropertyToControl value to a string */
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "ToString (FAkPropertyToControl)", CompactNodeTitle = "->", BlueprintAutocast), Category = "Utilities|String")
@@ -75,11 +81,11 @@ UAkItemProperties
 UCLASS(config = Editor, defaultconfig)
 class AKAUDIO_API UAkItemProperties : public UWidget
 {
-	GENERATED_UCLASS_BODY()
+	GENERATED_BODY()
 public:
-	typedef TSlateDelegates< TSharedPtr< FString > >::FOnSelectionChanged FOnSelectionChanged;
+	UAkItemProperties(const FObjectInitializer& ObjectInitializer);
 
-public:	
+	typedef TSlateDelegates< TSharedPtr< FString > >::FOnSelectionChanged FOnSelectionChanged;
 
 	/** Called when the property selection changes. */
 	UPROPERTY(BlueprintAssignable, Category = "Widget Event")

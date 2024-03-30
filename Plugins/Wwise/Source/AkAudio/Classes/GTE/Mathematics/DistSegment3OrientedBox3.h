@@ -12,7 +12,7 @@
 #include <Mathematics/Ray.h>
 #include <Mathematics/Segment.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class DCPQuery<Real, Segment3<Real>, OrientedBox3<Real>>

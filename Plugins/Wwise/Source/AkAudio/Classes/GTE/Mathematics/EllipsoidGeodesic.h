@@ -9,7 +9,7 @@
 
 #include <Mathematics/RiemannianGeodesic.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class EllipsoidGeodesic : public RiemannianGeodesic<Real>

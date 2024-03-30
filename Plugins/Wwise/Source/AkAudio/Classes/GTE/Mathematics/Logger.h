@@ -12,7 +12,7 @@
 #include <stdexcept>
 #include <string>
 
-namespace gte
+namespace WwiseGTE
 {
     class Logger
     {
@@ -172,22 +172,24 @@ namespace gte
         }
     };
 
+    #define GTE_LogAssert(condition, message) \
+    if (!(condition)) \
+    { \
+    WwiseGTE::Logger(__FILE__, __FUNCTION__, __LINE__, message).Assertion(); \
+    throw std::runtime_error(message); \
+    }
+
+    #define GTE_LogError(message) \
+    WwiseGTE::Logger(__FILE__, __FUNCTION__, __LINE__, message).Error(); \
+    throw std::runtime_error(message)
+
+    #define GTE_LogWarning(message) \
+    WwiseGTE::Logger(__FILE__, __FUNCTION__, __LINE__, message).Warning()
+
+    #define GTE_LogInformation(message) \
+    WwiseGTE::Logger(__FILE__, __FUNCTION__, __LINE__, message).Information()
+
 }
 
 
-#define LogAssert(condition, message) \
-    if (!(condition)) \
-    { \
-        gte::Logger(__FILE__, __FUNCTION__, __LINE__, message).Assertion(); \
-        throw std::runtime_error(message); \
-    }
 
-#define LogError(message) \
-    gte::Logger(__FILE__, __FUNCTION__, __LINE__, message).Error(); \
-    throw std::runtime_error(message)
-
-#define LogWarning(message) \
-    gte::Logger(__FILE__, __FUNCTION__, __LINE__, message).Warning()
-
-#define LogInformation(message) \
-    gte::Logger(__FILE__, __FUNCTION__, __LINE__, message).Information()

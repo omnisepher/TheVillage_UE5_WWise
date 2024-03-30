@@ -11,7 +11,7 @@
 #include <Mathematics/Triangle.h>
 #include <Mathematics/Vector.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class DCPQuery<Real, Vector<N, Real>, Triangle<N, Real>>

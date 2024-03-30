@@ -32,7 +32,7 @@
 // In particular, the details for choosing an initial cone for fitting
 // are somewhat complicated.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class ApprCone3

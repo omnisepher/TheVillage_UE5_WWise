@@ -45,7 +45,7 @@
 // difference method used to approximate the partial differential equation.
 // The method assumes a pixel size of h = 1.
 
-namespace gte
+namespace WwiseGTE
 {
     // The image type must be one of short, int, float or double.  The
     // computations are performed using double.  The input and output images

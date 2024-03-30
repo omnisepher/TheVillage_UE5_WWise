@@ -1,22 +1,26 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #include "WwiseSoundBankInfoCache.h"
 
 #include "AssetManagement/AkAssetDatabase.h"
-#include "AkUnrealHelper.h"
+#include "WwiseDefines.h"
+#include "WwiseUnrealDefines.h"
+#include "WwiseUnrealHelper.h"
 #include "HAL/FileManager.h"
 #if UE_5_0_OR_LATER
 #include "HAL/PlatformFileManager.h"
@@ -24,7 +28,7 @@ Copyright (c) 2021 Audiokinetic Inc.
 #include "HAL/PlatformFilemanager.h"
 #endif
 #include "Misc/Paths.h"
-#include "WwiseProjectInfo.h"
+#include "AssetManagement/WwiseProjectInfo.h"
 
 namespace WwiseSoundBankInfoCacheHelpers
 {
@@ -154,7 +158,7 @@ void WwiseSoundBankInfoCache::readBool(FArchive& Ar, bool& Value)
 
 bool WwiseSoundBankInfoCache::IsSoundBankUpToUpdate(const FGuid& Id, const FString& Platform, const FString& Language, const uint32 Hash) const
 {
-	FString bankName = AkUnrealHelper::GuidToBankName(Id);
+	FString bankName = WwiseUnrealHelper::GuidToBankName(Id);
 
 	FGuid platformGuid;
 	
@@ -165,7 +169,7 @@ bool WwiseSoundBankInfoCache::IsSoundBankUpToUpdate(const FGuid& Id, const FStri
 
 	uint32 languageId = WwiseSoundBankInfoCacheHelpers::SFXLanguageID;
 
-	if (Language != TEXT("SFX") && Language.Len()>0)
+	if (Language.Len() > 0)
 	{
 		AK::FNVHash32 hash;
 		FTCHARToUTF8 utf8(*Language.ToLower());

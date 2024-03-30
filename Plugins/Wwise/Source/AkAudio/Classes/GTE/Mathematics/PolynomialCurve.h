@@ -10,7 +10,7 @@
 #include <Mathematics/ParametricCurve.h>
 #include <Mathematics/Polynomial1.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class PolynomialCurve : public ParametricCurve<N, Real>

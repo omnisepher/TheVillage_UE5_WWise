@@ -12,7 +12,7 @@
 #include <array>
 #include <initializer_list>
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class Vector

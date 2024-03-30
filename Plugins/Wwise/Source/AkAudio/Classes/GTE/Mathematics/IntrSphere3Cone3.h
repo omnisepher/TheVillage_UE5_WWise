@@ -19,7 +19,7 @@
 // The find-intersection returns a single point in the set of intersection
 // when that intersection is not empty.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, Sphere3<Real>, Cone3<Real>>

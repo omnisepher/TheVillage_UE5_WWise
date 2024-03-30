@@ -16,7 +16,7 @@
 // FitUsingLengths uses the algorithm of Section 5.1.
 // FitUsingSquaredLengths uses the algorithm of Section 5.2.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class ApprCircle2

@@ -14,7 +14,7 @@
 // Queries for intersection of objects with halfspaces.  These are useful for
 // containment testing, object culling, and clipping.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, Halfspace3<Real>, Capsule3<Real>>

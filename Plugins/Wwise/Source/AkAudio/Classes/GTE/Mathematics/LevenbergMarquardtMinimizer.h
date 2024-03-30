@@ -13,7 +13,7 @@
 // See GteGaussNewtonMinimizer.h for a formulation of the minimization
 // problem and how Levenberg-Marquardt relates to Gauss-Newton.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class LevenbergMarquardtMinimizer

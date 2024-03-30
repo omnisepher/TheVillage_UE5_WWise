@@ -17,7 +17,7 @@
 // X = C + y[0]*U[0] + y[1]*U[1].  This point is inside or on the
 // box whenever |y[i]| <= e[i] for all i.
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class OrientedBox

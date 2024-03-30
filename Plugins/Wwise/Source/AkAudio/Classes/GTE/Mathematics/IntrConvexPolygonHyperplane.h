@@ -17,7 +17,7 @@
 // The intersection queries are based on the document
 // https://www.geometrictools.com/Documentation/ClipConvexPolygonByHyperplane.pdf
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class TIQuery<Real, std::vector<Vector<N, Real>>, Hyperplane<N, Real>>

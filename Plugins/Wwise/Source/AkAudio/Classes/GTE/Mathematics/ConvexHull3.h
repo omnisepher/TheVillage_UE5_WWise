@@ -34,7 +34,7 @@
 #include <set>
 #include <thread>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename InputType, typename ComputeType>
     class ConvexHull3

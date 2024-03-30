@@ -18,7 +18,7 @@
 // ((0,0,0),(0,0,0)) on failure. The error for (x0,y0,z0) is
 // [a*(x0-xAvr)+b*(y0-yAvr)-(z0-zAvr)]^2.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class ApprHeightPlane3 : public ApprQuery<Real, Vector3<Real>>

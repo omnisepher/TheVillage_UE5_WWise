@@ -16,7 +16,7 @@
 //   https://www.geometrictools.com/Documentation/DistanceLine3Line3.pdf
 // for details.
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Rational>
     class DistanceSegmentSegmentExact

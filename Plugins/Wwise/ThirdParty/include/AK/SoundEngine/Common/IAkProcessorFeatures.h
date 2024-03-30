@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 /// \file 
@@ -37,6 +36,7 @@ namespace AK
 	/// SIMD instruction sets.
 	enum AkSIMDProcessorSupport
 	{
+	#if (defined(AK_CPU_X86_64) || defined(AK_CPU_X86) || defined(AK_CPU_WASM))
 		AK_SIMD_SSE = 1<<0,		///< SSE support.	
 		AK_SIMD_SSE2 = 1<<1,	///< SSE2 support.
 		AK_SIMD_SSE3 = 1<<2,	///< SSE3 support.
@@ -45,6 +45,7 @@ namespace AK
 		AK_SIMD_AVX = 1<<5,		///< AVX support.
 		AK_SIMD_F16C = 1<<6,	///< F16C support.
 		AK_SIMD_AVX2 = 1<<7		///< AVX2 support.
+	#endif
 	};
 
 	/// Runtime processor supported features detection interface. Allows to query specific processor features

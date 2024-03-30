@@ -1,18 +1,19 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
-
 
 /*=============================================================================
 	AkSpatialAudioDrawUtils.cpp:
@@ -21,25 +22,25 @@ Copyright (c) 2021 Audiokinetic Inc.
 
 #if WITH_EDITOR
 
+#include "WwiseUEFeatures.h"
 #include "AkAcousticPortal.h"
 #include "AkSpatialAudioVolume.h"
 #include "AkSurfaceReflectorSetComponent.h"
-#include "Classes/EditorStyleSettings.h"
 
 AkDrawBounds::AkDrawBounds(const FTransform& T, const FVector& Extent) : Transform(T), BoxExtent(Extent) {}
 
-FVector AkDrawBounds::FRU() { return Transform.TransformPosition(BoxExtent); }
-FVector AkDrawBounds::BLD() { return Transform.TransformPosition(-BoxExtent); }
-FVector AkDrawBounds::FLD() { return Transform.TransformPosition(FVector(BoxExtent.X, -BoxExtent.Y, -BoxExtent.Z)); }
-FVector AkDrawBounds::BRU() { return Transform.TransformPosition(FVector(-BoxExtent.X, BoxExtent.Y, BoxExtent.Z)); }
-FVector AkDrawBounds::FLU() { return Transform.TransformPosition(FVector(BoxExtent.X, -BoxExtent.Y, BoxExtent.Z)); }
-FVector AkDrawBounds::BLU() { return Transform.TransformPosition(FVector(-BoxExtent.X, -BoxExtent.Y, BoxExtent.Z)); }
-FVector AkDrawBounds::FRD() { return Transform.TransformPosition(FVector(BoxExtent.X, BoxExtent.Y, -BoxExtent.Z)); }
-FVector AkDrawBounds::BRD() { return Transform.TransformPosition(FVector(-BoxExtent.X, BoxExtent.Y, -BoxExtent.Z)); }
-FVector AkDrawBounds::RU() { return Transform.TransformPosition(FVector(0.0f, BoxExtent.Y, BoxExtent.Z)); }
-FVector AkDrawBounds::LU() { return Transform.TransformPosition(FVector(0.0f, -BoxExtent.Y, BoxExtent.Z)); }
-FVector AkDrawBounds::RD() { return Transform.TransformPosition(FVector(0.0f, BoxExtent.Y, -BoxExtent.Z)); }
-FVector AkDrawBounds::LD() { return Transform.TransformPosition(FVector(0.0f, -BoxExtent.Y, -BoxExtent.Z)); }
+FVector AkDrawBounds::FRU() const { return Transform.TransformPosition(FVector(BoxExtent)); }
+FVector AkDrawBounds::BLD() const { return Transform.TransformPosition(FVector(-BoxExtent)); }
+FVector AkDrawBounds::FLD() const { return Transform.TransformPosition(FVector(BoxExtent.X, -BoxExtent.Y, -BoxExtent.Z)); }
+FVector AkDrawBounds::BRU() const { return Transform.TransformPosition(FVector(-BoxExtent.X, BoxExtent.Y, BoxExtent.Z)); }
+FVector AkDrawBounds::FLU() const { return Transform.TransformPosition(FVector(BoxExtent.X, -BoxExtent.Y, BoxExtent.Z)); }
+FVector AkDrawBounds::BLU() const { return Transform.TransformPosition(FVector(-BoxExtent.X, -BoxExtent.Y, BoxExtent.Z)); }
+FVector AkDrawBounds::FRD() const { return Transform.TransformPosition(FVector(BoxExtent.X, BoxExtent.Y, -BoxExtent.Z)); }
+FVector AkDrawBounds::BRD() const { return Transform.TransformPosition(FVector(-BoxExtent.X, BoxExtent.Y, -BoxExtent.Z)); }
+FVector AkDrawBounds::RU()  const { return Transform.TransformPosition(FVector(0.0, BoxExtent.Y, BoxExtent.Z)); }
+FVector AkDrawBounds::LU()  const { return Transform.TransformPosition(FVector(0.0, -BoxExtent.Y, BoxExtent.Z)); }
+FVector AkDrawBounds::RD()  const { return Transform.TransformPosition(FVector(0.0, BoxExtent.Y, -BoxExtent.Z)); }
+FVector AkDrawBounds::LD()  const { return Transform.TransformPosition(FVector(0.0, -BoxExtent.Y, -BoxExtent.Z)); }
 
 namespace AkSpatialAudioColors
 {	
@@ -48,7 +49,7 @@ namespace AkSpatialAudioColors
 
 	void GetPortalColors(const UAkPortalComponent* Portal, FLinearColor& FrontColor, FLinearColor& BackColor)
 	{
-		FLinearColor ConnectedColor = GetDefault<UEditorStyleSettings>()->SelectionColor;
+		FLinearColor ConnectedColor = FAkAppStyle::Get().GetSlateColor("SelectionColor").GetSpecifiedColor();
 		FrontColor = ConnectedColor;
 		BackColor = ConnectedColor;
 		if (!Portal->PortalPlacementValid())
@@ -57,12 +58,12 @@ namespace AkSpatialAudioColors
 			FrontColor = ErrorColor;
 			BackColor = ErrorColor;
 		}
-		else if (Portal->GetFrontRoomComponent() == nullptr)
+		else if (!Portal->GetFrontRoomComponent().IsValid())
 		{
 			FLinearColor DisconnectedColor = FLinearColor::Gray;
 			FrontColor = DisconnectedColor;
 		}
-		else if (Portal->GetBackRoomComponent() == nullptr)
+		else if (!Portal->GetBackRoomComponent().IsValid())
 		{
 			FLinearColor DisconnectedColor = FLinearColor::Gray;
 			BackColor = DisconnectedColor;
@@ -73,7 +74,7 @@ namespace AkSpatialAudioColors
 
 	FLinearColor GetPortalOutlineColor(const UAkPortalComponent* Portal)
 	{
-		FLinearColor OutlineColor = GetDefault<UEditorStyleSettings>()->SelectionColor;
+		FLinearColor OutlineColor = FAkAppStyle::Get().GetSlateColor("SelectionColor").GetSpecifiedColor();
 		if (false == Portal->PortalPlacementValid())
 		{
 			OutlineColor = FLinearColor::Red;
@@ -84,12 +85,12 @@ namespace AkSpatialAudioColors
 	
 	FLinearColor GetRoomColor()
 	{
-		return GetDefault<UEditorStyleSettings>()->SelectionColor;
+		return FAkAppStyle::Get().GetSlateColor("SelectionColor").GetSpecifiedColor();
 	}
 	
 	FLinearColor GetRadialEmitterOutlineColor()
 	{
-		return GetDefault<UEditorStyleSettings>()->SelectionColor;
+		return FAkAppStyle::Get().GetSlateColor("SelectionColor").GetSpecifiedColor();
 	}
 
 	FLinearColor GetRadialEmitterColor()
@@ -125,7 +126,7 @@ namespace AkSpatialAudioColors
 
 	FLinearColor GetSpatialAudioVolumeOutlineColor()
 	{
-		return GetDefault<UEditorStyleSettings>()->SelectionColor;
+		return FAkAppStyle::Get().GetSlateColor("SelectionColor").GetSpecifiedColor();
 	}
 
 	FLinearColor GetBadFitSpatialAudioVolumeOutlineColor()

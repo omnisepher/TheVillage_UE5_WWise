@@ -9,7 +9,7 @@
 
 #include <Mathematics/Matrix3x3.h>
 
-namespace gte
+namespace WwiseGTE
 {
     // The input triangle mesh must represent a polyhedron.  The triangles are
     // represented as triples of indices <V0,V1,V2> into the vertex array.

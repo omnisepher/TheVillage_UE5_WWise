@@ -13,7 +13,7 @@
 #include <Mathematics/Projection.h>
 #include <Mathematics/Rotation.h>
 
-namespace gte
+namespace WwiseGTE
 {
     // The input points are fit with a Gaussian distribution.  The center C of
     // the ellipsoid is chosen to be the mean of the distribution.  The axes

@@ -19,7 +19,7 @@
 // The find-intersection query clips the triangle against the faces of
 // the oriented box.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, Triangle3<Real>, OrientedBox3<Real>>

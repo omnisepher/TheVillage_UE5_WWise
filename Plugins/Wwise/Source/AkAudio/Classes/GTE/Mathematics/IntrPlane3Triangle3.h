@@ -13,7 +13,7 @@
 #include <Mathematics/Triangle.h>
 #include <Mathematics/Vector3.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, Plane3<Real>, Triangle3<Real>>

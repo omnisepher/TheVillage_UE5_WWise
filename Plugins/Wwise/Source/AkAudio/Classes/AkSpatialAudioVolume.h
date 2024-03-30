@@ -1,20 +1,22 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 /*=============================================================================
-	AkReverbVolume.h:
+	AkSpatialAudioVolume.h:
 =============================================================================*/
 #pragma once
 
@@ -54,7 +56,10 @@ enum class EAkFitToGeometryMode : uint32
 UCLASS(ClassGroup = Audiokinetic, BlueprintType, hidecategories = (Advanced, Attachment, Volume))
 class AKAUDIO_API AAkSpatialAudioVolume : public AVolume
 {
-	GENERATED_UCLASS_BODY()
+	GENERATED_BODY()
+
+public:
+	AAkSpatialAudioVolume(const class FObjectInitializer& ObjectInitializer);
 
 #if WITH_EDITOR
 	void FitRaycast();
@@ -83,31 +88,38 @@ class AKAUDIO_API AAkSpatialAudioVolume : public AVolume
 	TArray<FAkSurfacePoly> PreviewPolys;
 #endif
 
-public:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SurfaceReflectorSet", meta = (ShowOnlyInnerProperties))
-	UAkSurfaceReflectorSetComponent* SurfaceReflectorSet;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SpatialAudioVolume", meta = (ShowOnlyInnerProperties))
+	UAkSurfaceReflectorSetComponent* SurfaceReflectorSet = nullptr;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "LateReverb", meta = (ShowOnlyInnerProperties))
-	UAkLateReverbComponent* LateReverb;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SpatialAudioVolume", meta = (ShowOnlyInnerProperties))
+	UAkLateReverbComponent* LateReverb = nullptr;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Room", meta = (ShowOnlyInnerProperties))
-	UAkRoomComponent* Room;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SpatialAudioVolume", meta = (ShowOnlyInnerProperties))
+	UAkRoomComponent* Room = nullptr;
 
 #if WITH_EDITORONLY_DATA
-
 	/**
-	Automatically fit the Ak Spatial Audio Volume to the surrounding geometry. The fitting operation is performed after enabling this property, or after moving the actor to a new location.
-	The fitting operation is performed by casting rays emanating spherically outwards from the origin of the actor. 
-	The points where the rays hit the surrounding geometry (drawn in the editor as green dots) are fit to a shape (box or convex polyhedron), and the actor is then resized appropriately.
+	Automatically fit the Ak Spatial Audio Volume to the surrounding geometry. The fitting operation is performed after this property is enabled. It is performed again when the actor is moved to a new location.
+	The fitting operation casts rays emanating spherically outwards from the origin of the actor. The points where the rays hit the surrounding geometry (drawn in the editor as green dots) are fit to a shape (box or convex polyhedron), and the actor is then resized appropriately.
+	This operation modifies properties in the Surface Properties category. The Physical Materials of the surfaces hit are used to choose a corresponding Acoustic Texture and Transmission Loss value, as determined by the DefaultGeometrySurfacePropertiesTable in the Integration Settings.
+	When this property is disabled, the fitting operation is not performed but the shape and surface properties of the Spatial Audio Volume are retained.
 	*/
 	UPROPERTY(EditAnywhere, Category = "Fit to Geometry" )
 	bool FitToGeometry = false;
 
 	/**
-	Set the collision channel for the ray traces performed to fit the portal to the surrounding geometry. The default value for the collision channel is specified in the Wwise integration settings.
+	Sets the collision channel for the ray traces performed to fit the spatial audio volume to the surrounding geometry. When set to 'Use Integration Settings Default', the value will be taken from the DefaultFitToGeometryCollisionChannel in the Wwise Integration Settings.
 	*/
 	UPROPERTY(EditAnywhere, Category = "Fit to Geometry")
-	TEnumAsByte<ECollisionChannel> CollisionChannel;
+	TEnumAsByte<EAkCollisionChannel> CollisionChannel;
+
+#if WITH_EDITOR
+	/**
+	Converts between EAkCollisionChannel and ECollisionChannel. Returns Wwise Integration Settings default if CollisionChannel == UseIntegrationSettingsDefault. Otherwise, casts CollisionChannel to ECollisionChannel.
+	*/
+	UFUNCTION(BlueprintCallable, Category = "Fit to Geometry")
+	ECollisionChannel GetCollisionChannel();
+#endif
 
 	/** 
 	Choose the shape with which to fit to the surrounding geometry. 

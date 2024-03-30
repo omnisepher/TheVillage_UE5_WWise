@@ -9,7 +9,7 @@
 
 #include <Mathematics/IntpAkima1.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class IntpAkimaUniform1 : public IntpAkima1<Real>

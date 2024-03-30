@@ -16,7 +16,7 @@
 // Dot(D,(X-C)/|X-C|) >= cos(A).  Sector points X satisfy both inequality
 // constraints.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class Sector2

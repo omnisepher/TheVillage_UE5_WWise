@@ -77,7 +77,7 @@
 // The PlanarMesh<*>::Contains function does not require the triangles to
 // be ordered.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename InputType, typename ComputeType, typename RationalType>
     class PlanarMesh

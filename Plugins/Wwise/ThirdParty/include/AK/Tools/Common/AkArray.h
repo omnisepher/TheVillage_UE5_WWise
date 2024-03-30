@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #ifndef _AKARRAY_H
@@ -32,25 +31,27 @@ the specific language governing permissions and limitations under the License.
 #include <AK/Tools/Common/AkAssert.h>
 #include <AK/Tools/Common/AkPlatformFuncs.h>
 
+#include <utility>
+
 template <AkMemID T_MEMID>
 struct AkArrayAllocatorNoAlign
 {
-	AkForceInline void * Alloc( size_t in_uSize )
+	static AkForceInline void * Alloc( size_t in_uSize )
 	{
 		return AkAlloc(T_MEMID, in_uSize);
 	}
 
-	AkForceInline void * ReAlloc( void * in_pCurrent, size_t in_uOldSize, size_t in_uNewSize )
+	static AkForceInline void * ReAlloc( void * in_pCurrent, size_t in_uOldSize, size_t in_uNewSize )
 	{
 		return AkRealloc(T_MEMID, in_pCurrent, in_uNewSize);
 	}
 
-	AkForceInline void Free( void * in_pAddress )
+	static AkForceInline void Free( void * in_pAddress )
 	{
 		AkFree(T_MEMID, in_pAddress);
 	}
 
-	AkForceInline void TransferMem(void *& io_pDest, AkArrayAllocatorNoAlign<T_MEMID> in_srcAlloc, void * in_pSrc )
+	static AkForceInline void TransferMem(void *& io_pDest, AkArrayAllocatorNoAlign<T_MEMID> in_srcAlloc, void * in_pSrc )
 	{
 		io_pDest = in_pSrc;
 	}
@@ -78,13 +79,13 @@ struct AkArrayAllocatorAlignedSimd
 	{
 		io_pDest = in_pSrc;
 	}
-
 };
 
 // AkHybridAllocator
 //	Attempts to allocate from a small buffer of size uBufferSizeBytes, which is contained within the array type.  Useful if the array is expected to contain a small number of elements.
 //	If the array grows to a larger size than uBufferSizeBytes, the the memory is allocated with the specified AkMemID.
-//	NOTE: only use with types that are trivially copyable.
+//	NOTE: The use of this allocator is not allowed when AkArray::TMovePolicy::IsTrivial() == false,
+//        since TMovePolicy::Move will not be invoked in TransferMem.
 template< AkUInt32 uBufferSizeBytes, AkUInt8 uAlignmentSize = 1, AkMemID T_MEMID = AkMemID_Object>
 struct AkHybridAllocator
 {
@@ -135,6 +136,12 @@ struct AkHybridAllocator
 	AK_ALIGN(char m_buffer[uBufferSizeBytes], uAlignmentSize);
 };
 
+// Helper for AkHybridAllocator for uCount items of type T.
+//	NOTE: The use of this allocator is not allowed when AkArray::TMovePolicy::IsTrivial() == false,
+//  since TMovePolicy::Move will not be invoked in TransferMem.
+template <class T, AkUInt32 uCount = 1, AkMemID MemID = AkMemID_Object>
+using AkSmallArrayAllocator = AkHybridAllocator<sizeof(T)* uCount, alignof(T), MemID>;
+
 template <class T>
 struct AkAssignmentMovePolicy
 {
@@ -143,6 +150,39 @@ struct AkAssignmentMovePolicy
 	static AkForceInline void Move( T& in_Dest, T& in_Src )
 	{
 		in_Dest = in_Src;
+	}
+
+	// todo: use std::is_trivially_copyable<T>::value everywhere instead
+	// To do so, we must revise usage of the different policies first.
+	// Until then, it is not recommended to use this policy if T is not trivially copyable.
+	static AkForceInline bool IsTrivial()
+	{
+		return true;
+	}
+};
+
+// AkStdMovePolicy, for non-trivially copyable types.
+struct AkStdMovePolicy
+{
+	template <class T>
+	static AkForceInline void Move(T&& io_Dest, T&& io_Src)
+	{
+		io_Dest = std::move(io_Src);
+	}
+
+	static AkForceInline bool IsTrivial()
+	{
+		return false;
+	}
+};
+
+// AkStdMovePolicy, for trivially copyable types.
+struct AkTrivialStdMovePolicy
+{
+	template <class T>
+	static AkForceInline void Move(T&& io_Dest, T&& io_Src)
+	{
+		io_Dest = std::move(io_Src);
 	}
 
 	static AkForceInline bool IsTrivial()
@@ -169,6 +209,7 @@ struct AkTransferMovePolicy
 // Common allocators:
 typedef AkArrayAllocatorNoAlign<AkMemID_Object> ArrayPoolDefault;
 typedef AkArrayAllocatorNoAlign<AkMemID_Processing> ArrayPoolLEngineDefault;
+typedef AkArrayAllocatorNoAlign<AkMemID_Profiler> ArrayPoolProfiler;
 typedef AkArrayAllocatorAlignedSimd<AkMemID_Processing> ArrayPoolLEngineDefaultAlignedSimd;
 
 struct AkGrowByPolicy_Legacy
@@ -179,6 +220,23 @@ struct AkGrowByPolicy_Legacy
 struct AkGrowByPolicy_NoGrow
 {
 	static AkUInt32 GrowBy( AkUInt32 /*in_CurrentArraySize*/ ) { return 0; }
+};
+
+// The hybrid GrowBy policy will try to grow to exactly uCount before growing farther to prevent unneccesary allocations.
+// The goal is to avoid expanding past uBufferSizeBytes until you have to, then behave like AkGrowByPolicy_Proportional
+// uCount should be uBufferSizeBytes / sizeof(T)
+template <AkUInt32 uCount>
+struct AkGrowByPolicy_Hybrid
+{
+	static AkUInt32 GrowBy(AkUInt32 in_CurrentArraySize)
+	{
+		if (in_CurrentArraySize < uCount)
+			return uCount - in_CurrentArraySize;
+		else
+		{
+			return in_CurrentArraySize + (in_CurrentArraySize >> 1);
+		}
+	}
 };
 
 struct AkGrowByPolicy_Proportional
@@ -346,16 +404,35 @@ public:
 	{
 		AKASSERT( m_pItems != 0 );
 
-		// Move items by 1
+		if (TMovePolicy::IsTrivial())
+		{
+			T* pItem = in_rIter.pItem;
+			T* pLastItem = m_pItems + (m_uLength - 1);
 
-		T * pItemLast = m_pItems + m_uLength - 1;
+			// Destroy item
+			pItem->~T();
 
-		for ( T * pItem = in_rIter.pItem; pItem < pItemLast; pItem++ )
-			TMovePolicy::Move( pItem[ 0 ], pItem[ 1 ] );
+			// Move all others by one <-
+			if (pItem < pLastItem)
+			{
+				AKPLATFORM::AkMemMove(
+					pItem,
+					pItem + 1,
+					(AkUInt32)(pLastItem - pItem) * sizeof(T)
+				);
+			}
+		}
+		else
+		{
+			// Move items by 1 <-
+			T* pItemLast = m_pItems + m_uLength - 1;
 
-		// Destroy the last item
+			for (T* pItem = in_rIter.pItem; pItem < pItemLast; pItem++)
+				TMovePolicy::Move(pItem[0], pItem[1]);
 
-		pItemLast->~T();
+			// Destroy the last item
+			pItemLast->~T();
+		}
 
 		m_uLength--;
 
@@ -367,16 +444,34 @@ public:
 	{
 		AKASSERT( m_pItems != 0 );
 
-		// Move items by 1
+		if (TMovePolicy::IsTrivial())
+		{
+			T* pItem = m_pItems + in_uIndex;
 
-		T * pItemLast = m_pItems + m_uLength - 1;
+			// Destroy item
+			pItem->~T();
 
-		for ( T * pItem = m_pItems+in_uIndex; pItem < pItemLast; pItem++ )
-			TMovePolicy::Move( pItem[ 0 ], pItem[ 1 ] );
+			// Move all others by one <-
+			if (in_uIndex + 1 < m_uLength)
+			{
+				AKPLATFORM::AkMemMove(
+					pItem,
+					pItem + 1,
+					(m_uLength - in_uIndex - 1) * sizeof(T)
+				);
+			}
+		}
+		else
+		{
+			// Move items by 1 <-
+			T* pItemLast = m_pItems + m_uLength - 1;
 
-		// Destroy the last item
+			for (T* pItem = m_pItems + in_uIndex; pItem < pItemLast; pItem++)
+				TMovePolicy::Move(pItem[0], pItem[1]);
 
-		pItemLast->~T();
+			// Destroy the last item
+			pItemLast->~T();
+		}
 
 		m_uLength--;
 	}
@@ -385,9 +480,9 @@ public:
 	/// This version should be used only when the order in the array is not an issue.
 	Iterator EraseSwap( Iterator& in_rIter )
 	{
-		AKASSERT( m_pItems != 0 );
+		AKASSERT( m_pItems != 0 && Length() > 0 );
 
-		if ( Length( ) > 1 )
+		if (in_rIter.pItem < (m_pItems + m_uLength - 1))
 		{
 			// Swap last item with this one.
 			TMovePolicy::Move( *in_rIter.pItem, Last( ) );
@@ -411,27 +506,46 @@ public:
 		EraseSwap(Iterator);
 	}
 
-	bool IsGrowingAllowed()
+	bool IsGrowingAllowed() const
 	{
 		return TGrowBy::GrowBy( 1 ) != 0;
 	}
 
-	/// Pre-Allocate a number of spaces in the array
-	AKRESULT Reserve( AkUInt32 in_ulReserve )
+	/// Ensure preallocation of a number of items.
+	///
+	/// Reserve() won't change the Length() of the array and does nothing if
+	/// in_ulReserve is smaller or equal to current Reserved() size.
+	///
+	/// If an allocation occurs, i.e. `in_ulReserve > Reserved()`, all iterators and
+	/// all references to the array elements are invalidated.
+	///
+	/// \note When template parameter `TGrowBy = AkGrowByPolicy_NoGrow`, Reserve() shall
+	///       only be called if the current reserved size is zero.
+	///       It should normally only be called once on init.
+	///
+	/// \note When template parameter `TGrowBy = AkGrowByPolicy_Proportional`, inappropriate
+	///       calls to Reserve(), e.g. calling it before every AddLast(), may increase the
+	///       number of reallocations and result in decreased performance.
+	inline AKRESULT Reserve(AkUInt32 in_ulReserve)
 	{
-		AKASSERT( m_pItems == 0 && m_uLength == 0 );
-		AKASSERT( in_ulReserve || IsGrowingAllowed() );
+		if (in_ulReserve <= m_ulReserved)
+			return AK_Success;
 
-		if ( in_ulReserve )
+		if (m_ulReserved && !IsGrowingAllowed())
 		{
-			m_pItems = (T *) TAlloc::Alloc( sizeof( T ) * in_ulReserve );
-			if ( m_pItems == 0 )
-				return AK_InsufficientMemory;
-
-			m_ulReserved = in_ulReserve;
+			AKASSERT(!"AkArray calling Reserve() with AkGrowByPolicy_NoGrow is only allowed when reserved size is zero");
+			return AK_InvalidParameter;
 		}
 
-		return AK_Success;
+		return GrowArray(in_ulReserve - m_ulReserved) ? AK_Success : AK_InsufficientMemory;
+	}
+
+	/// Ensure preallocation of a number of extra items on top of current array size.
+	/// Same as calling `myArray.Reserve(myArray.Length() + extraItemCount)`.
+	/// \see Reserve()
+	inline AKRESULT ReserveExtra(AkUInt32 in_ulReserve)
+	{
+		return Reserve(Length() + in_ulReserve);
 	}
 
 	AkUInt32 Reserved() const { return m_ulReserved; }
@@ -572,6 +686,27 @@ public:
     }
 
 	/// Insert an item at the specified position without filling it.
+	/// Success: returns an iterator pointing to the new item.
+	/// Failure: returns end iterator.
+	Iterator Insert(Iterator& in_rIter)
+	{
+		AKASSERT(!in_rIter.pItem || m_pItems);
+
+		AkUInt32 index = (in_rIter.pItem && m_pItems) ? (AkUInt32)(in_rIter.pItem - m_pItems) : 0;
+		if (index <= Length())
+		{
+			if (T* ptr = Insert(index))
+			{
+				Iterator it;
+				it.pItem = ptr;
+				return it;
+			}
+		}
+
+		return End();
+	}
+
+	/// Insert an item at the specified position without filling it.
 	/// Returns the pointer to the item to be filled.
 	T * Insert(unsigned int in_uIndex)
 	{
@@ -593,20 +728,40 @@ public:
 #endif
 
 		// have we got space for a new one ?
-		if(  cItems < m_ulReserved )
+		if (cItems < m_ulReserved)
 		{
-			T * pItemLast = m_pItems + m_uLength++;
-			AkPlacementNew( pItemLast ) T; 
+			if (TMovePolicy::IsTrivial())
+			{
+				T* pItem = m_pItems + in_uIndex;
 
-			// Move items by 1
+				// Move items by one ->
+				if (in_uIndex < m_uLength)
+				{
+					AKPLATFORM::AkMemMove(
+						pItem + 1,
+						pItem,
+						(m_uLength - in_uIndex) * sizeof(T)
+					);
+				}
 
-			for ( T * pItem = pItemLast; pItem > ( m_pItems + in_uIndex ); --pItem )
-				TMovePolicy::Move( pItem[ 0 ], pItem[ -1 ] );
+				// Initialize the new item
+				AkPlacementNew(pItem) T;
 
-			// Reinitialize item at index
+				m_uLength++;
+			}
+			else
+			{
+				T* pItemLast = m_pItems + m_uLength++;
+				AkPlacementNew(pItemLast) T;
 
-			( m_pItems + in_uIndex )->~T();
-			AkPlacementNew( m_pItems + in_uIndex ) T; 
+				// Move items by 1 ->
+				for (T* pItem = pItemLast; pItem > (m_pItems + in_uIndex); --pItem)
+					TMovePolicy::Move(pItem[0], pItem[-1]);
+
+				// Reinitialize item at index
+				(m_pItems + in_uIndex)->~T();
+				AkPlacementNew(m_pItems + in_uIndex) T;
+			}
 
 			return m_pItems + in_uIndex;
 		}
@@ -628,7 +783,9 @@ public:
 		AkUInt32 ulNewReserve = m_ulReserved + in_uGrowBy;
 		T * pNewItems = NULL;
 		size_t cItems = Length();
-		if (TMovePolicy::IsTrivial())
+
+		// Reallocate only if IsTrivial() and m_pItems is already allocated.
+		if (m_pItems && TMovePolicy::IsTrivial())
 		{
 			pNewItems = (T *)TAlloc::ReAlloc(m_pItems, sizeof(T) * cItems, sizeof(T) * ulNewReserve);
 			if (!pNewItems)
@@ -667,18 +824,18 @@ public:
 		AkUInt32 cItems = Length();
 		if (in_uiSize < cItems)
 		{
-			//Destroy superfluous elements
-			for(AkUInt32 i = in_uiSize - 1 ; i < cItems; i++)
+			for (AkUInt32 i = in_uiSize; i < cItems; i++)
 			{
-				m_pItems[ i ].~T();
+				m_pItems[i].~T();
 			}
+			
 			m_uLength = in_uiSize;
 			return true;
 		}
 
 		if ( in_uiSize > m_ulReserved )
 		{
-			if ( !GrowArray(in_uiSize - cItems) ) 
+			if ( !GrowArray(in_uiSize - m_ulReserved) )
 				return false;
 		}
 

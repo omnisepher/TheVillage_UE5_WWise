@@ -13,7 +13,7 @@
 
 // The queries consider the cylinder to be a solid.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class DCPQuery<Real, Vector3<Real>, Cylinder3<Real>>

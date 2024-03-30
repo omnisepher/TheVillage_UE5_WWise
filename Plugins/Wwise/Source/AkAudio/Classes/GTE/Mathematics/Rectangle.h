@@ -14,7 +14,7 @@
 // parameters s0 and s1 are constrained by |s0| <= e0 and |s1| <= e1,
 // where e0 > 0 and e1 > 0 are the extents of the rectangle.
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class Rectangle

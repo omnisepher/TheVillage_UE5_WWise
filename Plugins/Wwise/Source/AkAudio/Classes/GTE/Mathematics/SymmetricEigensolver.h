@@ -100,7 +100,7 @@
 // eigenvector matrix is, of course, quite expensive.  If you need only a
 // small number of eigenvectors, use function GetEigenvector(int,Real*).
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class SymmetricEigensolver
@@ -377,7 +377,7 @@ namespace gte
                 }
 
                 // Apply the Givens rotations.
-                for (auto const& givens : gte::reverse(mGivens))
+                for (auto const& givens : WwiseGTE::reverse(mGivens))
                 {
                     Real& xr = x[givens.index];
                     Real& xrp1 = x[givens.index + 1];

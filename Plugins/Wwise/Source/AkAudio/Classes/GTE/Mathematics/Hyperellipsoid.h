@@ -39,7 +39,7 @@
 // This equation can be factored to the form (X-K)^T * M * (X-K) = 1, where
 // K = -A^{-1}*B/2, M = A/(B^T*A^{-1}*B/4-C).
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class Hyperellipsoid

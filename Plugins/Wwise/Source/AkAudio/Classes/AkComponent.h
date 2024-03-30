@@ -1,18 +1,19 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
-
 
 /*=============================================================================
 	AkComponent.h:
@@ -23,9 +24,12 @@ Copyright (c) 2021 Audiokinetic Inc.
 #include "Runtime/Launch/Resources/Version.h"
 #include "AkInclude.h"
 #include "AkGameplayTypes.h"
+#include "AkSettings.h" // for EAkCollisionChannel
 #include "Components/SceneComponent.h"
-#include "OcclusionObstructionService/AkComponentOcclusionObstructionService.h"
 #include "AkGameObject.h"
+
+#include "Wwise/AkComponentObstructionAndOcclusionService.h"
+
 #include "AkComponent.generated.h"
 
 UENUM(Meta = (Bitflags))
@@ -63,27 +67,47 @@ public:
 	static bool Prioritize(const AkReverbFadeControl& A, const AkReverbFadeControl& B);
 };
 
-
 /*------------------------------------------------------------------------------------
 	UAkComponent
 ------------------------------------------------------------------------------------*/
 UCLASS(ClassGroup=Audiokinetic, BlueprintType, Blueprintable, hidecategories=(Transform,Rendering,Mobility,LOD,Component,Activation), AutoExpandCategories=AkComponent, meta=(BlueprintSpawnableComponent))
 class AKAUDIO_API UAkComponent: public UAkGameObject
 {
-	GENERATED_UCLASS_BODY()
+	GENERATED_BODY()
 
 public:
+	UAkComponent(const class FObjectInitializer& ObjectInitializer);
+
 	UPROPERTY()
-	bool bUseSpatialAudio_DEPRECATED;
+	bool bUseSpatialAudio_DEPRECATED = false;
 
 	int32 ReflectionFilter_DEPRECATED;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AkComponent|Occlusion")
-		TEnumAsByte<ECollisionChannel> OcclusionCollisionChannel;
+	/**
+	* The object collision channel to use when doing line of sight traces for obstruction/occlusion calculations.
+	* When set to 'Use Integration Settings Default', the value will be taken from the DefaultCollisionChannel in the Wwise Integration Settings.
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AkComponent|Obstruction Occlusion", meta = (DisplayName = "Collision Channel"))
+	TEnumAsByte<EAkCollisionChannel> OcclusionCollisionChannel = { EAkCollisionChannel::EAKCC_UseIntegrationSettingsDefault };
+
+	/** Get the collision channel used when doing line of sight traces for obstruction/occlusion calculations. */
+	UFUNCTION(BlueprintCallable, Category="AkComponent|Obstruction Occlusion", meta = (DisplayName = "Get Collision Channel"))
+	ECollisionChannel GetOcclusionCollisionChannel();
+
+	/**
+	* Set the time interval between obstruction/occlusion checks (direct line of sight between the listener and this game object). Valid range [0, [.
+	* Obstruction is used if Spatial Audio Rooms are present in the map. Otherwise, occlusion is used. Set to 0 to disable obstruction/occlusion on this component.
+	* The obstruction/occlusion value is directly applied with AK::SoundEngine::SetObjectObstructionAndOcclusion.
+	* When using Spatial Audio, obstruction checks are also done between portals in the same room and this game object.
+	* Only use this feature if you plan to obstruct this game object with geometry that is neither \ref features_objects_aksurfacereflectorset nor \ref features_objects_akgeometrycomponent.
+	* If not, we recommend that you disable obstruction/occlusion checks and exclusively use Spatial Audio Geometric Diffraction and Transmission.
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AkComponent|Obstruction Occlusion", meta = (ClampMin = 0.f, DisplayName = "Refresh Interval"))
+	float OcclusionRefreshInterval = .0f;
 
 	/**Enable spot reflectors for this Ak Component **/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AkComponent|Spatial Audio")
-		uint32 EnableSpotReflectors : 1;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AkComponent|Spatial Audio")
+	bool EnableSpotReflectors = false;
 
 	/**
 	*	Define an outer radius around each sound position to simulate a radial sound source.
@@ -91,17 +115,20 @@ public:
 	*	When the listener intersects the outer radius, the spread is exactly 50%. When the listener is in between the inner and outer radius, the spread interpolates linearly from 50% to 100%.
 	*/
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AkComponent|Spatial Audio|Radial Emitter", meta = (ClampMin = 0.0f) )
-	float outerRadius;
+	float outerRadius = .0f;
 
 	/**
 	*	Define an inner radius around each sound position to simulate a radial sound source.
 	*	If the listener is inside the inner radius, the spread is 100%.
 	*/
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AkComponent|Spatial Audio|Radial Emitter", meta = (ClampMin = 0.0f))
-	float innerRadius;
+	float innerRadius = .0f;
 
 	UFUNCTION(BlueprintCallable, Category = "Audiokinetic|AkComponent")
 	void SetGameObjectRadius(float in_outerRadius, float in_innerRadius);
+
+	UFUNCTION(BlueprintCallable, Category = "Audiokinetic|AkComponent")
+	void SetEnableSpotReflectors(bool in_enable);
 
 private:
 	/** 
@@ -110,7 +137,7 @@ private:
 	*	Setting a value here will apply only to sounds playing on the AK Component that do not have an Auxiliary Bus set in the Wwise Authoring tool.
 	*/
 	UPROPERTY(EditAnywhere, Category = "AkComponent|Spatial Audio|Reflect")
-	class UAkAuxBus * EarlyReflectionAuxBus;
+	class UAkAuxBus * EarlyReflectionAuxBus = nullptr;
 
 	/**
 	*	Send to an Auxiliary Bus containing the Wwise Reflect plugin for early reflections rendering.
@@ -120,104 +147,50 @@ private:
 	UPROPERTY(EditAnywhere, Category = "AkComponent|Spatial Audio|Reflect")
 	FString EarlyReflectionAuxBusName;
 
-	/** As of 2019.2, the Reflection Order is set in the Spatial Audio Initialization Settings in Project Settings */
-	UPROPERTY(VisibleAnywhere, Category = "AkComponent|Spatial Audio|Reflect (DEPRECATED)", meta = (ClampMin = "0", ClampMax = "4"))
-	int EarlyReflectionOrder;
-
 	/**
 	*	Set the send volume for the early reflections Auxiliary Bus.
 	*	The send volume applied to this AK Component will be applied additively to the Auxiliary Send volume defined per-sound in the Wwise Authoring tool.
 	*/
 	UPROPERTY(EditAnywhere, Category = "AkComponent|Spatial Audio|Reflect", meta = (ClampMin = "0.0", ClampMax = "1.0"))
-	float EarlyReflectionBusSendGain;
-
-	/** As of 2019.2, the Reflection Max Path Length is set by the sound's Attenuation Max Distance value in the Authoring */
-	UPROPERTY(VisibleAnywhere, Category = "AkComponent|Spatial Audio|Reflect (DEPRECATED)", meta = (ClampMin = "0.0"))
-	float EarlyReflectionMaxPathLength;
-
-	/** As of 2019.2, the Room Reverb Aux Bus Gain is set by the Game-Defined Auxiliary Sends Volume in the Sound Property Editor in the Authoring */
-	UPROPERTY(VisibleAnywhere, Category = "AkComponent|Spatial Audio|Room (DEPRECATED)", meta = (ClampMin = "0.0", ClampMax = "1.0"))
-	float roomReverbAuxBusGain;
-
-	/** As of 2019.2, diffraction is enabled in the Sound Property Editor in the Authoring */
-	UPROPERTY(VisibleAnywhere, Category = "AkComponent|Spatial Audio|Geometric Diffraction (DEPRECATED)", meta = (ClampMin = "0"))
-	int diffractionMaxEdges;
-
-	/** As of 2019.2, diffraction is enabled in the Sound Property Editor in the Authoring */
-	UPROPERTY(VisibleAnywhere, Category = "AkComponent|Spatial Audio|Geometric Diffraction (DEPRECATED)", meta = (ClampMin = "0"))
-	int diffractionMaxPaths;
-
-	/** As of 2019.2, diffraction is enabled in the Sound Property Editor in the Authoring */
-	UPROPERTY(VisibleAnywhere, Category = "AkComponent|Spatial Audio|Geometric Diffraction (DEPRECATED)", meta = (ClampMin = "0.0"))
-	float diffractionMaxPathLength;
+	float EarlyReflectionBusSendGain = .0f;
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AkComponent|Spatial Audio|Debug Draw")
-	uint32 DrawFirstOrderReflections : 1;
+	bool DrawFirstOrderReflections = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AkComponent|Spatial Audio|Debug Draw")
-	uint32 DrawSecondOrderReflections : 1;
+	bool DrawSecondOrderReflections = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AkComponent|Spatial Audio|Debug Draw")
-	uint32 DrawHigherOrderReflections : 1;
+	bool DrawHigherOrderReflections = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AkComponent|Spatial Audio|Debug Draw")
-	uint32 DrawDiffraction : 1;
+	bool DrawDiffraction = false;
 
 	/** Stop sound when owner is destroyed? */
 	UPROPERTY()
-	bool StopWhenOwnerDestroyed;
+	bool StopWhenOwnerDestroyed = false;
 
 	/**
 	 * Posts this component's AkAudioEvent to Wwise, using this component as the game object source, and wait until the event is 
 	 * done playing to continue execution. Extra calls while the event is playing are ignored.
-	 *
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Audiokinetic|AkComponent", meta = (AdvancedDisplay = "0", Latent, LatentInfo = "LatentInfo", AutoCreateRefTerm = "ExternalSources"))
-	int32 PostAssociatedAkEventAndWaitForEnd(const TArray<FAkExternalSourceInfo>& ExternalSources, FLatentActionInfo LatentInfo);
-
-	UFUNCTION(BlueprintCallable, Category = "Audiokinetic|AkComponent", meta = (AdvancedDisplay = "1", Latent, LatentInfo = "LatentInfo", AutoCreateRefTerm = "ExternalSources"))
-	void PostAssociatedAkEventAndWaitForEndAsync(int32& PlayingID, const TArray<FAkExternalSourceInfo>& ExternalSources, FLatentActionInfo LatentInfo);
-
-	AK_DEPRECATED(2019.1.2, "This function is deprecated and will be removed in future releases.")
+	UFUNCTION(BlueprintCallable, Category = "Audiokinetic|AkComponent", meta = (AdvancedDisplay = "0", Latent, LatentInfo = "LatentInfo"))
 	int32 PostAssociatedAkEventAndWaitForEnd(FLatentActionInfo LatentInfo);
 
 	/**
-	* Posts an event to Wwise, using this component as the game object source, and wait until the event is
-	* done playing to continue execution. Extra calls while the event is playing are ignored.
-	*
-	*/
-	UFUNCTION(BlueprintCallable, Category = "Audiokinetic|AkComponent", meta = (AdvancedDisplay = "1", Latent, LatentInfo = "LatentInfo", AutoCreateRefTerm = "ExternalSources"))
+	 * Posts an event to Wwise, using this component as the game object source, and wait until the event is
+	 * done playing to continue execution. Extra calls while the event is playing are ignored.
+	 *
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Audiokinetic|AkComponent", meta = (AdvancedDisplay = "1", Latent, LatentInfo = "LatentInfo"))
 	int32 PostAkEventAndWaitForEnd(
 		class UAkAudioEvent * AkEvent,
-		const FString& in_EventName,
-		const TArray<FAkExternalSourceInfo>& ExternalSources,
 		FLatentActionInfo LatentInfo
 	);
 
-	/**
-	* Posts an event to Wwise, using this component as the game object source, and wait until the event is
-	* done playing to continue execution. Extra calls while the event is playing are ignored.
-	*/
-	UFUNCTION(BlueprintCallable, Category = "Audiokinetic|AkComponent", meta = (AdvancedDisplay = "2", Latent, LatentInfo = "LatentInfo", AutoCreateRefTerm = "ExternalSources"))
-	void PostAkEventAndWaitForEndAsync(
-			class UAkAudioEvent* AkEvent,
-			int32& PlayingID,
-			const TArray<FAkExternalSourceInfo>& ExternalSources,
-			FLatentActionInfo LatentInfo
-		);
-
-	/**
-	 * Posts an event to Wwise using its name, using this component as the game object source
-	 *
-	 * @param AkEvent		The event to post
-	 */
-	UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category="Audiokinetic|AkComponent", meta = (DeprecatedFunction, DeprecationMessage = "Please use the \"Event Name\" field of Post Ak Event"))
-	int32 PostAkEventByName( const FString& in_EventName );
-	
-	AkPlayingID PostAkEventByNameWithDelegate(const FString& in_EventName, int32 CallbackMask, const FOnAkPostEventCallback& PostEventCallback, const TArray<FAkExternalSourceInfo>& ExternalSources = TArray<FAkExternalSourceInfo>());
-	AkPlayingID PostAkEventByNameWithCallback(const FString& in_EventName, AkUInt32 in_uFlags = 0, AkCallbackFunc in_pfnUserCallback = NULL, void * in_pUserCookie = NULL, const TArray<FAkExternalSourceInfo>& ExternalSources = TArray<FAkExternalSourceInfo>());
-
+	int32 PostAkEvent(UAkAudioEvent* AkEvent, int32 CallbackMask, const FOnAkPostEventCallback& PostEventCallback) override;
+	AkPlayingID PostAkEvent(UAkAudioEvent* AkEvent, AkUInt32 Flags = 0, AkCallbackFunc UserCallback = nullptr, void* UserCookie = nullptr) override;
 	/**
 	 * Posts a trigger to wwise, using this component as the game object source
 	 *
@@ -253,18 +226,6 @@ public:
 
 	// Reverb volumes functions
 
-	/**
-	 * Set UseReverbVolumes flag. Set value to true to use reverb volumes on this component.
-	 *
-	 * @param inUseReverbVolumes	Whether to use reverb volumes or not.
-	 */
-	UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category="Audiokinetic|AkComponent", meta = (DeprecatedFunction, DeprecationMessage = "Please use the \"UseReverbVolume\" property", ScriptName="DEPRECATED_UseReverbVolumes"))
-	void UseReverbVolumes(bool inUseReverbVolumes);
-
-	UFUNCTION(BlueprintCallable, Category = "Audiokinetic|AkComponent", meta = (AdvancedDisplay = "5", DeprecatedFunction, DeprecationMessage = "This function is deprecated and will be removed in future releases."))
-	void UseEarlyReflections(class UAkAuxBus* AuxBus, int Order = 1, float BusSendGain = 1.f, float MaxPathLength = 100000.f, bool SpotReflectors = false, const FString& AuxBusName = FString(""));
-
-
 	/** 
 	* Set the early reflections aux bus for this AK Component.
 	* Geometrical reflection calculation inside spatial audio is enabled for a game object if any sound playing on the game object has a valid early reflections aux bus specified in the authoring tool,
@@ -296,15 +257,11 @@ public:
 
 	/** Modifies the attenuation computations on this game object to simulate sounds with a a larger or smaller area of effect. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="AkComponent")
-	float AttenuationScalingFactor;
+	float AttenuationScalingFactor = .0f;
 
 	/** Sets the attenuation scaling factor, which modifies the attenuation computations on this game object to simulate sounds with a a larger or smaller area of effect. */
 	UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Audiokinetic|AkComponent")
 	void SetAttenuationScalingFactor(float Value);
-
-	/** Set the time interval between occlusion/obstruction checks (direct line of sight between the listener and this game object). Set to 0 to disable occlusion/obstruction on this component. We recommend disabling it if you want to use full Spatial Audio diffraction. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AkComponent|Occlusion")
-	float OcclusionRefreshInterval;
 
 	/** Whether to use reverb volumes or not */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AkComponent")
@@ -321,6 +278,7 @@ public:
 
 	void GetAkGameObjectName(FString& Name) const;
 
+	bool IsListener = false;
 	bool IsDefaultListener = false;
 
 #if CPP
@@ -373,22 +331,25 @@ public:
 
 	void OnListenerUnregistered(UAkComponent* in_pListener)
 	{
+		FScopeLock Lock(&ListenerCriticalSection);
 		Listeners.Remove(in_pListener);
 	}
 
 	void OnDefaultListenerAdded(UAkComponent* in_pListener)
 	{
-		check(bUseDefaultListeners);
-		Listeners.Add(in_pListener);
+		if(bUseDefaultListeners)
+		{
+			FScopeLock Lock(&ListenerCriticalSection);
+			Listeners.Add(in_pListener);
+		}
 	}
-
-	const TSet<UAkComponent*>& GetEmitters();
 
 	static UAkComponent* GetAkComponent(AkGameObjectID GameObjectID);
 
-	AkRoomID GetSpatialAudioRoom() const;
+	AkRoomID GetSpatialAudioRoomID() const;
+	const TWeakObjectPtr<UAkRoomComponent> GetSpatialAudioRoom() const { return CurrentRoom; }
 
-	void UpdateOcclusionObstruction() { ObstructionService.UpdateObstructionOcclusion(Listeners, GetPosition(), GetOwner(), GetSpatialAudioRoom(), OcclusionCollisionChannel, OcclusionRefreshInterval); }
+	void UpdateObstructionAndOcclusion();
 
 	FVector GetPosition() const;
 
@@ -425,7 +386,7 @@ private:
 	 */
 	void ApplyAkReverbVolumeList(float DeltaTime);
 
-	AkComponentOcclusionObstructionService ObstructionService;
+	AkComponentObstructionAndOcclusionService ObstructionService;
 
 	/** Array of the active AkReverbVolumes at the AkComponent's location */
 	TArray<AkReverbFadeControl> ReverbFadeControls;
@@ -437,12 +398,12 @@ private:
 	bool NeedToUpdateAuxSends(const TArray<AkAuxSendValue>& NewValues);
 
 	/** Room the AkComponent is currently in. nullptr if none */
-	class UAkRoomComponent* CurrentRoom;
+	TWeakObjectPtr<class UAkRoomComponent> CurrentRoom;
 
 	/** Whether to automatically destroy the component when the event is finished */
 	bool bAutoDestroy;
 
-	/** Previous known position. Used to avoid Spamming SetPOsition on a listener */
+	/** Previous known position. Used to avoid Spamming SetPosition on a listener */
 	AkSoundPosition CurrentSoundPosition;
 	bool HasMoved();
 
@@ -454,16 +415,12 @@ private:
 #endif
 
 	bool bUseDefaultListeners;
-	TSet<UAkComponent*> Listeners;
-
-	//NOTE: This set of emitters is only valid if this UAkComopnent is a listener, and it it is not a default listener. See GetEmitters().
-	TSet<UAkComponent*> Emitters;
-
-	void CheckEmitterListenerConsistancy();
+	FCriticalSection ListenerCriticalSection;
+	TSet<TWeakObjectPtr<UAkComponent>> Listeners;
 
 	void DebugDrawReflections() const;
-	void _DebugDrawReflections(const AkVector& akEmitterPos, const AkVector& akListenerPos, const AkReflectionPathInfo* paths, AkUInt32 uNumPaths) const;
+	void _DebugDrawReflections(const AkVector64& akEmitterPos, const AkVector64& akListenerPos, const AkReflectionPathInfo* paths, AkUInt32 uNumPaths) const;
 
 	void DebugDrawDiffraction() const;
-	void _DebugDrawDiffraction(const AkVector& akEmitterPos, const AkVector& akListenerPos, const AkDiffractionPathInfo* paths, AkUInt32 uNumPaths) const;
+	void _DebugDrawDiffraction(const AkVector64& akEmitterPos, const AkVector64& akListenerPos, const AkDiffractionPathInfo* paths, AkUInt32 uNumPaths) const;
 };

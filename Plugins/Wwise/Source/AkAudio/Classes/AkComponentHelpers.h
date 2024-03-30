@@ -1,25 +1,27 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 /*=============================================================================
 	AkComponentHelpers.h:
 =============================================================================*/
 #pragma once
+#include "Components/SceneComponent.h"
 #include "PhysicsEngine/BodySetup.h"
-#include <AK/SoundEngine/Common/AkTypes.h>
-#include <AkInclude.h>
+#include "AkInclude.h"
 
 namespace AkComponentHelpers
 {
@@ -59,7 +61,7 @@ namespace AkComponentHelpers
 	AKAUDIO_API bool IsInGameWorld(const UActorComponent* InComponent);
 
 	/**/
-	AKAUDIO_API void GetPrimitiveTransformAndExtent(const UPrimitiveComponent& Primitive, AkTransform& transform, AkExtent& extent);
+	AKAUDIO_API void GetPrimitiveTransformAndExtent(const UPrimitiveComponent& Primitive, AkWorldTransform& transform, AkExtent& extent);
 	AKAUDIO_API void GetPrimitiveUpAndFront(const UPrimitiveComponent& Primitive, AkVector& Up, AkVector& Front);
 
 	/* Return true if the movement would reset the child to (0, 0, 0) locally, with respect to the parent position. Return false otherwise.*/
@@ -83,7 +85,7 @@ namespace AkComponentHelpers
 		Blueprint classes. For Blueprint class components, during Super::PostEditChangeProperty(), the component is
 		replaced with a new instance.
 		The duplicated component instance initially has default values for all UPROPERTY members.
-		It is only later, after BeginPlay() has been called, that the values from the previous instance's UPROPERTYs are
+		It is only later, after BeginPlay() has been called, that the values from the previous instance's UPROPERTY are
 		copied to the new instance! So in that case, we need to defer the BeginPlay logic that depends on UPROPERTY values
 		that have been updated via user interaction, prior to the begin play call.
 		*/

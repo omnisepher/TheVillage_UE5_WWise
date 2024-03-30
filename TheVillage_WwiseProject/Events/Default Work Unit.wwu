@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<WwiseDocument Type="WorkUnit" ID="{356907E4-944A-4278-8FD1-D59BFD4F4E7D}" SchemaVersion="103">
+<WwiseDocument Type="WorkUnit" ID="{356907E4-944A-4278-8FD1-D59BFD4F4E7D}" SchemaVersion="119">
 	<Events>
 		<WorkUnit Name="Default Work Unit" ID="{356907E4-944A-4278-8FD1-D59BFD4F4E7D}" PersistMode="Standalone">
 			<ChildrenList>
@@ -75,6 +75,17 @@
 							<ReferenceList>
 								<Reference Name="Target">
 									<ObjectRef Name="Heartbeat" ID="{A65F488D-9C5A-4ED0-ACA8-12F73EE625FA}" WorkUnitID="{1DEC10FC-2733-4CA4-8FE4-C98B0139CC79}"/>
+								</Reference>
+							</ReferenceList>
+						</Action>
+					</ChildrenList>
+				</Event>
+				<Event Name="TestSound" ID="{158E83B7-EE45-4C36-805A-5797E7D87BD6}">
+					<ChildrenList>
+						<Action Name="" ID="{BB0779EF-85F5-48F4-85D4-5CA232599DB5}" ShortID="1039363487">
+							<ReferenceList>
+								<Reference Name="Target">
+									<ObjectRef Name="Blizzard" ID="{9D1C332A-F562-451C-B1A7-93DC39B4CEB8}" WorkUnitID="{1DEC10FC-2733-4CA4-8FE4-C98B0139CC79}"/>
 								</Reference>
 							</ReferenceList>
 						</Action>

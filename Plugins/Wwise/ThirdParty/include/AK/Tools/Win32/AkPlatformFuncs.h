@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #ifndef _AK_PLATFORM_FUNCS_H_
@@ -40,6 +39,10 @@ the specific language governing permissions and limitations under the License.
 #include <math.h>
 #endif // _WIN64
 #include <intrin.h>
+
+#if defined(AK_XBOXSERIESX)
+#include <ammintrin.h>
+#endif
 
 //-----------------------------------------------------------------------------
 // Platform-specific thread properties definition.
@@ -77,6 +80,7 @@ namespace AK
 #define AK_DEFAULT_STACK_SIZE					(128*1024)
 #define AK_THREAD_PRIORITY_NORMAL				THREAD_PRIORITY_NORMAL
 #define AK_THREAD_PRIORITY_ABOVE_NORMAL			THREAD_PRIORITY_ABOVE_NORMAL
+#define AK_THREAD_PRIORITY_BELOW_NORMAL			THREAD_PRIORITY_BELOW_NORMAL
 #define AK_THREAD_PRIORITY_TIME_CRITICAL		THREAD_PRIORITY_TIME_CRITICAL
 #define AK_THREAD_MODE_BACKGROUND_BEGIN			THREAD_MODE_BACKGROUND_BEGIN
 
@@ -103,15 +107,11 @@ namespace AKPLATFORM
 	/// Platform Independent Helper
 	inline AKRESULT AkCreateEvent( AkEvent & out_event )
     {
-#ifdef AK_USE_UWP_API
-		out_event = CreateEventEx(nullptr, nullptr, 0, STANDARD_RIGHTS_ALL|EVENT_MODIFY_STATE);
-#else
 		out_event = ::CreateEvent( NULL,					// No security attributes
                                     false,					// Reset type: automatic
                                     false,					// Initial signaled state: not signaled
                                     NULL                    // No name
                                    );
-#endif
 		return ( out_event ) ? AK_Success : AK_Fail;
 	}
 
@@ -126,12 +126,7 @@ namespace AKPLATFORM
 	/// Platform Independent Helper
 	inline void AkWaitForEvent( AkEvent & in_event )
 	{
-#ifdef AK_USE_UWP_API
-		DWORD dwWaitResult = ::WaitForSingleObjectEx( in_event, INFINITE, FALSE );
-        AKASSERT( dwWaitResult == WAIT_OBJECT_0 );
-#else
         AKVERIFY( ::WaitForSingleObject( in_event, INFINITE ) == WAIT_OBJECT_0 );
-#endif
 	}
 
 	/// Platform Independent Helper
@@ -141,66 +136,38 @@ namespace AKPLATFORM
 	}
 
 	/// Platform Independent Helper
-	inline AKRESULT AkCreateSemaphore(AkSemaphore * out_semaphore, AkUInt32 in_initialCount)
+	AkForceInline void AkClearSemaphore(AkSemaphore& io_semaphore)
 	{
-#ifdef AK_USE_UWP_API
-		(*out_semaphore) = ::CreateSemaphoreEx(
-			NULL,				// no security attributes
-			in_initialCount,	// initial count
-			INT_MAX,			// no maximum -- matches posix semaphore behaviour
-			NULL,				// no name
-			0,					// reserved
-			STANDARD_RIGHTS_ALL | SEMAPHORE_MODIFY_STATE);
-#else
-		(*out_semaphore) = ::CreateSemaphore(
+		io_semaphore = NULL;
+	}
+
+	/// Platform Independent Helper
+	inline AKRESULT AkCreateSemaphore(AkSemaphore& out_semaphore, AkUInt32 in_initialCount)
+	{
+		out_semaphore = ::CreateSemaphore(
 			NULL,				// no security attributes
 			in_initialCount,	// initial count
 			INT_MAX,			// no maximum -- matches posix semaphore behaviour
 			NULL);				// no name
-#endif
 		return (out_semaphore) ? AK_Success : AK_Fail;
 	}
 
 	/// Platform Independent Helper
-	inline void AkDestroySemaphore(AkSemaphore * io_semaphore)
+	inline void AkDestroySemaphore(AkSemaphore& io_semaphore)
 	{
-		if (io_semaphore)
-		{
-			::CloseHandle(*io_semaphore);
-		}
-		io_semaphore = NULL;
+		::CloseHandle(io_semaphore);
 	}
 
 	/// Platform Independent Helper - Semaphore wait, aka Operation P. Decrements value of semaphore, and, if the semaphore would be less than 0, waits for the semaphore to be released.
-	inline void AkWaitForSemaphore(AkSemaphore * in_semaphore)
+	inline void AkWaitForSemaphore(AkSemaphore& in_semaphore)
 	{
-		AKVERIFY( ::WaitForSingleObject(*in_semaphore, INFINITE) == WAIT_OBJECT_0 );
+		AKVERIFY(::WaitForSingleObject(in_semaphore, INFINITE) == WAIT_OBJECT_0);
 	}
 
-	/// Platform Independent Helper - Semaphore signal, aka Operation V. Increments value of semaphore.
-	inline void AkReleaseSemaphore(AkSemaphore * in_semaphore)
+	/// Platform Independent Helper - Semaphore signal, aka Operation V. Increments value of semaphore by an arbitrary count.
+	inline void AkReleaseSemaphore(AkSemaphore& in_semaphore, AkUInt32 in_count)
 	{
-		AKVERIFY( ReleaseSemaphore(*in_semaphore, 1, NULL) >= 0 );
-	}
-
-	// Virtual Memory
-	// ------------------------------------------------------------------
-
-#ifdef AK_WIN_UNIVERSAL_APP
-	AkForceInline void* AllocVM(size_t size, size_t* /*extra*/)
-	{
-		return VirtualAllocFromApp(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-	}
-#else
-	AkForceInline void* AllocVM(size_t size, size_t* /*extra*/)
-	{
-		return VirtualAlloc(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-	}
-
-#endif
-	AkForceInline void FreeVM(void* address, size_t size, size_t /*extra*/, size_t release)
-	{
-		VirtualFree(address, release ? 0 : size, release ? MEM_RELEASE : MEM_DECOMMIT);
+		AKVERIFY(ReleaseSemaphore(in_semaphore, in_count, NULL) >= 0);
 	}
 
     // Threads
@@ -244,7 +211,7 @@ namespace AKPLATFORM
 	}
 
 	/// Set the name of a thread: see http://msdn.microsoft.com/en-us/library/xcb2z8hs.aspx
-	inline void AkSetThreadName( DWORD in_dwThreadID, LPCSTR in_szThreadName )
+	inline void AkSetThreadName( AkThread in_threadHnd, DWORD in_dwThreadID, LPCSTR in_szThreadName )
 	{
 		const DWORD MS_VC_EXCEPTION=0x406D1388;
 
@@ -272,6 +239,15 @@ namespace AKPLATFORM
 		__except(EXCEPTION_CONTINUE_EXECUTION)
 		{
 		}
+
+#if defined(AK_XBOX) || defined(_GAMING_DESKTOP) // also applicable on Windows when Win7 support is dropped. SetThreadDescription is a Win10 only API
+		wchar_t wszThreadName[32];
+		AkUInt32 maxStrLen = (sizeof(wszThreadName) / sizeof(wchar_t)) - 1;
+		AkUInt32 nameStrLen = AkMin((int)strlen(in_szThreadName), maxStrLen);
+		MultiByteToWideChar(CP_UTF8, 0, in_szThreadName, nameStrLen, wszThreadName, maxStrLen);
+		wszThreadName[nameStrLen] = '\0';
+ 		SetThreadDescription(in_threadHnd, wszThreadName);
+#endif
 	}
 
 	/// Platform Independent Helper
@@ -292,7 +268,7 @@ namespace AKPLATFORM
                                        in_threadProperties.uStackSize,	// StackSize (0 uses system default)
                                        pStartRoutine,                   // Thread start routine
                                        pParams,                         // Thread function parameter
-                                       0,								// Creation flags: create running
+                                       CREATE_SUSPENDED,                // Creation flags: create suspended so we can set priority/affinity before starting
                                        &dwThreadID );
 
 		// ::CreateThread() return NULL if it fails.
@@ -302,36 +278,59 @@ namespace AKPLATFORM
             return;
         }
 
-        // Set thread name.
-        AkSetThreadName( dwThreadID, in_szThreadName );
+		// Set thread name.
+		if (in_szThreadName)
+		{
+			AkSetThreadName(*out_pThread, dwThreadID, in_szThreadName);
+		}
 
 		// Set properties.
 		if ( !::SetThreadPriority( *out_pThread, in_threadProperties.nPriority ) &&
 			 in_threadProperties.nPriority != THREAD_MODE_BACKGROUND_BEGIN )
-        {
-            AKASSERT( !"Failed setting thread priority" );
+		{
+			AKASSERT( !"Failed setting thread priority" );
 			AkCloseThread( out_pThread );
-            return;
-        }
+			AkClearThread(out_pThread);
+			return;
+		}
 #ifdef AK_WIN_UNIVERSAL_APP
 		if ( in_threadProperties.processorNumber.Number != MAXIMUM_PROCESSORS)
-        {
+		{
 			if ( !SetThreadIdealProcessorEx( *out_pThread, const_cast<PPROCESSOR_NUMBER>(&in_threadProperties.processorNumber), NULL) )
-            {
-                AKASSERT( !"Failed setting thread ideal processor" );
+			{
+				AKASSERT( !"Failed setting thread ideal processor" );
 				AkCloseThread( out_pThread );
-            }
+				AkClearThread(out_pThread);
+				return;
+			}
 		}
 #else
 		if (in_threadProperties.dwAffinityMask)
 		{
-			if (!::SetThreadAffinityMask(*out_pThread, in_threadProperties.dwAffinityMask))
+			AkUInt32 dwAffinityMask = in_threadProperties.dwAffinityMask;
+			DWORD_PTR procAffinity, sysAffinity;
+			if (::GetProcessAffinityMask(::GetCurrentProcess(), &procAffinity, &sysAffinity))
+			{
+				// To avoid errors in SetThreadAffinityMask, make sure the user-supplied mask is a subset of what is allowed by the process
+				dwAffinityMask &= procAffinity;
+			}
+			if (!::SetThreadAffinityMask(*out_pThread, dwAffinityMask))
 			{
 				AKASSERT(!"Failed setting thread affinity mask");
 				AkCloseThread(out_pThread);
+				AkClearThread(out_pThread);
+				return;
 			}
 		}
 #endif
+		// Thread is ready, start it up.
+		if (!::ResumeThread(*out_pThread))
+		{
+			AKASSERT(!"Failed to start the thread");
+			AkCloseThread(out_pThread);
+			AkClearThread(out_pThread);
+			return;
+		}
 	}
 
 	/// Platform Independent Helper
@@ -339,11 +338,7 @@ namespace AKPLATFORM
     {
         AKASSERT( in_pThread );
         AKASSERT( *in_pThread );
-#ifdef AK_USE_UWP_API
-        ::WaitForSingleObjectEx( *in_pThread, INFINITE, FALSE );
-#else
         ::WaitForSingleObject( *in_pThread, INFINITE );
-#endif
     }
 
 	/// Returns the calling thread's ID.
@@ -365,6 +360,12 @@ namespace AKPLATFORM
 	inline void AkMemCpy( void * pDest, const void * pSrc, AkUInt32 uSize )
 	{
 		memcpy( pDest, pSrc, uSize );
+	}
+
+	/// Platform Independent Helper
+	inline void AkMemMove( void* pDest, const void* pSrc, AkUInt32 uSize )
+	{
+		memmove( pDest, pSrc, uSize );
 	}
 
 	/// Platform Independent Helper
@@ -476,6 +477,24 @@ namespace AKPLATFORM
 	{
 		int iAvailableSize = (int)( in_uDestMaxNumChars - strlen( in_pDest ) - 1 );
 		strncat_s( in_pDest, in_uDestMaxNumChars, in_pSrc, AkMin( iAvailableSize, (int)strlen( in_pSrc ) ) );
+	}
+
+	inline int SafeStrFormat(wchar_t * in_pDest, size_t in_uDestMaxNumChars, const wchar_t* in_pszFmt, ...)
+	{
+		va_list args;
+		va_start(args, in_pszFmt);
+		int r = vswprintf(in_pDest, in_uDestMaxNumChars, in_pszFmt, args);
+		va_end(args);
+		return r;
+	}
+
+	inline int SafeStrFormat(char * in_pDest, size_t in_uDestMaxNumChars, const char* in_pszFmt, ...)
+	{
+		va_list args;
+		va_start(args, in_pszFmt);
+		int r = vsnprintf(in_pDest, in_uDestMaxNumChars, in_pszFmt, args);
+		va_end(args);
+		return r;
 	}
 
 	/// Stack allocations.
@@ -661,10 +680,21 @@ namespace AKPLATFORM
 	#define AK_CHAR_TO_UTF16(	in_pdDest, in_pSrc, in_MaxSize )	AKPLATFORM::AkCharToWideChar( in_pSrc, in_MaxSize, in_pdDest )
 	#define AK_OSCHAR_TO_UTF16(	in_pdDest, in_pSrc, in_MaxSize )	AKPLATFORM::SafeStrCpy(		in_pdDest, in_pSrc, in_MaxSize )
 
+	/// Detects whether the string represents an absolute path to a file
+	inline bool IsAbsolutePath(const AkOSChar* in_pszPath, size_t in_pathLen)
+	{
+		return
+			(in_pathLen >= 3 && in_pszPath[1] == ':' && in_pszPath[2] == '\\') || // Classic "C:\..." DOS-style path
+			(in_pathLen >= 2 && in_pszPath[0] == '\\'); // Uncommon "\..." absolute path from current drive, or UNC "\\..."
+	}
+
 	// Use with AkOSChar.
-	#define AK_PATH_SEPARATOR	(L"\\")
-	#define AK_LIBRARY_PREFIX	(L"")
-	#define AK_DYNAMIC_LIBRARY_EXTENSION	(L".dll")
+	#define AK_PATH_SEPARATOR	L"\\"
+	#define AK_LIBRARY_PREFIX	L""
+	#define AK_DYNAMIC_LIBRARY_EXTENSION	L".dll"
+
+	#define AK_FILEHANDLE_TO_UINTPTR(_h) ((AkUIntPtr)_h)
+	#define AK_SET_FILEHANDLE_TO_UINTPTR(_h,_u) _h = (AkFileHandle)_u
 
 	#if defined(AK_ENABLE_PERF_RECORDING)
 	

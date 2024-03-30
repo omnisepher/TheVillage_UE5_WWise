@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 /// \file AK/Comm/AkCommunication.h
@@ -40,6 +39,7 @@ the specific language governing permissions and limitations under the License.
 #include <AK/Tools/Common/AkPlatformFuncs.h>
 
 #define AK_COMM_SETTINGS_MAX_STRING_SIZE 64
+#define AK_COMM_SETTINGS_MAX_URL_SIZE 128
 
 /// Platform-independent initialization settings of communication module between the Wwise sound engine
 /// and authoring tool.
@@ -51,12 +51,11 @@ struct AkCommSettings
 		: commSystem(AkCommSystem_Socket)
 	{
 		szAppNetworkName[0] = 0;
+		szCommProxyServerUrl[0] = 0;
 	}
 
 	/// Ports used for communication between the Wwise authoring application and your game.
 	/// All of these ports are opened in the game when Wwise communication is enabled.
-	/// When using HIO type communication, the ports are in fact channels and they must be 3
-	/// consecutives channels in the order they are defined in the Port structure.
 	///
 	/// \sa
 	/// - \ref initialization_comm_ports
@@ -69,10 +68,8 @@ struct AkCommSettings
 			: uDiscoveryBroadcast( AK_COMM_DEFAULT_DISCOVERY_PORT )
 #if defined( AK_COMM_NO_DYNAMIC_PORTS )
 			, uCommand( AK_COMM_DEFAULT_DISCOVERY_PORT + 1 )
-			, uNotification( AK_COMM_DEFAULT_DISCOVERY_PORT + 2 )
 #else
 			, uCommand( 0 )
-			, uNotification( 0 )
 #endif
 		{
 		}
@@ -80,18 +77,14 @@ struct AkCommSettings
 		/// This is where the authoring application broadcasts "Game Discovery" requests
 		/// to discover games running on the network. Default value: 24024.
 		///
-		/// \warning Unlike the other ports in this structure, this port cannot be dynamic
-		///          (cannot be set to 0). Refer to \ref initialization_comm_ports_discovery_broadcast
-		///          for more details.
+		/// \warning Unlike the other port in this structure, this port cannot be dynamic: setting it
+		/// to 0 will disable discovery. Refer to \ref initialization_comm_ports_discovery_broadcast
+		/// for more details.
 		AkUInt16 uDiscoveryBroadcast;
 
 		/// Used by the "command" channel.
 		/// \remark Set to 0 to request a dynamic/ephemeral port.
 		AkUInt16 uCommand;
-
-		/// Used by the "notification" channel.
-		/// \remark Set to 0 to request a dynamic/ephemeral port.
-		AkUInt16 uNotification;
 	};
 
 	/// Ports used for communication between the Wwise authoring application and your game.
@@ -125,6 +118,9 @@ struct AkCommSettings
 	/// Optional name that will be displayed over network remote connection of Wwise.
 	/// It must be a NULL terminated string.
 	char szAppNetworkName[AK_COMM_SETTINGS_MAX_STRING_SIZE];
+
+	/// Optional URL of Comm proxy server (only applicable for platforms incapable of acting as raw UDP/TCP servers)
+	char szCommProxyServerUrl[AK_COMM_SETTINGS_MAX_URL_SIZE];
 };
 
 namespace AK
@@ -196,6 +192,13 @@ namespace AK
 		/// \return
 		///      - AK_Success if initialization was successful.
 		AK_EXTERNAPIFUNC( const AkCommSettings&, GetCurrentSettings )();
+
+
+		/// Get the port currently in used by the command channel.
+		///
+		/// \return
+		///      - Port number.
+		AK_EXTERNAPIFUNC( AkUInt16, GetCommandPort )();
 
 		//@}
 	}

@@ -16,7 +16,7 @@
 // The queries consider the box to be a solid and the polygon to be a
 // convex solid.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class FIQuery<Real, Halfspace<2, Real>, std::vector<Vector2<Real>>>

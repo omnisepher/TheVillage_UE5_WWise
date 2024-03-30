@@ -12,7 +12,7 @@
 #include <Mathematics/Hypersphere.h>
 #include <Mathematics/SymmetricEigensolver.h>
 
-namespace gte
+namespace WwiseGTE
 {
     // The quadratic fit is
     //   0 = C[0] + C[1]*X + C[2]*Y + C[3]*X^2 + C[4]*Y^2 + C[5]*X*Y

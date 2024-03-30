@@ -24,7 +24,7 @@
 //
 //#define GTE_THROW_ON_UINTEGERFP32_OUT_OF_RANGE
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N>
     class UIntegerFP32 : public UIntegerALU32<UIntegerFP32<N>>
@@ -138,7 +138,7 @@ namespace gte
             }
             else
             {
-                LogError("The number of bits must be nonnegative.");
+                GTE_LogError("The number of bits must be nonnegative.");
             }
 
 #if defined(GTE_THROW_ON_UINTEGERFP32_OUT_OF_RANGE)

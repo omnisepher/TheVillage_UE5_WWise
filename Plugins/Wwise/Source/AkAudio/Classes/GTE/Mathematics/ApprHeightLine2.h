@@ -17,7 +17,7 @@
 // mParameters values are ((xAvr,yAvr),(a,-1)) on success and ((0,0),(0,0)) on
 // failure. The error for (x0,y0) is [a*(x0-xAvr)-(y0-yAvr)]^2.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class ApprHeightLine2 : public ApprQuery<Real, Vector2<Real>>

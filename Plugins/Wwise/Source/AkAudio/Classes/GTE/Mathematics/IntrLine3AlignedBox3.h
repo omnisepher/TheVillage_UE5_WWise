@@ -21,7 +21,7 @@
 // are described in
 // https://www.geometrictools.com/Documentation/IntersectionLineBox.pdf
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, Line3<Real>, AlignedBox3<Real>>

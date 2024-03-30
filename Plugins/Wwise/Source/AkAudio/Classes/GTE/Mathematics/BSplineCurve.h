@@ -10,7 +10,7 @@
 #include <Mathematics/BasisFunction.h>
 #include <Mathematics/ParametricCurve.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class BSplineCurve : public ParametricCurve<N, Real>

@@ -13,7 +13,7 @@
 // document
 //   https://www.geometrictools.com/Documentation/EulerAngles.pdf
 
-namespace gte
+namespace WwiseGTE
 {
     // Factorization into Euler angles is not necessarily unique.  Let the
     // integer indices for the axes be (N0,N1,N2), which must be in the set

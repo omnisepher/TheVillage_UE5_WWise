@@ -10,7 +10,7 @@
 #include <Mathematics/IntrLine3Plane3.h>
 #include <Mathematics/Segment.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, Segment3<Real>, Plane3<Real>>

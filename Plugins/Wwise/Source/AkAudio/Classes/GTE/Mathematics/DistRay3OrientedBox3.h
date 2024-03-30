@@ -11,7 +11,7 @@
 #include <Mathematics/DistPointOrientedBox.h>
 #include <Mathematics/Ray.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class DCPQuery<Real, Ray3<Real>, OrientedBox3<Real>>

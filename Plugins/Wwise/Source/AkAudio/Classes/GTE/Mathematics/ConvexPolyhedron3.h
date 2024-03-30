@@ -12,7 +12,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class ConvexPolyhedron3

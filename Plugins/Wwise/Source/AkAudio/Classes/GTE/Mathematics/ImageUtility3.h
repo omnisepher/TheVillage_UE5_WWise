@@ -23,7 +23,7 @@
 // preserve the input image, make a copy of it before calling these
 // functions.
 
-namespace gte
+namespace WwiseGTE
 {
     class ImageUtility3
     {

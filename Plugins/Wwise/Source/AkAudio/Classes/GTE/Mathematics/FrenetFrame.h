@@ -12,7 +12,7 @@
 #include <Mathematics/Vector3.h>
 #include <memory>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class FrenetFrame2

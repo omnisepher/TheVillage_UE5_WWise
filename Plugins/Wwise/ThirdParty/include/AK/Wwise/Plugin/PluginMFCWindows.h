@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 /**
@@ -40,7 +39,8 @@ the specific language governing permissions and limitations under the License.
 
 #if 	defined( DOXYGEN_INCLUDE ) || ( \
 		(defined( _WIN32 ) || defined ( _WIN64 ) || defined( WINAPI_FAMILY )) \
-	 && ((defined(_AFXDLL) && _AFXDLL) || defined(_MFC_BLD) || defined(__AFX_H__)) )
+	 && ((defined(_AFXDLL) && _AFXDLL) || defined(_MFC_BLD) || defined(__AFX_H__)) \
+	 && __has_include(<afxwin.h>) )
 
 #include <afxwin.h>
 

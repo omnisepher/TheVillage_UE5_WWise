@@ -9,7 +9,7 @@
 
 #include <Mathematics/Math.h>
 
-namespace gte
+namespace WwiseGTE
 {
     // Find-intersection queries.
 

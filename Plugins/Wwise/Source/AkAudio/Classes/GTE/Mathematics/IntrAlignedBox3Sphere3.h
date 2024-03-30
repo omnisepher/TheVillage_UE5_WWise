@@ -16,7 +16,7 @@
 // and also uses the method of separating axes.
 // https://www.geometrictools.com/Documentation/MethodOfSeparatingAxes.pdf
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, AlignedBox3<Real>, Sphere3<Real>>

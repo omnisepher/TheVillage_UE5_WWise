@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 /// \file 
@@ -38,8 +37,6 @@ the specific language governing permissions and limitations under the License.
 
 #include <AK/SoundEngine/Common/IAkStreamMgr.h>
 #include <AK/Tools/Common/AkPlatformFuncs.h>
-
-class CAkFilePackage;
 
 /// \name Audiokinetic Stream Manager's implementation-specific definitions.
 //@{
@@ -67,43 +64,31 @@ struct AkDeviceSettings
 	AkUInt32			uIOMemoryAlignment;			///< I/O memory alignment. It is passed directly to AK::MemoryMgr::Malign().
 	AkUInt32			ePoolAttributes;			///< Attributes for I/O memory. Here, specify the allocation type (AkMemType_Device, and so on). It is passed directly to AK::MemoryMgr::Malign().
 	AkUInt32			uGranularity;				///< I/O requests granularity (typical bytes/request).
-	AkUInt32			uSchedulerTypeFlags;		///< Scheduler type flags.
     AkThreadProperties	threadProperties;			///< Scheduler thread properties.
 	AkReal32			fTargetAutoStmBufferLength;	///< Targetted automatic stream buffer length (ms). When a stream reaches that buffering, it stops being scheduled for I/O except if the scheduler is idle.
-	AkUInt32			uMaxConcurrentIO;			///< Maximum number of transfers that can be sent simultaneously to the Low-Level I/O (applies to AK_SCHEDULER_DEFERRED_LINED_UP device only).
-	bool				bUseStreamCache;			///< If true the device attempts to reuse IO buffers that have already been streamed from disk. This is particularly useful when streaming small looping sounds. The drawback is a small CPU hit when allocating memory, and a slightly larger memory footprint in the StreamManager pool. 													
+	AkUInt32			uMaxConcurrentIO;			///< Maximum number of transfers that can be sent simultaneously to the Low-Level I/O.
+	bool				bUseStreamCache;			///< If true, the device attempts to reuse I/O buffers that have already been streamed from disk. This is particularly useful when streaming small looping sounds. However, there is a small increase in CPU usage when allocating memory, and a slightly larger memory footprint in the StreamManager pool. 													
 	AkUInt32			uMaxCachePinnedBytes;		///< Maximum number of bytes that can be "pinned" using AK::SoundEngine::PinEventInStreamCache() or AK::IAkStreamMgr::PinFileInCache()
 };
-
-/// \name Scheduler type flags.
-
-/// Requests to Low-Level IO are synchronous. The streaming device expects a blocking I/O hook at creation time (IAkIOHookBlocking interface, see CreateDevice()). 
-/// Functions of this interface should return only when the transfer is complete.
-#define AK_SCHEDULER_BLOCKING          (0x01)
-/// Requests to Low-Level IO are asynchronous, but posted one after the other, starting with streams that need data the most. 
-/// The streaming device expects a deferred I/O hook at creation time (IAkIOHookDeferredBatch interface, see CreateDevice()). 
-/// Up to AkDeviceSettings::uMaxConcurrentIO requests can be sent to the Low-Level I/O at the same time.
-#define AK_SCHEDULER_DEFERRED_LINED_UP (0x02)
 
 /// File descriptor. File identification for the low-level I/O.
 /// \sa
 /// - AK::StreamMgr::IAkLowLevelIOHook
+/// - AK::StreamMgr::IAkLowLevelIOHook::BatchOpen
+/// - AK::StreamMgr::IAkLowLevelIOHook::Close
 struct AkFileDesc
 {
-    AkInt64				iFileSize;			///< File size in bytes
-    AkUInt64			uSector;			///< Start sector (the sector size is specified by the low-level I/O)
-											///< \sa
-											///< - AK::StreamMgr::IAkFileLocationResolver::Open()
-											///< - AK::StreamMgr::IAkLowLevelIOHook::GetBlockSize()
-    AkUInt32			uCustomParamSize;	///< Size of the custom parameter
-    void *				pCustomParam;		///< Custom parameter
-    AkFileHandle		hFile;              ///< File handle/identifier
-    AkDeviceID			deviceID;			///< Device ID, obtained from CreateDevice() \sa AK::IAkStreamMgr::CreateDevice()
-	CAkFilePackage*		pPackage;			///< If this file is in a File Package, this will be the 
+    AkInt64				iFileSize  = 0;			///< File size in bytes
+    AkUInt64			uSector = 0;			///< Start sector (the sector size is specified by the low-level I/O)
+												///< \sa
+												///< - AK::StreamMgr::IAkFileLocationResolver::Open()
+												///< - AK::StreamMgr::IAkLowLevelIOHook::GetBlockSize()
+    AkFileHandle		hFile = AkFileHandle(); ///< File handle/identifier
+    AkDeviceID			deviceID = AK_INVALID_DEVICE_ID;			///< Device ID, obtained from CreateDevice() \sa AK::IAkStreamMgr::CreateDevice()
 };
 
 /// Structure for synchronous transfers handshaking with the Low-Level I/O. Used with blocking I/O hooks.
-/// \sa AK::StreamMgr::IAkIOHookBlocking
+/// \sa AK::StreamMgr::IAkLowLevelIOHook
 struct AkIOTransferInfo
 {
 	AkUInt64		uFilePosition;		///< File offset where transfer should begin.
@@ -113,41 +98,22 @@ struct AkIOTransferInfo
 
 struct AkAsyncIOTransferInfo;
 
-/// Callback function prototype definition used for asynchronous I/O transfers between the Stream Manager
-/// and the Low-Level IO. Used with deferred I/O hooks.
+/// Callback function prototype definition used for asynchronous I/O transfers between the Stream Manager and the Low-Level IO.
 /// Notes:
 /// - If you pass in_eResult of AK_Fail, all streams awaiting for this transfer are marked as invalid and will stop. An "IO error" notification is posted to the capture log.
 /// - If the transfer was cancelled by the Stream Manager while it was in the Low-Level IO, you must return AK_Success, whether
 /// you performed the operation or not. The Stream Manager knows that it was cancelled, so it will not try to use it after you call it back.
 /// \sa 
 /// - AkAsyncIOTransferInfo
-/// - AK::StreamMgr::IAkIOHookDeferredBatch
+/// - AK::StreamMgr::IAkLowLevelIOHook
 AK_CALLBACK( void, AkIOCallback )( 
 	AkAsyncIOTransferInfo * in_pTransferInfo,	///< Pointer to the AkAsyncIOTransferInfo structure that was passed to corresponding Read() or Write() call.
 	AKRESULT		in_eResult					///< Result of transfer: AK_Success or AK_Fail (streams waiting for this transfer become invalid).
 	);
 
-/// Callback function prototype definition used for asynchronous I/O transfers between the Stream Manager
-/// and the Low-Level IO. Used with batch deferred I/O hooks.
-/// Notes:
-/// - in_peResult and in_ppTransferInfo must both contain in_uNumTransfers number of elements
-/// - For each in_peResult with a value of AK_Fail, all streams awaiting for the corresponding transfer are marked as invalid and will stop. An "IO error" notification is posted to the capture log.
-/// - If a given transfer was cancelled by the Stream Manager while it was in the Low-Level IO, you must return AK_Success for that result, whether
-/// you performed the operation or not. The Stream Manager knows that it was cancelled, so it will not try to use it after you call it back.
-/// - Note that one call to BatchRead, BatchWrite or BatchCancel does not have to result in one execution of the callback. The only requirement is that
-/// each element of in_ppTransferInfo passed in only has the IOCallback fired on it one time.
-/// \sa 
-/// - AkAsyncIOTransferInfo
-/// - AK::StreamMgr::IAkIOHookDeferredBatch
-AK_CALLBACK(void, AkBatchIOCallback)(
-	AkUInt32				in_uNumTransfers,	///< Number of transfers to process
-	AkAsyncIOTransferInfo** in_ppTransferInfo,	///< List of pointers to AkAsyncIOTransferInfo structures that were previously passed in to BatchRead() or BatchWrite()
-	AKRESULT*				in_peResult			///< Array of results of each transfer: AK_Success or AK_Fail (streams waiting for this transfer become invalid).
-	);
-
 /// Structure for asynchronous transfers handshaking with the Low-Level I/O. Extends AkIOTransferInfo.
 /// \sa 
-/// - AK::StreamMgr::IAkIOHookDeferredBatch
+/// - AK::StreamMgr::IAkLowLevelIOHook
 /// - AkIOTransferInfo
 /// - AkAIOCallback
 struct AkAsyncIOTransferInfo : public AkIOTransferInfo
@@ -155,22 +121,99 @@ struct AkAsyncIOTransferInfo : public AkIOTransferInfo
 	void *			pBuffer;			///< Buffer for data transfer.
 	AkIOCallback	pCallback;			///< Callback function used to notify the high-level device when the transfer is complete.
 	void *			pCookie;			///< Reserved. The I/O device uses this cookie to retrieve the owner of the transfer.
-	void *			pUserData;			///< Custom user data.
+	void *			pUserData;			///< Custom user data.	
+};
+
+struct AkAsyncFileOpenData;
+
+/// Callback signature for the notification of completion of the asynchronous Open operation.
+/// \sa 
+/// - AkAsyncFileOpenData
+/// - AK::StreamMgr::IAkLowLevelIOHook::BatchOpen
+AK_CALLBACK(void, AkFileOpenCallback)(
+	AkAsyncFileOpenData * in_pOpenInfo,	///< Pointer to the AkAsyncFileOpenData structure that was passed to corresponding Open().
+	AKRESULT			in_eResult			///< Result of transfer: AK_Success or AK_Fail (streams waiting for this transfer become invalid).
+	);
+
+/// Structure used by Low Level IO Hooks (IAkLowLevelIOHook) to pass and retreive information on files to be opened by the IO hook.
+/// Please refer to AK::StreamMgr::IAkLowLevelIOHook::BatchOpen for more information about the sementics of the Open operation.
+/// \sa 
+/// - AkFileOpenData
+/// - AK::StreamMgr::IAkLowLevelIOHook::BatchOpen
+struct AkAsyncFileOpenData : public AkFileOpenData
+{
+	~AkAsyncFileOpenData();
+
+	AkAsyncFileOpenData(const AkFileOpenData& in_copy)
+		: pCallback(NULL)
+		, pCookie(NULL)
+		, pFileDesc(NULL)
+		, pCustomData(NULL)
+		, pszStreamName(NULL)
+	{
+		*(AkFileOpenData*)this = in_copy;
+	}
+
+	AkAsyncFileOpenData(const AkAsyncFileOpenData& in_copy)
+		: pCallback(in_copy.pCallback)
+		, pCookie(in_copy.pCookie)
+		, pFileDesc(in_copy.pFileDesc)
+		, pCustomData(NULL)
+		, pszStreamName(NULL)
+	{
+		*(AkFileOpenData*)this = in_copy;
+	}
+
+	AkAsyncFileOpenData() 
+		: AkFileOpenData()
+		, pCallback(NULL)
+		, pCookie(NULL)
+		, pFileDesc(NULL)
+		, pCustomData(NULL)
+		, pszStreamName(NULL)
+	{}
+		
+	AkAsyncFileOpenData(const AkOSChar* in_pszFileName, AkOpenMode in_eOpenMode = AK_OpenModeRead, AkFileSystemFlags* in_pFlags = NULL)
+		:AkFileOpenData(in_pszFileName, in_eOpenMode, in_pFlags)
+		, pCallback(NULL)
+		, pCookie(NULL)
+		, pFileDesc(NULL)
+		, pCustomData(NULL)
+		, pszStreamName(NULL)
+	{}
+
+	AkAsyncFileOpenData(AkFileID in_idFile, AkOpenMode in_eOpenMode = AK_OpenModeRead, AkFileSystemFlags* in_pFlags = NULL)
+		:AkFileOpenData(in_idFile, in_eOpenMode, in_pFlags)
+		, pCallback(NULL)
+		, pCookie(NULL)
+		, pFileDesc(NULL)
+		, pCustomData(NULL)
+		, pszStreamName(NULL)
+	{}
+
+	///< Functions used to manage optional stream name. The name will be used when sending stream information to the Wwise profiler.
+	AKRESULT SetStreamName(const AkOSChar* in_pszStreamName);
+	const AkOSChar* GetStreamName() const { return pszStreamName; }
+
+	AkFileOpenCallback	pCallback;			///< Callback function used to notify the high-level device when Open is done
+	void*				pCookie;			///< Reserved. Pass this unchanged to the callback function. The I/O device uses this cookie to retrieve the owner of the transfer.
+	AkFileDesc*			pFileDesc;			///< File Descriptor to fill once the Open operation is complete. 
+	void*				pCustomData;		///< Convienience pointer for the IO hook implementer. Useful for additional data used in asynchronous implementations, for example.
+
+private:
+	AkOSChar*		pszStreamName;		///< Display name. If provided, this will be used to set the stream name, which is used for the profiler. This struct is not responsible for the memory.
 };
 
 /// Low-Level I/O requests heuristics.
 /// Used for asynchronous read requests. 
 /// \sa 
-/// - AK::StreamMgr::IAkIOHookBlocking::Read()
-/// - AK::StreamMgr::IAkIOHookBlocking::Write()
-/// - AK::StreamMgr::IAkIOHookDeferredBatch::Read()
-/// - AK::StreamMgr::IAkIOHookDeferredBatch::Write()
+/// - AK::StreamMgr::IAkLowLevelIOHook::BatchRead()
+/// - AK::StreamMgr::IAkLowLevelIOHook::BatchWrite()
 struct AkIoHeuristics
 {
 	AkReal32		fDeadline;			///< Operation deadline (ms). 
 	AkPriority		priority;			///< Operation priority (at the time it was scheduled and sent to the Low-Level I/O). Range is [AK_MIN_PRIORITY,AK_MAX_PRIORITY], inclusively.
 };
-
 
 
 //@}
@@ -180,7 +223,24 @@ namespace AK
 	/// Audiokinetic Stream Manager's implementation-specific interfaces of the Low-Level IO submodule.
 	namespace StreamMgr
 	{
-		/// Base interface for Low-Level I/O hooks. Defines common methods across both types of hooks.
+		/// Interface for batched deferred low-level I/O transfers.
+		/// This I/O transfer handshaking method is preferred when you want to hook I/O to your own
+		/// I/O streaming technology, and you want to submit multiple I/O requests in one call, so as
+		/// to allow for better opportunities for CPU and I/O performance.
+		/// All operations in this interface will be happening in the device's own thread, separate
+		/// from the main audio thread. Also, it is assumed that all operations are asynchronous although
+		/// immediate resolution is also supported.
+		/// You may queue them into your own system, and even use the heuristics passed down to this
+		/// level for your convenience. Note that the requests are always sent in the order that the
+		/// Stream Manager considers to be the most appropriate. You may receive less than
+		/// AkDeviceSettings::uMaxConcurrentIO at any given time. The number of concurrent transfers
+		/// depends on the number of streams running in the high-level streaming device, and on its
+		/// target buffering length and granularity. Your advantage at this level is to be aware of
+		/// file placement, so you may try to re-order requests in order to minimize seeking on disk. 
+		/// Calls to BatchRead()/BatchWrite() should return as soon as possible. You need to call 
+		/// AkAsyncIOTransferInfo::pCallback for all individual items in a transfer batch.
+		/// Cancel() is provided in order to inform you that the streaming device will flush this transfer
+		/// upon completion. You may implement it or not. In all cases, you must call the callback.
 		class IAkLowLevelIOHook
 		{
 		protected:
@@ -188,10 +248,13 @@ namespace AK
 			virtual ~IAkLowLevelIOHook(){}
 
 		public:
-			/// Cleans up a file.
+
+			/// Closes a file. 
+			/// The file descriptor should be deleted during this call. 
+			/// No other module should have a reference to it at this point.
 			/// \return AK_Success if the file was properly cleaned-up.
 			virtual AKRESULT Close(
-				AkFileDesc &			in_fileDesc			///< File descriptor.
+				AkFileDesc *			in_pFileDesc			///< File descriptor.
 				) = 0;
 
 			/// Returns the block size for the file or its storage device. 
@@ -211,11 +274,9 @@ namespace AK
 			/// \warning 
 			/// Returning 0 is not allowed and will likely make the Stream Manager crash.
 			/// \sa 
-			///	- AK::StreamMgr::IAkFileLocationResolver::Open()
-			/// - AK::StreamMgr::IAkIOHookBlocking::Read()
-			/// - AK::StreamMgr::IAkIOHookBlocking::Write()
-			/// - AK::StreamMgr::IAkIOHookDeferredBatch::Read()
-			/// - AK::StreamMgr::IAkIOHookDeferredBatch::Write()
+			///	- AK::StreamMgr::IAkLowLevelIOHook::BatchOpen()
+			/// - AK::StreamMgr::IAkLowLevelIOHook::BatchRead()
+			/// - AK::StreamMgr::IAkLowLevelIOHook::BatchWrite()
 			virtual AkUInt32 GetBlockSize(
 				AkFileDesc &			in_fileDesc			///< File descriptor.
 				) = 0;
@@ -235,80 +296,7 @@ namespace AK
 			/// Stream Manager never calls it.
 			/// \return A 32-bit unsigned value to display in the Wwise profiler.
 			virtual AkUInt32 GetDeviceData() = 0;
-		};
 
-		/// Interface for blocking low-level I/O transfers. Used by streaming devices created with the
-		/// AK_SCHEDULER_BLOCKING flag.
-		/// This is the simplest I/O hook. Calls to Read()/Write() must block until they are completed.
-		/// The streaming device's I/O thread sends one transfer at a time.
-		class IAkIOHookBlocking : public IAkLowLevelIOHook
-		{
-		protected:
-			/// Virtual destructor on interface to avoid warnings.
-			virtual ~IAkIOHookBlocking(){}
-
-		public:
-
-			/// Reads data from a file (synchronous). 
-			/// Read data from the file described by in_fileDesc, in address out_pBuffer and with size and position 
-			/// passed within io_transferInfo. When transfer is complete, return with the proper return code.
-			/// \remarks 
-			/// File position passed in io_transferInfo takes the offset of this file relative 
-			/// to AkFileDesc::hFile (described with AkFileDesc::uSector). It is computed by the high-level 
-			/// device as "in_fileDesc.uSector * Block_Size + Stream_Position", where Block_Size is obtained 
-			/// via AK::StreamMgr::IAkLowLevelIOHook::GetBlockSize(). 
-			/// \return 
-			///     - AK_Success:	transfer was successful and out_pBuffer is filled with data.
-			///     - AK_Fail:		an error occured.
-			virtual AKRESULT Read(
-				AkFileDesc &			in_fileDesc,        ///< File descriptor.
-				const AkIoHeuristics &	in_heuristics,		///< Heuristics for this data transfer.
-				void *					out_pBuffer,        ///< Buffer to be filled with data.
-				AkIOTransferInfo &		in_transferInfo		///< Synchronous data transfer info. 
-				) = 0;
-
-			/// Writes data to a file (synchronous). 
-			/// Write data to the file described by in_fileDesc, from address in_pData and with size and position 
-			/// passed within io_transferInfo. When transfer is complete, return with the proper return code.
-			/// \remarks File position passed in io_transferInfo takes the offset of this file relative 
-			/// to AkFileDesc::hFile (described with AkFileDesc::uSector). It is computed by the high-level 
-			/// device as "in_fileDesc.uSector * Block_Size + Stream_Position", where Block_Size is obtained 
-			/// via AK::StreamMgr::IAkLowLevelIOHook::GetBlockSize(). 
-			/// \return 
-			///     - AK_Success:   transfer was successful.
-			///     - AK_Fail:      an error occured.
-			virtual AKRESULT Write(
-				AkFileDesc &			in_fileDesc,        ///< File descriptor.
-				const AkIoHeuristics &	in_heuristics,		///< Heuristics for this data transfer.
-				void *					in_pData,           ///< Data to be written.
-				AkIOTransferInfo &		io_transferInfo		///< Synchronous data transfer info. 
-				) = 0;
-		};
-
-		/// Interface for batched deferred low-level I/O transfers. Used by streaming devices created
-		/// with the AK_SCHEDULER_DEFERRED_LINED_UP flag.
-		/// This I/O transfer handshaking method is preferred when you want to hook I/O to your own
-		/// I/O streaming technology, and you want to submit multiple I/O requests in one call, so as
-		/// to allow for better opportunities for CPU and I/O performance.
-		/// You may queue them into your own system, and even use the heuristics passed down to this
-		/// level for your convenience. Note that the requests are always sent in the order that the
-		/// Stream Manager considers to be the most appropriate. You may receive less than
-		/// AkDeviceSettings::uMaxConcurrentIO at any given time. The number of concurrent transfers
-		/// depends on the number of streams running in the high-level streaming device, and on its
-		/// target buffering length and granularity. Your advantage at this level is to be aware of
-		/// file placement, so you may try to re-order requests in order to minimize seeking on disk. 
-		/// Calls to BatchRead()/BatchWrite() should return as soon as possible. You need to call 
-		/// AkAsyncIOTransferInfo::pCallback for an individual item, or AkBatchIOCallback for a collection
-		/// of items as soon as a transfer is completed.
-		/// Cancel() is provided in order to inform you that the streaming device will flush this transfer
-		/// upon completion. You may implement it or not. In all cases, you must call the callback.
-		class IAkIOHookDeferredBatch : public IAkLowLevelIOHook
-		{
-		protected:
-			/// Virtual destructor on interface to avoid warnings.
-			virtual ~IAkIOHookDeferredBatch() {}
-
-		public:
 			struct BatchIoTransferItem
 			{
 				AkFileDesc* pFileDesc;
@@ -316,70 +304,48 @@ namespace AK
 				AkAsyncIOTransferInfo* pTransferInfo;
 			};
 
+
+			/// Request to open multiple files (asynchronous). 
+			/// \remarks 
+			/// - The pCallback within each AkAsyncFileOpenData must be called when completed. 
+			/// - It is possible to mix synchronous and asynchronous file opens, as long as all pCallbacks are eventually called.
+			/// - When implementing this function, make sure to process all items even if one fails to be dispatched or to open.
+			/// - Pointers in in_ppItems will stay valid until pCallback is called to signal the operation result.
+			virtual void BatchOpen(
+				AkUInt32						in_uNumFiles,			///< Number of transfers to process
+				AkAsyncFileOpenData**			in_ppItems 				///< List of files to open. See remarks above.
+			) = 0;
+
 			/// Reads multiple data from multiple files (asynchronous).
 			/// \remarks 
 			/// - Queue up multiple read requests at once, using the provided array of in_pTransferItems. There will
 			/// be in_uNumTransfers number of items in the array.
-			/// - io_pDispatchResults will contain an in_uNumTransfers number of items in the array. Each item in
-			/// io_pDispatchResults should be set to AK_Success if the corresponding Read was successfully dispatched,
-			/// and set to AK_Failure otherwise. As well, the return value should be a cumulative result of the
-			/// dispatches, where AK_Success indicates all requests were dispatched successfully, and
-			/// io_pDispatchResults will not be investigated, whereas AK_Fail indicates at least one failure.
-			/// - When a given Read, or some set of reads has completed - whether it was successful, cancelled,
-			/// or failed - call in_pBatchIoCallback for the corresponding transfer. Pass in the list of
-			/// AkAsyncIOTransferInfo objects to receive the callback, as well as a list of results for each transfer,
-			/// e.g. AK_Success or some other AKRESULT. Do not call in_pBatchIoCallback for transfers that were not
-			/// dispatched (as indicated by the corresponding value in io_pDispatchResults).
+			/// - The pCallback within each BatchIoTransferItem::pTransferInfo must be called when completed.
 			/// - The pointer to each BatchIoTransferItem::pTransferInfo will be valid until the high-level
-			/// device is notified through the callback. The array of in_pTransferItems will not be valid, though.
+			/// device is notified through the callback. However, the array of in_pTransferItems will not be valid.
 			/// - File position passed in each BatchIoTransferItem::pTransferInfo takes the offset of this file relative 
 			/// to AkFileDesc::hFile (described with AkFileDesc::uSector). It is computed by the high-level 
 			/// device as "pFileDesc->uSector * Block_Size + Stream_Position", where Block_Size is obtained 
 			/// via AK::StreamMgr::IAkLowLevelIOHook::GetBlockSize(). 
-			///
-			/// \return 
-			///     - AK_Success:    All I/O requests were successfully dispatched.
-			///                      in_pBatchIoCallback must be called for each read that completes.
-			///     - AK_Fail:       At least one failure occurred when dispatching reads.
-			///                      The values of io_pDispatchResults should indicate which operation failed to be dispatched.
-			virtual AKRESULT BatchRead(
+			virtual void BatchRead(
 				AkUInt32						in_uNumTransfers,		///< Number of transfers to process
-				BatchIoTransferItem*			in_pTransferItems,		///< List of transfer items to process
-				AkBatchIOCallback				in_pBatchIoCallback,	///< Callback to execute to handle completion of multiple items simultaneously
-				AKRESULT*						io_pDispatchResults		///< Output result codes to indicate if a transfer was successfully dispatched
+				BatchIoTransferItem*			in_pTransferItems 		///< List of transfer items to process
 			) = 0;
 
 			/// Write multiple data to multiple files (asynchronous).
 			/// \remarks 
 			/// - Queue up multiple write requests at once, using the provided array of in_pTransferItems. There will
 			/// be in_uNumTransfers number of items in the array.
-			/// - io_pDispatchResults will contain an in_uNumTransfers number of items in the array. Each item in
-			/// io_pDispatchResults should be set to AK_Success if the corresponding write was successfully dispatched,
-			/// and set to AK_Failure otherwise. As well, the return value should be a cumulative result of the
-			/// dispatches, where AK_Success indicates all requests were dispatched successfully, and
-			/// io_pDispatchResults will not be investigated, whereas AK_Fail indicates at least one failure.
-			/// - When a given write, or some set of writes has completed - whether it was successful, cancelled,
-			/// or failed - call in_pBatchIoCallback for the corresponding transfer. Pass in the list of
-			/// AkAsyncIOTransferInfo objects to receive the callback, as well as a list of results for each transfer,
-			/// e.g. AK_Success or some other AKRESULT. Do not call in_pBatchIoCallback for transfers that were not
-			/// dispatched (as indicated by the corresponding value in io_pDispatchResults).
+			/// - The pCallback within each BatchIoTransferItem::pTransferInfo must be called when completed.
 			/// - The pointer to each BatchIoTransferItem::pTransferInfo will be valid until the high-level
-			/// device is notified through the callback. The array of in_pTransferItems will not be valid, though.
+			/// device is notified through the callback. However, the array of in_pTransferItems will not be valid.
 			/// - File position passed in each BatchIoTransferItem::pTransferInfo takes the offset of this file relative 
 			/// to AkFileDesc::hFile (described with AkFileDesc::uSector). It is computed by the high-level 
 			/// device as "pFileDesc->uSector * Block_Size + Stream_Position", where Block_Size is obtained 
-			/// via AK::StreamMgr::IAkLowLevelIOHook::GetBlockSize(). 
-			///
-			/// \return 
-			///     - AK_Success:    All I/O requests were successfully dispatched.
-			///                      in_pBatchIoCallback must be called for each write that completes.
-			///     - AK_Fail:       At least one failure occurred when dispatching writes.
-			///                      The values of io_pDispatchResults should indicate which operation failed to be dispatched.
-			virtual AKRESULT BatchWrite(
+			/// via AK::StreamMgr::IAkLowLevelIOHook::GetBlockSize().
+			virtual void BatchWrite(
 				AkUInt32						in_uNumTransfers,		///< Number of transfers to process
-				BatchIoTransferItem*			in_pTransferItems,		///< List of transfer items to process
-				AkBatchIOCallback				in_pBatchIoCallback,	///< Callback to execute to handle completion of multiple items simultaneously
-				AKRESULT*						io_pDispatchResults		///< Output result codes to indicate if a transfer was successfully dispatched
+				BatchIoTransferItem*			in_pTransferItems 		///< List of transfer items to process
 			) = 0;
 
 			/// Notifies that a transfer request is cancelled. It will be flushed by the streaming device when completed.
@@ -388,7 +354,8 @@ namespace AK
 			/// and AkDeviceSettings::uGranularity) is large and when you low-level IO hook accepts many concurrent requests
 			/// at the same time.
 			/// \remarks
-			/// - Cancel() simply informs the Low-Level I/O that a specific transfer will be flushed upon reception. 
+			/// - BatchCancel() is an optional functionality that can be implemented as a no-op.
+			/// - BatchCancel() simply informs the Low-Level I/O that a specific transfer will be flushed upon reception. 
 			///	The Low-Level I/O may use this information to stop this transfer right away, or not (it is internally tagged
 			///	by the high-level device as cancelled). Nevertheless, the callback function MUST be called for cancelled 
 			///	transfers to be resolved.
@@ -397,19 +364,20 @@ namespace AK
 			/// what you want.
 			/// - If io_bCancelAllTransfersForThisFile is set, you may cancel all transfers for this file at once.
 			///	Leave io_bCancelAllTransfersForThisFile to true if you don't want to be called again. For example, if
-			/// you don't do anything special in Cancel(), leave it to true. This will reduce the amount of useless calls.
-			/// If you set it to false, Cancel() will be called again for each remaining pending transfer that need to be cancelled. 
-			/// - If io_bCancelAllTransfersForThisFile is not set, Cancel() is only called for a subset of pending 
-			///	transfers for this file. You must not set it to true, as Cancel() needs to be called explicitly for each transfer that should be cancelled.
+			/// you don't do anything special in BatchCancel(), leave it to true. This will reduce the amount of useless calls.
+			/// If you set it to false, BatchCancel() will be called again for each remaining pending transfer that need to be cancelled. 
+			/// - If io_bCancelAllTransfersForThisFile is not set, BatchCancel() is only called for a subset of pending 
+			///	transfers for this file. You must not set it to true, as BatchCancel() needs to be called explicitly for each transfer that 
+			/// should be cancelled.
 			/// \warning
 			/// - The calling thread holds the stream's lock. You may call the callback function directly from here
 			/// (if you can guarantee that the I/O buffer will not be accessed in the meantime), but you must not wait here 
 			/// for another thread to call the callback function.
 			/// - Likewise, if you resolve transfers with your own thread and use a lock to protect your transfers queue, 
-			/// be careful not to run into a deadlock. Cancel() can be executed by any thread. Thus, if you need to lock your queue 
-			/// in Cancel(), you must never hold this lock when calling back transfers, either from within Cancel() or from your 
+			/// be careful not to run into a deadlock. BatchCancel() can be executed by any thread. Thus, if you need to lock your queue 
+			/// in BatchCancel(), you must never hold this lock when calling back transfers, either from within BatchCancel() or from your 
 			/// worker thread's routine. Lock your list, dequeue the transfer if you can, unlock, and call pCallback if and only if 
-			/// the transfer was found and dequeued. On the other hand, if you choose not to do anything in Cancel(), the lock only protects 
+			/// the transfer was found and dequeued. On the other hand, if you choose not to do anything in BatchCancel(), the lock only protects 
 			/// your list between Read()/Write() and your worker thread's routine, and since the device I/O thread does not hold the 
 			/// stream's lock while calling Read()/Write(), your worker thread may therefore hold it while calling back transfers.
 			/// - A race condition exists when cancelling all transfers (io_bCancelAllTransfersForThisFile is true) directly from within this hook. 
@@ -420,190 +388,30 @@ namespace AK
 				BatchIoTransferItem*			in_pTransferItems,						///< List of transfer items to process
 				bool**							io_ppbCancelAllTransfersForThisFile		///< Flag for each transfer indicating whether all transfers should be cancelled for this file (see notes in function description).
 			) = 0;
-		};
 
-
-		/// Interface for deferred low-level I/O transfers. Used by streaming devices created with the
-		/// AK_SCHEDULER_DEFERRED_LINED_UP flag.
-		/// This is an "adapter" interface to forward calls to IAkIOHookDeferredBatch, to maintain
-		/// compatibility with existing implementations, as well as provide a simpler interface for new
-		/// implementations.
-		/// This I/O transfer handshaking method is preferred when you want to hook I/O to your own
-		/// I/O streaming technology. You will receive up to AkDeviceSettings::uMaxConcurrentIO requests
-		/// at the same time. You may queue them into your own system, and even use the heuristics passed
-		/// down to this level for your convenience. 
-		/// Note that the requests are always sent in the order that the Stream Manager considers to be
-		/// the most appropriate. You may receive less than AkDeviceSettings::uMaxConcurrentIO at any
-		/// given time. The number of concurrent transfers depends on the number of streams running in 
-		/// the high-level streaming device, and on its target buffering length and granularity.
-		/// Your advantage at this level is to be aware of file placement, so you may try to re-order 
-		/// requests in order to minimize seeking on disk. 
-		/// Calls to Read()/Write() should return as soon as possible. You need to call 
-		/// AkAsyncIOTransferInfo::pCallback as soon as a transfer is completed.
-		/// Cancel() is provided in order to inform you that the streaming device will flush this transfer
-		/// upon completion. You may implement it or not. In all cases, you must call the callback.
-		class IAkIOHookDeferred : public IAkIOHookDeferredBatch
-		{
-		protected:
-			/// Virtual destructor on interface to avoid warnings.
-			virtual ~IAkIOHookDeferred(){}
-
-		public:
-			/// Reads data from a file (asynchronous).
-			/// \remarks 
-			/// - Queue up your read request with address, size and file position specified in io_transferInfo.
-			/// - When transfer is complete (whether it was successful, cancelled or failed), call 
-			/// AkAsyncIOTransferInfo::pCallback. However, if you return AK_Fail() from Read(), do not call
-			/// AkAsyncIOTransferInfo::pCallback.
-			/// - AkAsyncIOTransferInfo::pCookie must be passed to the callback function as-is. It must not
-			/// be changed by the Low-Level I/O.
-			/// - The reference to io_transferInfo will be valid until the high-level device is notified 
-			/// through the callback.
-			/// - File position passed in io_transferInfo takes the offset of this file relative 
-			/// to AkFileDesc::hFile (described with AkFileDesc::uSector). It is computed by the high-level 
-			/// device as "in_fileDesc.uSector * Block_Size + Stream_Position", where Block_Size is obtained 
-			/// via AK::StreamMgr::IAkLowLevelIOHook::GetBlockSize(). 
-			/// \return 
-			///     - AK_Success:   An I/O request was successfully dispatched and is pending: 
-			///                     AkAsyncIOTransferInfo::pCallback must be called when it completes.
-			///     - AK_Fail:      An error occurred, no I/O request was dispatched
-			virtual AKRESULT Read(
-				AkFileDesc &			in_fileDesc,        ///< File descriptor.
-				const AkIoHeuristics &	in_heuristics,		///< Heuristics for this data transfer.
-				AkAsyncIOTransferInfo & io_transferInfo		///< Asynchronous data transfer info.
-				) = 0;
-
-			/// Writes data to a file (asynchronous).
-			/// \remarks 
-			/// - Queue up your write request with address, size and file position specified in io_transferInfo.
-			/// - When transfer is complete (whether it was successful, cancelled or failed), call 
-			/// AkAsyncIOTransferInfo::pCallback. However, if you return AK_Fail() from Write(), do not call
-			/// AkAsyncIOTransferInfo::pCallback.
-			/// - AkAsyncIOTransferInfo::pCookie must be passed to the callback function as-is. It must not
-			/// be changed by the Low-Level I/O.
-			/// - The reference to io_transferInfo will be valid until the high-level device is notified 
-			/// through the callback.
-			/// - File position passed in io_transferInfo takes the offset of this file relative 
-			/// to AkFileDesc::hFile (described with AkFileDesc::uSector). It is computed by the high-level 
-			/// device as "in_fileDesc.uSector * Block_Size + Stream_Position", where Block_Size is obtained 
-			/// via AK::StreamMgr::IAkLowLevelIOHook::GetBlockSize(). 
-			/// \return 
-			///     - AK_Success:	 An I/O request was successfully processed and is pending: 
-			///							AkAsyncIOTransferInfo::pCallback must be called when it completes.
-			///     - AK_Fail:        an error occured.
-			virtual AKRESULT Write(
-				AkFileDesc &			in_fileDesc,        ///< File descriptor.
-				const AkIoHeuristics &	in_heuristics,		///< Heuristics for this data transfer.
-				AkAsyncIOTransferInfo & io_transferInfo		///< Platform-specific asynchronous IO operation info.
-				) = 0;
-
-			/// Notifies that a transfer request is cancelled. It will be flushed by the streaming device when completed.
-			/// Cancellation is normal and happens regularly; for example, whenever a sound stops before the end
-			/// or stops looping. It happens even more frequently when buffering (AkDeviceSettings::fTargetAutoStmBufferLength 
-			/// and AkDeviceSettings::uGranularity) is large and when you low-level IO hook accepts many concurrent requests
-			/// at the same time.
-			/// \remarks
-			/// - Cancel() simply informs the Low-Level I/O that a specific transfer will be flushed upon reception. 
-			///	The Low-Level I/O may use this information to stop this transfer right away, or not (it is internally tagged
-			///	by the high-level device as cancelled). Nevertheless, the callback function MUST be called for cancelled 
-			///	transfers to be resolved.
-			/// - When calling the callback function of a cancelled transfer, pass it *AK_Success*. Passing AK_Fail 
-			/// to AkAsyncIOTransfer::pCallback has the effect of killing the stream once and for all. This is not
-			/// what you want.
-			/// - If io_bCancelAllTransfersForThisFile is set, you may cancel all transfers for this file at once.
-			///	Leave io_bCancelAllTransfersForThisFile to true if you don't want to be called again. For example, if
-			/// you don't do anything special in Cancel(), leave it to true. This will reduce the amount of useless calls.
-			/// If you set it to false, Cancel() will be called again for each remaining pending transfer that need to be cancelled. 
-			/// - If io_bCancelAllTransfersForThisFile is not set, Cancel() is only called for a subset of pending 
-			///	transfers for this file. You must not set it to true, as Cancel() needs to be called explicitly for each transfer that should be cancelled.
-			/// \warning
-			/// - The calling thread holds the stream's lock. You may call the callback function directly from here
-			/// (if you can guarantee that the I/O buffer will not be accessed in the meantime), but you must not wait here 
-			/// for another thread to call the callback function.
-			/// - Likewise, if you resolve transfers with your own thread and use a lock to protect your transfers queue, 
-			/// be careful not to run into a deadlock. Cancel() can be executed by any thread. Thus, if you need to lock your queue 
-			/// in Cancel(), you must never hold this lock when calling back transfers, either from within Cancel() or from your 
-			/// worker thread's routine. Lock your list, dequeue the transfer if you can, unlock, and call pCallback if and only if 
-			/// the transfer was found and dequeued. On the other hand, if you choose not to do anything in Cancel(), the lock only protects 
-			/// your list between Read()/Write() and your worker thread's routine, and since the device I/O thread does not hold the 
-			/// stream's lock while calling Read()/Write(), your worker thread may therefore hold it while calling back transfers.
-			/// - A race condition exists when cancelling all transfers (io_bCancelAllTransfersForThisFile is true) directly from within this hook. 
-			/// If you handle the io_bCancelAllTransfersForThisFile == true case, you need to defer calling the completion callback to later 
-			/// (from your usual I/O completion thread, for example). This will be fixed in a future version of Wwise.
-			virtual void Cancel(
-				AkFileDesc &		in_fileDesc,			///< File descriptor.
-				AkAsyncIOTransferInfo & io_transferInfo,	///< Transfer info to cancel.
-				bool & io_bCancelAllTransfersForThisFile	///< Flag indicating whether all transfers should be cancelled for this file (see notes in function description).
-				) = 0;
-
-			/// The following functions each provide "stub" implementations of IAkHookDeferredIOBatch operations, so as to forward calls to 
-			/// the existing single-transfer variants. The soundengine never calls IAkHookDeferred::Read et al, internally, and only
-			/// ever calls IAkIOHookDeferredBatch::BatchRead et al. 
-			virtual AKRESULT BatchRead(
-				AkUInt32				in_uNumTransfers,		///< Number of transfers to process
-				BatchIoTransferItem*	in_pTransferItems,		///< List of transfer items to process
-				AkBatchIOCallback		/*in_pBatchIoCallback*/,///< Callback to execute to handle completion of multiple items simultaneously
-				AKRESULT*				io_pDispatchResults		///< Output result codes to indicate if a transfer was successfully dispatched
-			)
-			{
-				AKRESULT cumulativeResult = AK_Success;
-				for (AkUInt32 i = 0; i < in_uNumTransfers; ++i)
-				{
-					BatchIoTransferItem ioTransferItem = in_pTransferItems[i];
-					AKRESULT result = Read(*(ioTransferItem.pFileDesc), ioTransferItem.ioHeuristics, *(ioTransferItem.pTransferInfo));
-					io_pDispatchResults[i] = result;
-					cumulativeResult = result == AK_Success ? cumulativeResult : AK_Fail;
-				}
-				return cumulativeResult;
-			}
-
-			virtual AKRESULT BatchWrite(
-				AkUInt32				in_uNumTransfers,		///< Number of transfers to process
-				BatchIoTransferItem*	in_pTransferItems,		///< List of transfer items to process
-				AkBatchIOCallback		/*in_pBatchIoCallback*/,///< Callback to execute to handle completion of multiple items simultaneously
-				AKRESULT*				io_pDispatchResults		///< Output result codes to indicate if a transfer was successfully dispatched
-			)
-			{
-				AKRESULT cumulativeResult = AK_Success;
-				for (AkUInt32 i = 0; i < in_uNumTransfers; ++i)
-				{
-					BatchIoTransferItem ioTransferItem = in_pTransferItems[i];
-					AKRESULT result = Write(*(ioTransferItem.pFileDesc), ioTransferItem.ioHeuristics, *(ioTransferItem.pTransferInfo));
-					io_pDispatchResults[i] = result;
-					cumulativeResult = result == AK_Success ? cumulativeResult : AK_Fail;
-				}
-				return cumulativeResult;
-			}
-			virtual void BatchCancel(
-				AkUInt32				in_uNumTransfers,		///< Number of transfers to process
-				BatchIoTransferItem*	in_pTransferItems,		///< List of transfer items to process
-				bool** io_ppbCancelAllTransfersForThisFile		///< Flag for each transfer indicating whether all transfers should be cancelled for this file (see notes in function description).
-			)
-			{
-				for (AkUInt32 i = 0; i < in_uNumTransfers; ++i)
-				{
-					BatchIoTransferItem ioTransferItem = in_pTransferItems[i];
-					Cancel(*(ioTransferItem.pFileDesc), *(ioTransferItem.pTransferInfo), *(io_ppbCancelAllTransfersForThisFile[i]));
-				}
-			}
-
+			/// This function is called to provide information when file related errors occur. The base paths known by this IO hook should be returned in out_searchedPath.
+			virtual AKRESULT OutputSearchedPaths(
+				AKRESULT in_result,						///< Result of the open call
+				const AkFileOpenData& in_FileOpen,		///< File name and flags passed to the Open call.
+				AkOSChar* out_searchedPath,				///< Pre-allocated string buffer to be filled with all searched paths searched for the file.
+				AkInt32 in_pathSize						///< The maximum size of the string
+			) {	return AK_NotImplemented; };
 		};
 
 		/// File location resolver interface. There is one and only one File Location Resolver that is
 		/// registered to the Stream Manager (using AK::StreamMgr::SetFileLocationResolver()). Its purpose
-		/// is to map a file name or ID to 
-		/// 1) a streaming device / I/O hook;
-		/// 2) a valid file descriptor (AkFileDesc) usable by the I/O hook.
+		/// is to resolve a file name or ID to a streaming device (I/O hook) that can handle the file.
 		/// When your Low-Level I/O submodule uses a single device, you should create a standalone I/O
-		/// hook which implements one of the I/O hooks defined above (blocking or deferred), as well 
+		/// hook which implements one of the I/O hooks defined above, as well 
 		/// as the File Location Resolver. You then register this object to the Stream Manager as the 
 		/// File Location Resolver.
 		/// If you wish to create multiple devices, then you should have a separate object that implements
 		/// AK::StreamMgr::IAkFileLocationResolver and registers to the Stream Manager as such. This object
 		/// will be used to dispatch the file open request to the appropriate device. The strategy you will 
-		/// use to select the correct device is up to you to implement. You may also implement a set of
-		/// hooks that delegate opening to the next device when they can't find the file requested 
-		/// (like a chain of responsiblity pattern), although this will likely be less efficient.
+		/// use to select the correct device is up to you to implement.
+		/// There is a built-in mechanism of chaining devices through GetNextPreferredDevice(). 
+		/// If a device can't open a file GetNextPreferredDevice will be called again to get the next 
+		/// device to check.
 		class IAkFileLocationResolver
 		{
 		protected:
@@ -612,99 +420,24 @@ namespace AK
 
 		public:
 
-			/// Returns a file descriptor for a given file name (string).
-			/// Performs the operations needed to make the file descriptor usable by
-			/// the other methods of the interface (for e.g. ask the OS for a valid file handle).
-			/// \return 
-			///     - AK_Success:       A valid file descriptor is returned
-			///     - AK_FileNotFound:  File was not found.
-			///     - AK_Fail:          File could not be open for any other reason.
-			/// \return 
-			///		- A file descriptor, that contains 
-			///         - an unique identifier to be used with functions of the low-level IO 
-			///           interface.
-			///         - the total stream size in bytes.
-			///         - the offset from the beginning of the file (in blocks).
-			///         - a device ID, that was obtained through AK::StreamMgr::CreateDevice().
-			///		- The updated io_bSyncOpen flag depending on the File Resolver's deferred opening policy.
-			/// \remarks
-			///		- The file descriptor is unique for each stream, and its address remains the same 
-			///		throughout its lifetime. In other words, the value of &in_fileDesc inside Read() or
-			///		Close() is the same as &out_fileDesc in Open().
-			///		- Open() is always called first in the client thread.
-			///		- If io_bSyncOpen is true, file opening must be executed now. If it is false,
-			///		the File Location Resolver may choose whether it wants open it now, or later
-			///		from the streaming device's thread. If it wishes to open it now, then it must
-			///		set io_bSyncOpen to true. Otherwise, it needs to do the following: leave 
-			///		io_bSyncOpen to false, clear out_fileDesc::iFileSize and out_fileDesc::uSector, 
-			///		and set out_fileDesc::deviceID to the streaming device's ID that will handle 
-			///		this file. By returning io_bSyncOpen as false, the Stream Manager will interpret
-			///		this as a request for deferred file opening, and this function will called again
-			///		from the streaming device's thread (this time, with this io_bSyncOpen set to true).
-			///		- All members of out_fileDesc will be cleared upon first call to Open().
-			/// \warning
-			///		- It is illegal to return io_bSyncOpen as false if Open() was called with io_bSyncOpen
-			///		set to true.
-			///		- Deferred file opening requires allocations in the Stream Manager's small object pool.
-			///		The File Location Resolver should always choose to open files synchronously if it is 
-			///		fast to do so.
-			///		- Whether opening is deferred or not, GetBlockSize() is always called right after the
-			///		first call to Open(), in the client's thread, and is never called again.
-			/// \sa 
-			///	- GetBlockSize()
-			/// - \ref streamingmanager_lowlevel_location
-			virtual AKRESULT Open( 
-				const AkOSChar*			in_pszFileName,		///< File name.
-				AkOpenMode				in_eOpenMode,		///< Open mode.
-				AkFileSystemFlags *		in_pFlags,			///< Special flags. Can pass NULL.
-				bool &					io_bSyncOpen,		///< If true, the file must be opened synchronously. Otherwise it is left at the File Location Resolver's discretion. Return false if Open needs to be deferred.
-				AkFileDesc &			io_fileDesc         ///< Returned file descriptor.
-				) = 0;
-
-			/// Returns a file descriptor for a given file ID.
-			/// Performs the operations needed to make the file descriptor usable by
-			/// the other methods of the interface (for e.g. ask the OS for a valid file handle).
-			/// \return 
-			///     - AK_Success:       A valid file descriptor is returned
-			///     - AK_FileNotFound:  File was not found.
-			///     - AK_Fail:          File could not be open for any other reason.
-			/// \return 
-			///		- A file descriptor, that contains 
-			///         - an unique identifier to be used with functions of the low-level IO 
-			///           interface.
-			///         - the total stream size in bytes.
-			///         - the offset from the beginning of the file (in blocks).
-			///         - a device ID, that was obtained through AK::StreamMgr::CreateDevice().
-			///		- The updated io_bSyncOpen flag depending on the File Resolver's deferred opening policy.
-			/// \remarks
-			///		- Open() is always called first in the client thread.
-			///		- If io_bSyncOpen is true, file opening must be executed now. If it is false,
-			///		the File Location Resolver may choose whether it wants open it now, or later
-			///		from the streaming device's thread. If it wishes to open it now, then it must
-			///		set io_bSyncOpen to true. Otherwise, it needs to do the following: leave 
-			///		io_bSyncOpen to false, clear out_fileDesc::iFileSize and out_fileDesc::uSector, 
-			///		and set out_fileDesc::deviceID to the streaming device's ID that will handle 
-			///		this file. By returning io_bSyncOpen as false, the Stream Manager will interpret
-			///		this as a request for deferred file opening, and this function will called again
-			///		from the streaming device's thread (this time, with this io_bSyncOpen set to true).
-			///		- All members of out_fileDesc will be cleared upon first call to Open().
-			/// \warning
-			///		- It is illegal to return io_bSyncOpen as false if Open() was called with io_bSyncOpen
-			///		set to true.
-			///		- Deferred file opening requires allocations in the Stream Manager's small object pool.
-			///		The File Location Resolver should always choose to open files synchronously if it is 
-			///		fast to do so.
-			///		- Whether opening is deferred or not, GetBlockSize() is always called right after the
-			///		first call to Open(), in the client's thread, and is never called again.
-			///	- GetBlockSize()
-			/// - \ref streamingmanager_lowlevel_location
-			virtual AKRESULT Open( 
-				AkFileID				in_fileID,          ///< File ID.
-				AkOpenMode				in_eOpenMode,       ///< Open mode.
-				AkFileSystemFlags *		in_pFlags,			///< Special flags. Can pass NULL.
-				bool &					io_bSyncOpen,		///< If true, the file must be opened synchronously. Otherwise it is left at the File Location Resolver's discretion. Return false if Open needs to be deferred.
-				AkFileDesc &			io_fileDesc         ///< Returned file descriptor.
-				) = 0;
+			/// Determines which device to use to open a file. 
+			/// If your File Resolver only handles one device, return AK_NotImplemented and the StreamMgr will use the only device configured.
+			/// If it handles multiple devices, you can base the decision on where to get the file on any kind of heuristic: 
+			/// file extension, file name, access rights, CodecID, etc.
+			/// The order in which devices are searched is left to the implementer.
+			/// This function will always be called first with io_idDevice = AK_INVALID_DEVICE_ID. 
+			/// \return
+			///		- AK_Success if there is a device to delegate the Open() call to. io_idDevice should be set to the proper AkDeviceID (as returned by AK::StreamMgr::CreateDevice).
+			///		- AK_FileNotFound if all devices have been exhausted. 
+			///		- AK_NotImplemented if there is only one device in the system and file resolution is trivial.
+			/// \remark
+			/// This can be called from multiple threads.
+			/// Note that there is a 
+			virtual AKRESULT GetNextPreferredDevice(
+				AkAsyncFileOpenData& in_FileOpen,	///< File name and flags passed to the Open call.
+				AkDeviceID& io_idDevice				///< In: last device used. Out: next device to use to open the file
+				) 
+			{ return AK_NotImplemented;	};
 		};
 
 		/// \name Audiokinetic implementation-specific Stream Manager factory.
@@ -756,23 +489,23 @@ namespace AK
 		/// \return The device ID. AK_INVALID_DEVICE_ID if there was an error and it could not be created.
 		/// \warning 
 		/// - This function is not thread-safe.
-		/// - Use a blocking hook (IAkIOHookBlocking) with SCHEDULER_BLOCKING devices, and a 
-		/// deferred hook (IAkIOHookDeferredBatch) with SCHEDULER_DEFERRED_LINED_UP devices (these flags are
-		/// specified in the device settings (AkDeviceSettings). The pointer to IAkLowLevelIOHook is
-		/// statically cast internally into one of these hooks. Implementing the wrong (or no) interface
-		/// will result into a crash.
 		/// \remarks 
 		/// - You may use AK::StreamMgr::GetDefaultDeviceSettings() first to get default values for the 
 		/// settings, change those you want, then feed the structure to this function.
-		/// - The returned device ID should be kept by the Low-Level IO, to assign it to file descriptors 
-		/// in AK::StreamMgr::IAkFileLocationResolver::Open().
+		/// - The returned device ID should be kept by the Low-Level IO, to assign it to file descriptors
+		/// in AK::StreamMgr::IAkLowLevelIOHook::BatchOpen().
+		/// \return
+		/// - AK_Success: Device was added to the system properly
+		/// - AK_InsufficientMemory: Not enough memory to complete the operation
+		/// - AK_InvalidParameter: One of the settings in AkDeviceSettings is out of range. Check asserts or debug console.
 		/// \sa
 		/// - AK::StreamMgr::IAkLowLevelIOHook
 		/// - AK::StreamMgr::GetDefaultDeviceSettings()
 		/// - \ref streamingmanager_settings
-		AK_EXTERNAPIFUNC( AkDeviceID, CreateDevice )(
+		AK_EXTERNAPIFUNC( AKRESULT, CreateDevice )(
 			const AkDeviceSettings &	in_settings,		///< Device settings.
-			IAkLowLevelIOHook *			in_pLowLevelHook	///< Associated low-level I/O hook. Pass either a IAkIOHookBlocking or a IAkIOHookDeferredBatch interface, consistent with the type of the scheduler.
+			IAkLowLevelIOHook *			in_pLowLevelHook,	///< Associated low-level I/O hook. Pass either a IAkLowLevelIOHook interface, consistent with the type of the scheduler.
+			AkDeviceID&					out_idDevice		///< Assigned unique device id to use in all other functions of this interface.
 			);
 		/// Streaming device destruction.
 		/// \return AK_Success if the device was successfully destroyed.
@@ -780,6 +513,13 @@ namespace AK
 		AK_EXTERNAPIFUNC( AKRESULT, DestroyDevice )(
 			AkDeviceID					in_deviceID         ///< Device ID of the device to destroy.
 			);
+		
+		/// Execute pending I/O operations on all created I/O devices.
+		/// This should only be called in single-threaded environments where an I/O device cannot spawn a thread.
+		/// \return AK_Success when called from an appropriate environment, AK_NotCompatible otherwise.
+		/// \sa 
+		/// - AK::StreamMgr::CreateDevice()
+		AK_EXTERNAPIFUNC( AKRESULT, PerformIO )();
 
 		/// Get the default values for the streaming device's settings. Recommended usage
 		/// is to call this function first, then pass the settings to AK::StreamMgr::CreateDevice().

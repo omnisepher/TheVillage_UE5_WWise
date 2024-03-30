@@ -1,29 +1,33 @@
 {
  "PluginInfo": {
-  "Project": "TheVillage_WwiseProject",
   "Platform": "Windows",
   "BasePlatform": "Windows",
-  "Plugins": [
+  "PluginLibs": [
    {
-    "Name": "Wwise Guitar Distortion",
-    "ID": "8257539",
+    "LibName": "Wwise Guitar Distortion",
+    "LibId": "8257539",
+    "Type": "Effect",
     "DLL": "AkGuitarDistortion",
     "StaticLib": "AkGuitarDistortionFX"
    },
    {
-    "Name": "Wwise Time Stretch",
-    "ID": "8519683",
+    "LibName": "Wwise Time Stretch",
+    "LibId": "8519683",
+    "Type": "Effect",
     "DLL": "AkTimeStretch",
     "StaticLib": "AkTimeStretchFX"
    },
    {
-    "Name": "System",
-    "ID": "11403271"
+    "LibName": "System",
+    "LibId": "11403271",
+    "Type": "AudioDevice"
    },
    {
-    "Name": "No Output",
-    "ID": "11862023"
+    "LibName": "No Output",
+    "LibId": "11862023",
+    "Type": "AudioDevice"
    }
-  ]
+  ],
+  "FileHash": "{A0416524-B081-C9D3-05E8-240C74C062DB}"
  }
 }

@@ -50,7 +50,7 @@
 //   Type operator() (int i0, int i1, ..., int inm1) const;
 // }
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real, typename Controls>
     class IntpBSplineUniformShared
@@ -636,7 +636,7 @@ namespace gte
 
 // Implementation for B-spline interpolation whose dimension is known at
 // compile time.
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real, typename Controls, int N = 0>
     class IntpBSplineUniform : public IntpBSplineUniformShared<Real, Controls>
@@ -678,7 +678,7 @@ namespace gte
 
 // Implementation for B-spline interpolation whose dimension is known only
 // at run time.
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real, typename Controls>
     class IntpBSplineUniform<Real, Controls, 0> : public IntpBSplineUniformShared<Real, Controls>
@@ -733,7 +733,7 @@ namespace gte
 #if !defined(GTE_INTP_BSPLINE_UNIFORM_NO_SPECIALIZATION)
 
 // Specialization for 1-dimensional data.
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real, typename Controls>
     class IntpBSplineUniform<Real, Controls, 1> : public IntpBSplineUniformShared<Real, Controls>
@@ -924,7 +924,7 @@ namespace gte
 }
 
 // Specialization for 2-dimensional data.
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real, typename Controls>
     class IntpBSplineUniform<Real, Controls, 2> : public IntpBSplineUniformShared<Real, Controls>
@@ -1169,7 +1169,7 @@ namespace gte
 }
 
 // Specialization for 3-dimensional data.
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real, typename Controls>
     class IntpBSplineUniform<Real, Controls, 3> : public IntpBSplineUniformShared<Real, Controls>

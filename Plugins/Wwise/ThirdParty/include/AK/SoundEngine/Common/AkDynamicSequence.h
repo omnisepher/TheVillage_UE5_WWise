@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #ifndef _AK_SOUNDENGINE_AKDYNAMICSEQUENCE_H
@@ -37,7 +36,7 @@ namespace AK
 {
 	namespace SoundEngine
 	{
-		/// Dynamic Sequence namespace
+		/// Dynamic Sequence namespace. Use the Dynamic Sequence API to play and sequence Dialogue Events dynamically, according to a set of rules and conditions. For more information, refer to \ref integrating_elements_dynamicdialogue and <a href="https://www.audiokinetic.com/library/edge/?source=Help&id=understanding_dynamic_dialogue_system" target="_blank">Understanding the Dynamic Dialogue System</a>.
 		/// \remarks The functions in this namespace are thread-safe, unless stated otherwise.
 		namespace DynamicSequence
 		{
@@ -98,7 +97,7 @@ namespace AK
 				{
 					PlaylistItem * pItem = AddLast();
 					if ( !pItem )
-						return AK_Fail;
+						return AK_InsufficientMemory;
 
 					pItem->audioNodeID = in_audioNodeID;
 					pItem->msDelay = in_msDelay;
@@ -134,7 +133,7 @@ namespace AK
 			};
 
 			/// Open a new Dynamic Sequence.
-	        /// \return Playing ID of the dynamic sequence, or AK_INVALID_PLAYING_ID in failure case
+	        /// \return Playing ID of the dynamic sequence, or AK_INVALID_PLAYING_ID in failure case and an error message in the debug console and Wwise Profiler
 			///
 			/// \sa
 			/// - AK::SoundEngine::DynamicSequence::DynamicSequenceType
@@ -148,11 +147,17 @@ namespace AK
 														
 			/// Close specified Dynamic Sequence. The Dynamic Sequence will play until finished and then
 			/// deallocate itself.
+			/// \return 
+			/// - AK_Success if the command was successfully queued
+			/// - AK_PlayingIDNotFound if the playing ID does not match to any open Dynamic Sequence
 			AK_EXTERNAPIFUNC( AKRESULT, Close )(
 				AkPlayingID in_playingID						///< AkPlayingID returned by DynamicSequence::Open
 				);
 
 			/// Play specified Dynamic Sequence.
+			/// \return 
+			/// - AK_Success if the command was successfully queued
+			/// - AK_PlayingIDNotFound if the playing ID does not match to any open Dynamic Sequence
 			AK_EXTERNAPIFUNC( AKRESULT, Play )( 
 				AkPlayingID in_playingID,											///< AkPlayingID returned by DynamicSequence::Open
 				AkTimeMs in_uTransitionDuration = 0,								///< Fade duration
@@ -161,6 +166,9 @@ namespace AK
 
 			/// Pause specified Dynamic Sequence. 
 			/// To restart the sequence, call Resume.  The item paused will resume its playback, followed by the rest of the sequence.
+			/// \return 
+			/// - AK_Success if the command was successfully queued
+			/// - AK_PlayingIDNotFound if the playing ID does not match to any open Dynamic Sequence
 			AK_EXTERNAPIFUNC( AKRESULT, Pause )( 
 				AkPlayingID in_playingID,											///< AkPlayingID returned by DynamicSequence::Open
 				AkTimeMs in_uTransitionDuration = 0,								///< Fade duration
@@ -168,6 +176,9 @@ namespace AK
 				);
 
 			/// Resume specified Dynamic Sequence.
+			/// \return 
+			/// - AK_Success if the command was successfully queued
+			/// - AK_PlayingIDNotFound if the playing ID does not match to any open Dynamic Sequence
 			AK_EXTERNAPIFUNC( AKRESULT, Resume )(
 				AkPlayingID in_playingID,											///< AkPlayingID returned by DynamicSequence::Open
 				AkTimeMs in_uTransitionDuration = 0,									///< Fade duration
@@ -177,6 +188,9 @@ namespace AK
 			/// Stop specified Dynamic Sequence immediately.  
 			/// To restart the sequence, call Play. The sequence will restart with the item that was in the 
 			/// playlist after the item that was stopped.
+			/// \return 
+			/// - AK_Success if the command was successfully queued
+			/// - AK_PlayingIDNotFound if the playing ID does not match to any open Dynamic Sequence
 			AK_EXTERNAPIFUNC( AKRESULT, Stop )(
 				AkPlayingID in_playingID,											///< AkPlayingID returned by DynamicSequence::Open
 				AkTimeMs in_uTransitionDuration = 0,								///< Fade duration
@@ -184,6 +198,9 @@ namespace AK
 				);
 
 			/// Break specified Dynamic Sequence.  The sequence will stop after the current item.
+			/// \return 
+			/// - AK_Success if the command was successfully queued
+			/// - AK_PlayingIDNotFound if the playing ID does not match to any open Dynamic Sequence
 			AK_EXTERNAPIFUNC( AKRESULT, Break )(
 				AkPlayingID in_playingID						///< AkPlayingID returned by DynamicSequence::Open
 				);
@@ -192,6 +209,9 @@ namespace AK
 			/// It is only possible to seek in the first item of the sequence.
 			/// If you seek past the duration of the first item, it will be skipped and an error will reported in the Capture Log and debug output. 
 			/// All the other items in the sequence will continue to play normally.
+			/// \return 
+			/// - AK_Success if the command was successfully queued
+			/// - AK_PlayingIDNotFound if the playing ID does not match to any open Dynamic Sequence
 			AK_EXTERNAPIFUNC( AKRESULT, Seek )(
 				AkPlayingID in_playingID,						///< AkPlayingID returned by DynamicSequence::Open
 				AkTimeMs in_iPosition,							///< Position into the the sound, in milliseconds
@@ -202,6 +222,9 @@ namespace AK
 			/// It is only possible to seek in the first item of the sequence.
 			/// If you seek past the duration of the first item, it will be skipped and an error will reported in the Capture Log and debug output.
 			/// All the other items in the sequence will continue to play normally.
+			/// \return 
+			/// - AK_Success if the command was successfully queued
+			/// - AK_PlayingIDNotFound if the playing ID does not match to any open Dynamic Sequence
 			AK_EXTERNAPIFUNC(AKRESULT, Seek)(
 				AkPlayingID in_playingID,						///< AkPlayingID returned by DynamicSequence::Open
 				AkReal32 in_fPercent,							///< Position into the the sound, in percentage of the whole duration.
@@ -209,6 +232,9 @@ namespace AK
 				);
 
 			/// Get pause times.
+			/// \return 
+			/// - AK_Success if successful
+			/// - AK_PlayingIDNotFound if the playing ID does not match to any open Dynamic Sequence
 			AK_EXTERNAPIFUNC(AKRESULT, GetPauseTimes)(
 				AkPlayingID in_playingID,						///< AkPlayingID returned by DynamicSequence::Open
 				AkUInt32 &out_uTime,							///< If sequence is currently paused, returns time when pause started, else 0.
@@ -217,6 +243,9 @@ namespace AK
 
 			/// Get currently playing item. Note that this may be different from the currently heard item
 			/// when sequence is in sample-accurate mode.
+			/// \return 
+			/// - AK_Success if successful
+			/// - AK_PlayingIDNotFound if the playing ID does not match to any open Dynamic Sequence
 			AK_EXTERNAPIFUNC(AKRESULT, GetPlayingItem)(
 				AkPlayingID in_playingID,						///< AkPlayingID returned by DynamicSequence::Open
 				AkUniqueID & out_audioNodeID, 					///< Returned audio node ID of playing item.
@@ -224,7 +253,7 @@ namespace AK
 				);
 
 			/// Lock the Playlist for editing. Needs a corresponding UnlockPlaylist call.
-			/// \return Pointer to locked Playlist if successful, NULL otherwise
+			/// \return Pointer to locked Playlist if successful, NULL otherwise (in_playingID not found)
 			/// \sa
 			/// - AK::SoundEngine::DynamicSequence::UnlockPlaylist
 			AK_EXTERNAPIFUNC( Playlist *, LockPlaylist )(
@@ -232,6 +261,9 @@ namespace AK
 				);
 
 			/// Unlock the playlist.
+			/// \return 
+			/// - AK_Success if successful
+			/// - AK_PlayingIDNotFound if the playing ID does not match to any open Dynamic Sequence
 			/// \sa
 			/// - AK::SoundEngine::DynamicSequence::LockPlaylist
 			AK_EXTERNAPIFUNC( AKRESULT, UnlockPlaylist )(

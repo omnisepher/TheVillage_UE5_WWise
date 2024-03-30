@@ -1,18 +1,19 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
-
 
 /*------------------------------------------------------------------------------------
 	SWaapiPicker.h
@@ -30,7 +31,8 @@ Copyright (c) 2021 Audiokinetic Inc.
 #include "Widgets/Input/SSearchBox.h"
 #include "Widgets/Views/STreeView.h"
 #include "Framework/Commands/UICommandList.h"
-DECLARE_LOG_CATEGORY_EXTERN(LogAkAudioPicker, Log, All);
+
+DECLARE_DELEGATE_OneParam(FOnImportWwiseAssetsClicked, const FString&);
 
 typedef TTextFilter< const FString& > StringFilter;
 
@@ -47,6 +49,7 @@ public:
 	typedef TSlateDelegates< TSharedPtr< FWwiseTreeItem > >::FOnSelectionChanged FOnSelectionChanged;
 
 	DECLARE_DELEGATE(FOnGenerateSoundBankClicked);
+	DECLARE_DELEGATE(FOnRefreshClicked);
 
 public:
 	SLATE_BEGIN_ARGS( SWaapiPicker )
@@ -96,6 +99,12 @@ public:
 		/** Handles the Generate SoundBanks click operation */
 		SLATE_EVENT(FOnGenerateSoundBankClicked, OnGenerateSoundBanksClicked)
 
+		/** Handles the Refresh click operation */
+		SLATE_EVENT(FOnRefreshClicked, OnRefreshClicked)
+
+		/** Handles the Import asset operation */
+		SLATE_EVENT(FOnImportWwiseAssetsClicked, OnImportWwiseAssetsClicked)
+
 	SLATE_END_ARGS( )
 
 	void Construct(const FArguments& InArgs);
@@ -111,7 +120,7 @@ public:
 	* Call WAAPI to get information about an object form the path or the id of the object (inFrom).
 	*
 	* @param inFromField	 The path or the id from which the data will be get.
-	* @param outJsonResult   A JSON object that contains useful informations about the call process, gets the object infos or gets an error infos in case the call failed.
+	* @param outJsonResult   A JSON object that contains useful information about the call process, gets the object infos or gets an error infos in case the call failed.
 	* @return			     A boolean to ensure that the call was successfully done.
 	*/
 	static bool CallWaapiGetInfoFrom(const FString& inFromField, const FString& inFromString, TSharedPtr<FJsonObject>& outJsonResult, const TArray<TransformStringField>& TransformFields);
@@ -143,7 +152,7 @@ public:
 	/**
 	* Allows to get information from a FJsonValue object and use it to create an FWwiseTreeItem.
 	*
-	* @param inJsonItem		An FJsonValue from which we get utile data to construct the  FWwiseTreeItem object.
+	* @param inJsonItem		An FJsonValue from which we get useful data to construct the  FWwiseTreeItem object.
 	* @return				An FWwiseTreeItem that will be added to the root items.
 	*/
 	TSharedPtr<FWwiseTreeItem> ConstructWwiseTreeItem(const TSharedPtr<FJsonValue>& InJsonItem);
@@ -167,7 +176,7 @@ private:
 	/** Filter for the search box */
 	TSharedPtr<StringFilter> SearchBoxFilter;
 
-	/** Root items (only events for now). */
+	/** Root items, one for each type of Wwise object */
 	FCriticalSection RootItemsLock;
 	TArray< TSharedPtr<FWwiseTreeItem> > RootItems;
 
@@ -204,6 +213,11 @@ private:
 
 	FOnGenerateSoundBankClicked OnGenerateSoundBanksClicked;
 
+	FOnRefreshClicked OnRefreshClicked;
+
+	/** Delegate to invoke when assets are imported. */
+	FOnImportWwiseAssetsClicked OnImportWwiseAssetsClicked;
+
 	/** Whether to disable the context menu and keyboard controls of the explore section*/
 	bool bRestrictContextMenu;
 
@@ -227,8 +241,8 @@ private:
 	/** One-off active timer to focus the widget post-construct */
 	EActiveTimerReturnType SetFocusPostConstruct(double InCurrentTime, float InDeltaTime);
 
-	/** Ran when the Populate button is clicked. Populates the window. */
-	FReply OnPopulateClicked();
+	/** Ran when the Refresh button is clicked. Populates the window. */
+	FReply OnRefreshButtonClicked();
 
 	FReply OnGenerateSoundBanksButtonClicked();
 
@@ -322,6 +336,9 @@ private:
 
 	/** Callback to execute the redo command */
 	void HandleRedoWaapiPickerCommandExecute() const;
+
+	/** Callback to import a Wwise item into the project's Contents*/
+	void HandleImportWwiseItemCommandExecute() const;
 
 	void SubscribeWaapiCallbacks();
 	void UnsubscribeWaapiCallbacks();

@@ -86,7 +86,7 @@ void AWizardChar::StartSpellCasting()
 		FOnAkPostEventCallback nullCallback;
 		TArray<FAkExternalSourceInfo> nullSources;
 
-		IceSkillEventID = UAkGameplayStatics::PostEvent(nullptr, this, int32(0), nullCallback, nullSources, false, (FString)("IceSkill"));
+		IceSkillEventID = UAkGameplayStatics::PostEvent(m_IceSkillEvent, this, int32(0), nullCallback, false);
 		Mana = Mana - SkillIceManaCost;
 	}
 }
@@ -98,6 +98,10 @@ void AWizardChar::StopSpellCasting()
 
 	StopSpellEffect();
 
-	UAkGameplayStatics::ExecuteActionOnPlayingID(AkActionOnEventType::Stop, IceSkillEventID, int32(200));
+	if (auto* SoundEngine = IWwiseSoundEngineAPI::Get())
+	{
+		SoundEngine->ExecuteActionOnPlayingID(AK::SoundEngine::AkActionOnEventType::AkActionOnEventType_Stop, IceSkillEventID, int32(200));
+	}
+	
 }
 

@@ -17,7 +17,7 @@
 // vector for the segment, and |t| <= e.  The value e = |P1 - P0|/2 is the
 // extent (or radius or half-length) of the segment.
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class Segment

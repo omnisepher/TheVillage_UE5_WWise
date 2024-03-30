@@ -1,9 +1,0 @@
-Event	ID	Name			Wwise Object Path	Notes
-	3731681489	IceSkill			\Default Work Unit\IceSkill	
-
-Game Parameter	ID	Name			Wwise Object Path	Notes
-	1351491183	IceSkillCastTime			\Default Work Unit\IceSkillCastTime	
-
-Effect plug-ins	ID	Name	Type				Notes
-	547688741	Wwise Guitar Distortion (Custom)	Wwise Guitar Distortion			
-

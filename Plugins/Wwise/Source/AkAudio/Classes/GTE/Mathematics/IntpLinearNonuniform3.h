@@ -20,7 +20,7 @@
 //   bool GetIndices(int, std::array<int, 4>&) const;
 //   bool GetBarycentrics(int, Vector3<Real> const&, Real[4]) const;
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real, typename TetrahedronMesh>
     class IntpLinearNonuniform3

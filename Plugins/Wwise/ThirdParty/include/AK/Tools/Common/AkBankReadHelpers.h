@@ -21,16 +21,22 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #ifndef _AK_BANKREADHELPERS_H_
 #define _AK_BANKREADHELPERS_H_
 
+#include <AK/Tools/Common/AkPlatformFuncs.h>
+
+#include <type_traits>
+
 namespace AK
 {
-	template< typename T >
+	template<
+		typename T,
+		typename std::enable_if<std::is_fundamental<T>::value || std::is_enum<T>::value, bool>::type = true
+	>
 	inline T ReadUnaligned(const AkUInt8* in_pVal)
 	{
 #if defined(__GNUC__)
@@ -43,7 +49,23 @@ namespace AK
 #endif
 	}
 
-	template< typename T >
+	template<
+		typename T,
+		typename std::enable_if<std::is_class<T>::value, bool>::type = true
+	>
+	inline T ReadUnaligned(const AkUInt8* in_pVal)
+	{
+		static_assert(std::is_trivially_copyable<T>::value, "Unaligned operations require being trivially copiable");
+
+		T result;
+		AKPLATFORM::AkMemCpy(&result, in_pVal, sizeof(T));
+		return result;
+	}
+
+	template<
+		typename T,
+		typename std::enable_if<std::is_fundamental<T>::value || std::is_enum<T>::value, bool>::type = true
+	>
 	inline void WriteUnaligned(AkUInt8* out_pVal, const T in_val)
 	{
 #if defined(__GNUC__)
@@ -67,6 +89,16 @@ namespace AK
 #else
 		*reinterpret_cast<T *>(out_pVal) = in_val;
 #endif
+	}
+
+	template<
+		typename T,
+		typename std::enable_if<std::is_class<T>::value, bool>::type = true
+	>
+	inline void WriteUnaligned(AkUInt8* out_pVal, const T& in_val)
+	{
+		static_assert(std::is_trivially_copyable<T>::value, "Unaligned operations require being trivially copiable");
+		AKPLATFORM::AkMemCpy(out_pVal, &in_val, sizeof(T));
 	}
 
 	/// Read data from bank and advance pointer.
@@ -155,11 +187,13 @@ namespace AK
 #define READVARIABLESIZEBANKDATA( _Type, _Ptr, _Size )		\
 		AK::ReadVariableSizeBankData<_Type>( _Ptr, _Size )
 
-/// Read and return null-terminatd UTF-8 string stored in bank, and its size.
+/// Read and return a null-terminated UTF-8 string, written with the DataWriter of \ref AK::Wwise::Plugin::CustomData::GetPluginData or
+/// \ref AK::Wwise::Plugin::AudioPlugin::GetBankParameters, and stored in bank, and its size.
+/// \ref wwiseplugin_bank
 #define READBANKSTRING( _Ptr, _Size, _out_StringSize )		\
 		AK::ReadBankStringUtf8( _Ptr, _Size, _out_StringSize )
 
-/// Skip over some bank data  of a given type, incrementing running pointer and decrementing block size for debug tracking purposes
+/// Skip over some bank data of a given type, incrementing running pointer and decrementing block size for debug tracking purposes
 #define SKIPBANKDATA( _Type, _Ptr, _Size )		\
 		( _Ptr ) += sizeof( _Type );	\
 		( _Size ) -= sizeof( _Type )

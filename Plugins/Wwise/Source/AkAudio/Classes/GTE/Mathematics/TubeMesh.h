@@ -12,7 +12,7 @@
 #include <functional>
 #include <memory>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TubeMesh : public Mesh<Real>

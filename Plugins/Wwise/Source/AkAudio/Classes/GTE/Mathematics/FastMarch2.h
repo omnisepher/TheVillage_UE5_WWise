@@ -17,7 +17,7 @@
 //   J.A. Sethian,
 //   Cambridge University Press, 1999
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class FastMarch2 : public FastMarch<Real>

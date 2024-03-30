@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 /// \file
@@ -40,6 +39,9 @@ typedef void ( AKSOUNDENGINE_CALL *AkMemInitForThread ) (
 	);
 
 typedef void ( AKSOUNDENGINE_CALL *AkMemTermForThread ) (
+	);
+
+typedef void ( AKSOUNDENGINE_CALL *AkMemTrimForThread ) (
 	);
 
 typedef void* ( AKSOUNDENGINE_CALL *AkMemMalloc ) (
@@ -133,6 +135,20 @@ typedef void ( *AkMemFreeVM ) (
 	size_t release
 	);
 
+enum AkSpanCount
+{
+	// Span count attempts to be as low as possible. Offers lowest memory usage, but reduces CPU performance due to increased calls to pfAllocVM and other memory allocation hooks.
+	AkSpanCount_Small = 0,
+
+	// Span count attempts to match 512KiB mappings. Offers moderate balance between memory and CPU usage.
+	AkSpanCount_Medium,
+
+	// Span count attempts to match 2MiB, or AK_VM_HUGE_PAGE_SIZE, mappings. Offers best overall CPU performance due to use of 2MiB page mappings, but increased memory usage.
+	AkSpanCount_Huge,
+
+	AkSpanCount_END,
+};
+
 /// Initialization settings for the default implementation of the Memory Manager. For more details, see \ref memorymanager_init.
 /// \sa AK::MemoryMgr
 struct AkMemSettings
@@ -141,6 +157,7 @@ struct AkMemSettings
 	//@{
 	AkMemInitForThread				pfInitForThread;				///< (Optional) Thread-specific allocator initialization hook.
 	AkMemTermForThread				pfTermForThread;				///< (Optional) Thread-specific allocator termination hook.
+	AkMemTrimForThread				pfTrimForThread;				///< (Optional) Thread-specific allocator "trimming" hook. Used to relinquish memory resources when threads enter a period of inactivity.
 	AkMemMalloc						pfMalloc;						///< (Optional) Memory allocation hook.
 	AkMemMalign						pfMalign;						///< (Optional) Memory allocation hook.
 	AkMemRealloc					pfRealloc;						///< (Optional) Memory allocation hook.
@@ -153,6 +170,8 @@ struct AkMemSettings
 	/// @name Configuration.
 	//@{
 	AkUInt64						uMemAllocationSizeLimit;		///< When non-zero, limits the total amount of virtual and device memory allocated by AK::MemoryMgr.
+	bool							bEnableSeparateDeviceHeap;		///< Enable use of device memory heap for all allocations (on applicable platforms).
+	AK::TempAlloc::InitSettings		tempAllocSettings[AK::TempAlloc::Type_NUM]; ///< Configuration of behavior for the temporary-memory pools. For more information, see \ref goingfurther_optimizingmempools_tempallocs.
 	//@}
 
 	/// @name Page allocation hooks, used by rpmalloc. Default to AKPLATFORM::AllocVM et al.
@@ -163,6 +182,9 @@ struct AkMemSettings
 	AkMemFreeVM						pfFreeDevice;					///< Device page allocation hook.
 	AkUInt32						uVMPageSize;					///< Virtual memory page size. Defaults to 0 which means auto-detect.
 	AkUInt32						uDevicePageSize;				///< Device memory page size. Defaults to 0 which means auto-detect.
+	//AkSpanCount					uVMSpanCount;					///< Virtual memory span count for each map operation in rpmalloc. Defaults to AkSpanCount_Huge. For more information, refer to \ref goingfurther_optimizingmempools_spancount.
+	//AkSpanCount					uDeviceSpanCount;				///< Device memory span count for each map operation in rpmalloc. Defaults to AkSpanCount_Huge. For more information, refer to \ref goingfurther_optimizingmempools_spancount.
+	AkUInt32						uMaxThreadLocalHeapAllocSize;	///< All memory allocations of sizes larger than this value will go to a global heap shared across all threads. Defaults to 0 which means all allocations go to a global heap. 
 	//@}
 
 	/// @name Memory allocation debugging.
@@ -174,6 +196,11 @@ struct AkMemSettings
 	AkMemDebugFree					pfDebugFree;					///< (Optional) Memory allocation debugging hook. Used for tracking calls to pfFree.
 	AkUInt32						uMemoryDebugLevel;				///< Default 0 disabled. 1 debug enabled. 2 stomp allocator enabled. 3 stomp allocator and debug enabled. User implementations may use multiple non-zero values to offer different features.
 	//@}
+
+	// Moved to end-of-struct to maintain stability across 2023.1 modules.
+	AkSpanCount						uVMSpanCount;					///< Virtual memory span count for each map operation in rpmalloc. Defaults to AkSpanCount_Huge. For more information, refer to \ref goingfurther_optimizingmempools_spancount.
+	AkSpanCount						uDeviceSpanCount;				///< Device memory span count for each map operation in rpmalloc. Defaults to AkSpanCount_Huge. For more information, refer to \ref goingfurther_optimizingmempools_spancount.
+
 };
 //@}
 
@@ -198,23 +225,25 @@ AK_EXTERNAPIFUNC( void, GetDefaultSettings ) (
 
 }
 
-#if defined AK_WIN || defined AK_LINUX || defined AK_SONY || defined AK_XBOX || defined AK_APPLE
-#define AK_CRT_ALLOCATOR
+#if defined AK_WIN || defined AK_LINUX || defined AK_SONY || defined AK_XBOX || defined AK_APPLE || defined AK_EMSCRIPTEN
+#define AK_CRT_ALLOCATOR_SUPPORTED
 #endif
 
-#ifdef AK_CRT_ALLOCATOR
-/// \name C runtime allocator functions for AkMemoryMgr
-//@{
-
+#ifdef AK_CRT_ALLOCATOR_SUPPORTED
 namespace AK
 {
 
 namespace MemoryMgr
 {
 
+/// @name C runtime allocator functions for the default implementation of the Memory Manager.
+//@{
+
 AK_EXTERNAPIFUNC( void, AkCrtAllocatorInitForThread )();
 
 AK_EXTERNAPIFUNC( void, AkCrtAllocatorTermForThread )();
+
+AK_EXTERNAPIFUNC( void, AkCrtAllocatorTrimForThread )();
 
 AK_EXTERNAPIFUNC( void*, AkCrtAllocatorMalloc )(
 	AkMemPoolId poolId,
@@ -252,15 +281,19 @@ AK_EXTERNAPIFUNC( size_t, AkCrtAllocatorSizeOfMemory )(
 	void* pAddress
 	);
 
-}
-
-}
-
 //@}
-#endif // AK_CRT_ALLOCATOR
 
-/// \name stomp allocator functions for AkMemoryMgr
-//@{
+}
+
+}
+
+#endif // AK_CRT_ALLOCATOR_SUPPORTED
+
+#if !defined AK_EMSCRIPTEN
+#define AK_STOMP_ALLOCATOR_SUPPORTED
+#endif
+
+#ifdef AK_STOMP_ALLOCATOR_SUPPORTED
 
 namespace AK
 {
@@ -268,9 +301,14 @@ namespace AK
 namespace MemoryMgr
 {
 
+/// @name Stomp allocator functions for the default implementation of the Memory Manager.
+//@{
+
 AK_EXTERNAPIFUNC( void, AkStompAllocatorInitForThread )();
 
 AK_EXTERNAPIFUNC( void, AkStompAllocatorTermForThread )();
+
+AK_EXTERNAPIFUNC( void, AkStompAllocatorTrimForThread )();
 
 AK_EXTERNAPIFUNC( void*, AkStompAllocatorMalloc )(
 	AkMemPoolId poolId,
@@ -308,9 +346,12 @@ AK_EXTERNAPIFUNC( size_t, AkStompAllocatorSizeOfMemory )(
 	void* pAddress
 	);
 
+//@}
+
 }
 
 }
+#endif // AK_STOMP_ALLOCATOR_SUPPORTED
 
 namespace AK
 {
@@ -318,7 +359,8 @@ namespace AK
 namespace MemoryMgr
 {
 
-/// debug tool hooks AkMemoryMgr
+/// @name Debug tool hooks for the default implementation of the Memory Manager.
+//@{
 
 AK_EXTERNAPIFUNC( AKRESULT, AkMemDebugToolInit )();
 
@@ -364,6 +406,8 @@ AK_EXTERNAPIFUNC( void, AkMemDebugToolFree ) (
 	AkMemPoolId poolId,
 	void* pAddress
 	);
+
+//@}
 
 }
 

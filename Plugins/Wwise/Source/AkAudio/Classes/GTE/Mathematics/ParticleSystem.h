@@ -10,7 +10,7 @@
 #include <Mathematics/Vector.h>
 #include <vector>
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class ParticleSystem

@@ -31,7 +31,7 @@
 // See GeometricTools/GTEngine/Samples/Geometrics/MinimumAreaBox2 for an
 // example of how to use the code.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename InputType, typename ComputeType>
     class MinimumAreaBox2

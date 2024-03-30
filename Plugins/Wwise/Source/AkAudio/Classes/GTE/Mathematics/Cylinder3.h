@@ -16,7 +16,7 @@
 // cylinder has endpoints C-(H/2)*D and C+(H/2)*D where D is a unit-length
 // direction of the line.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class Cylinder3

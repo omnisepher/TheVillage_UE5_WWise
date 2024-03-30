@@ -37,7 +37,7 @@
 // leading to the same polygon abstractly but the data structures do not
 // match.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class Polygon2

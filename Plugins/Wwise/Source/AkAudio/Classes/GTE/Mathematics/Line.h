@@ -13,7 +13,7 @@
 // unit-length direction vector, and t is any real number.  The user must
 // ensure that D is unit length.
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class Line

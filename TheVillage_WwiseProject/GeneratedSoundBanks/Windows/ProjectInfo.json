@@ -1,0 +1,43 @@
+{
+ "ProjectInfo": {
+  "Project": {
+   "Name": "TheVillage_WwiseProject",
+   "GUID": "{4E2D1051-69FC-4896-9FF6-8A5DCE1EB551}",
+   "Generator": "2023.1.2.8444"
+  },
+  "CacheRoot": "../../.cache",
+  "Platforms": [
+   {
+    "Name": "Mac",
+    "GUID": "{C9C544D1-03FE-4541-AD09-8B291F1CE9BC}",
+    "BasePlatform": "Mac",
+    "BasePlatformGUID": "{9C6217D5-DD11-4795-87C1-6CE02853C540}",
+    "Path": "../Mac"
+   },
+   {
+    "Name": "PS5",
+    "GUID": "{E749FED9-0517-4AB9-B4EF-EB50CFC105CE}",
+    "BasePlatform": "PS5",
+    "BasePlatformGUID": "{662A5E67-9D35-48DA-B6A8-B77C7F1D84E0}",
+    "Path": "../PS5"
+   },
+   {
+    "Name": "Windows",
+    "GUID": "{4A65DF19-77CA-4BA7-8E97-CB0FC70406B8}",
+    "BasePlatform": "Windows",
+    "BasePlatformGUID": "{6E0CB257-C6C8-4C5C-8366-2740DFC441EB}",
+    "Path": "."
+   }
+  ],
+  "Languages": [
+   {
+    "Name": "English(US)",
+    "Id": "684519430",
+    "GUID": "{F664BDAE-FAF2-432E-8E90-DFEAD699B081}",
+    "Default": "true",
+    "UseAsStandIn": "true"
+   }
+  ],
+  "FileHash": "{B74B1BAF-E474-F672-3224-8A2E30AD7371}"
+ }
+}

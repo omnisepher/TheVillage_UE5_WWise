@@ -13,7 +13,7 @@
 // degree D minimizes the quantity maximum{|1/sqrt(x) - p(x)| : x in [1,2]}
 // over all polynomials of degree D.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class InvSqrtEstimate

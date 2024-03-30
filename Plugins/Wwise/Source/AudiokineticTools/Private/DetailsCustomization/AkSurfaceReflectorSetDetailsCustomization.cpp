@@ -1,35 +1,37 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #include "AkSurfaceReflectorSetDetailsCustomization.h"
-#include "AkSurfaceReflectorSetComponent.h"
 #include "AkComponent.h"
-#include "UI/SAcousticSurfacesController.h"
+#include "AkSurfaceReflectorSetComponent.h"
 
-#include "DetailLayoutBuilder.h"
 #include "DetailCategoryBuilder.h"
+#include "DetailLayoutBuilder.h"
 #include "DetailWidgetRow.h"
 #include "EditorModeManager.h"
 #include "EditorSupportDelegates.h"
 #include "IPropertyUtilities.h"
 #include "LevelEditorActions.h"
-#include "ScopedTransaction.h"
-#include "Widgets/Text/STextBlock.h"
-#include "Widgets/Views/SExpanderArrow.h"
-#include "Widgets/Input/SButton.h"
+#include "Model.h"
 #include "GameFramework/Volume.h"
+#include "UI/SAcousticSurfacesController.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/Layout/SBox.h"
+#include "Widgets/Text/STextBlock.h"
 
 #include "Builders/ConeBuilder.h"
 #include "Builders/CubeBuilder.h"
@@ -39,7 +41,6 @@ Copyright (c) 2021 Audiokinetic Inc.
 #include "Builders/SpiralStairBuilder.h"
 #include "Builders/TetrahedronBuilder.h"
 
-#include "Model.h"
 
 #define LOCTEXT_NAMESPACE "AudiokineticTools"
 
@@ -59,14 +60,15 @@ FAkSurfaceReflectorSetDetailsCustomization::~FAkSurfaceReflectorSetDetailsCustom
 	FCoreUObjectDelegates::OnObjectModified.RemoveAll(this);
 	FEditorSupportDelegates::RedrawAllViewports.RemoveAll(this);
 
-	if (ReflectorSetBeingCustomized && ReflectorSetBeingCustomized->IsValidLowLevelFast() && ReflectorSetBeingCustomized->GetOnRefreshDetails() )
+	if (ReflectorSetBeingCustomized.IsValid() && ReflectorSetBeingCustomized->GetOnRefreshDetails())
 	{
 		if (ReflectorSetBeingCustomized->GetOnRefreshDetails()->IsBoundToObject(this))
 		{
 			ReflectorSetBeingCustomized->ClearOnRefreshDetails();
 		}
-		ReflectorSetBeingCustomized = nullptr;
 	}
+
+	ReflectorSetBeingCustomized.Reset();
 }
 
 FReply FAkSurfaceReflectorSetDetailsCustomization::OnEnableEditModeClicked()
@@ -100,10 +102,10 @@ void FAkSurfaceReflectorSetDetailsCustomization::OnObjectModified(UObject* Objec
 
 void FAkSurfaceReflectorSetDetailsCustomization::OnRedrawViewports()
 {
-	if (SelectedObjectModifiedThisFrame && MyDetailLayout != nullptr)
+	if (SelectedObjectModifiedThisFrame && DetailBuilder.IsValid())
 	{
 		// If there is any user interaction going on, we don't want to refresh the details panel.
-		// (This would interupt the interaction and make sliders unusable)
+		// (This would interrupt the interaction and make sliders unusable)
 		for (TWeakObjectPtr<UObject> UObjectPtr : ObjectsBeingCustomized)
 		{
 			if (UAkSurfaceReflectorSetComponent* reflectorSet = Cast<UAkSurfaceReflectorSetComponent>(UObjectPtr.Get()))
@@ -115,7 +117,16 @@ void FAkSurfaceReflectorSetDetailsCustomization::OnRedrawViewports()
 			}
 		}
 
-		MyDetailLayout->ForceRefreshDetails();
+		IDetailLayoutBuilder* Layout = nullptr;
+		if (auto LockedDetailBuilder = DetailBuilder.Pin())
+		{
+			Layout = LockedDetailBuilder.Get();
+		}
+		if (LIKELY(Layout))
+		{
+			Layout->ForceRefreshDetails();
+		}
+
 		SelectedObjectModifiedThisFrame = false;
 	}
 }
@@ -125,32 +136,40 @@ TSharedRef<IDetailCustomization> FAkSurfaceReflectorSetDetailsCustomization::Mak
 	return MakeShareable(new FAkSurfaceReflectorSetDetailsCustomization());
 }
 
-void FAkSurfaceReflectorSetDetailsCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailLayout)
+void FAkSurfaceReflectorSetDetailsCustomization::CustomizeDetails(const TSharedPtr<IDetailLayoutBuilder>& InDetailBuilder)
 {
-	DetailLayout.EditCategory("Toggle", FText::GetEmpty(), ECategoryPriority::Important);
-	DetailLayout.EditCategory("Geometry Settings", FText::GetEmpty(), ECategoryPriority::TypeSpecific);
-	DetailLayout.EditCategory("Fit To Geometry", FText::GetEmpty(), ECategoryPriority::TypeSpecific);
-	MyDetailLayout = &DetailLayout;
+	InDetailBuilder->EditCategory("EnableComponent", FText::GetEmpty(), ECategoryPriority::Important);
+	InDetailBuilder->EditCategory("SurfaceReflectorSet", FText::GetEmpty(), ECategoryPriority::TypeSpecific);
+	DetailBuilder = InDetailBuilder;
 
-	DetailLayout.GetObjectsBeingCustomized(ObjectsBeingCustomized);
-	auto AcousticPolysPropHandle = DetailLayout.GetProperty("AcousticPolys");
-	DetailLayout.HideProperty("AcousticPolys");
+	CustomizeDetails(*InDetailBuilder);
+}
+
+void FAkSurfaceReflectorSetDetailsCustomization::CustomizeDetails(IDetailLayoutBuilder& InDetailBuilder)
+{
+	InDetailBuilder.GetObjectsBeingCustomized(ObjectsBeingCustomized);
+	auto AcousticPolysPropHandle = InDetailBuilder.GetProperty("AcousticPolys");
+	InDetailBuilder.HideProperty("AcousticPolys");
 	
 	bool showGeometrySettings = false;
 	for (int i = 0; i < ObjectsBeingCustomized.Num(); ++i)
 	{
-		ReflectorSetBeingCustomized = Cast<UAkSurfaceReflectorSetComponent>(ObjectsBeingCustomized[i].Get());
-		if (ReflectorSetBeingCustomized && ReflectorSetBeingCustomized->bEnableSurfaceReflectors)
+		auto Component = Cast<UAkSurfaceReflectorSetComponent>(ObjectsBeingCustomized[i].Get());
+		if (Component)
 		{
-			showGeometrySettings = true;
-			break;
+			ReflectorSetBeingCustomized = TWeakObjectPtr<UAkSurfaceReflectorSetComponent>(Component);
+			if (ReflectorSetBeingCustomized->bEnableSurfaceReflectors)
+			{
+				showGeometrySettings = true;
+				break;
+			}
 		}
 	}
 
 	if (!showGeometrySettings)
-		DetailLayout.HideCategory("Geometry Settings");
+		InDetailBuilder.HideCategory("SurfaceReflectorSet");
 
-	IDetailCategoryBuilder& CategoryBuilder = DetailLayout.EditCategory("Geometry Surfaces", FText::GetEmpty(), ECategoryPriority::TypeSpecific);
+	IDetailCategoryBuilder& CategoryBuilder = InDetailBuilder.EditCategory("Surface Properties", FText::GetEmpty(), ECategoryPriority::TypeSpecific);
 	FString enableEditSurfacesTooltip(FString("Enable ") + GEOMETRY_EDIT_DISPLAY_NAME + " and show only selected actors");
 	FString disableEditSurfacesTooltip(FString("Disable ") + GEOMETRY_EDIT_DISPLAY_NAME + " and show all actors");
 
@@ -199,52 +218,70 @@ void FAkSurfaceReflectorSetDetailsCustomization::CustomizeDetails(IDetailLayoutB
 			break;
 		}
 	}
-	FDetailWidgetRow& acousticSurfacesRow = CategoryBuilder.AddCustomRow(AcousticPolysPropHandle->GetPropertyDisplayName());
-	acousticSurfacesRow.NameContent()
-	[
-		SNew(SBox)
-		.HeightOverride(surfacePropertiesControlsHeight)
+
+	if (auto LockedDetailBuilder = DetailBuilder.Pin())
+	{
+		FDetailWidgetRow& acousticSurfacesRow = CategoryBuilder.AddCustomRow(AcousticPolysPropHandle->GetPropertyDisplayName());
+		acousticSurfacesRow.NameContent()
 		[
-			SNew(SAcousticSurfacesLabels, ObjectsBeingCustomized)
-		]
-	];
-	acousticSurfacesRow.ValueContent()
-	[
-		SNew(SBox)
-		.HeightOverride(surfacePropertiesControlsHeight)
+			SNew(SBox)
+			.HeightOverride(surfacePropertiesControlsHeight)
+			[
+				SNew(SAcousticSurfacesLabels, ObjectsBeingCustomized)
+			]
+		];
+		acousticSurfacesRow.ValueContent()
 		[
-			SNew(SAcousticSurfacesController, ObjectsBeingCustomized, MyDetailLayout)
-		]
-	];
+			SNew(SBox)
+			.HeightOverride(surfacePropertiesControlsHeight)
+			[
+				SNew(SAcousticSurfacesController, ObjectsBeingCustomized, LockedDetailBuilder)
+			]
+		];
+	}
 
 	if (ObjectsBeingCustomized.Num() == 1)
 	{
-		ReflectorSetBeingCustomized = Cast<UAkSurfaceReflectorSetComponent>(ObjectsBeingCustomized[0].Get());
-		if (ReflectorSetBeingCustomized)
+		auto Component = Cast<UAkSurfaceReflectorSetComponent>(ObjectsBeingCustomized[0].Get());
+		if (Component)
 		{
+			ReflectorSetBeingCustomized = TWeakObjectPtr<UAkSurfaceReflectorSetComponent>(Component);
 			SetupGeometryModificationHandlers();
+		}
+		else
+		{
+			ReflectorSetBeingCustomized.Reset();
+			UE_LOG(LogAkAudio, Log, TEXT("FAkSurfaceReflectorSetDetailsCustomization::CustomizeDetails: Could not get ObjectsBeingCustomized."));
 		}
 	}
 }
 
-#define REGISTER_PROPERTY_CHANGED(Class, Property) \
-	auto Property ## Handle = MyDetailLayout->GetProperty(GET_MEMBER_NAME_CHECKED(Class, Property), Class::StaticClass(), BrushBuilderName); \
+#define REGISTER_PROPERTY_CHANGED(Class, Property, LockedDetailBuilder) \
+	auto Property ## Handle = LockedDetailBuilder->GetProperty(GET_MEMBER_NAME_CHECKED(Class, Property), Class::StaticClass(), BrushBuilderName); \
 	if (Property ## Handle->IsValidHandle()) Property ## Handle->SetOnPropertyValueChanged(FSimpleDelegate::CreateSP(this, &FAkSurfaceReflectorSetDetailsCustomization::OnGeometryChanged))
 
 void FAkSurfaceReflectorSetDetailsCustomization::SetupGeometryModificationHandlers()
 {
+	if (!ReflectorSetBeingCustomized.IsValid())
+	{
+		return;
+	}
+
 	static const FName BrushBuilderName(TEXT("BrushBuilder"));
 	auto ParentBrush = ReflectorSetBeingCustomized->ParentBrush;
 	if(!ParentBrush)
 		return;
 
-	auto EnableHandle = MyDetailLayout->GetProperty("bEnableSurfaceReflectors");
-	EnableHandle->SetOnPropertyValueChanged(FSimpleDelegate::CreateSP(this, &FAkSurfaceReflectorSetDetailsCustomization::OnEnableValueChanged));
+	if (auto LockedDetailBuilder = DetailBuilder.Pin())
+	{
+		auto EnableHandle = LockedDetailBuilder->GetProperty("bEnableSurfaceReflectors");
+		EnableHandle->SetOnPropertyValueChanged(FSimpleDelegate::CreateSP(this, &FAkSurfaceReflectorSetDetailsCustomization::OnEnableValueChanged));
 
-	// This is to detect if the BrushBuilder changed.
-	if (ReflectorSetBeingCustomized->AcousticPolys.Num() != ParentBrush->Nodes.Num())
-		MyDetailLayout->GetPropertyUtilities()->EnqueueDeferredAction(FSimpleDelegate::CreateSP(this, &FAkSurfaceReflectorSetDetailsCustomization::OnGeometryChanged));
-		
+		// This is to detect if the BrushBuilder changed.
+		if (ReflectorSetBeingCustomized->AcousticPolys.Num() != ParentBrush->Nodes.Num())
+			LockedDetailBuilder->GetPropertyUtilities()->EnqueueDeferredAction(FSimpleDelegate::CreateSP(this, &FAkSurfaceReflectorSetDetailsCustomization::OnGeometryChanged));
+	}
+
 	// Need to register to a LOT of different properties, because some change the geometry but don't force a refresh of the details panel
 	AVolume* ParentVolume = Cast<AVolume>(ReflectorSetBeingCustomized->GetOwner());
 	UClass* BrushBuilderClass = nullptr;
@@ -257,36 +294,39 @@ void FAkSurfaceReflectorSetDetailsCustomization::SetupGeometryModificationHandle
 		}
 	}
 
-	if (BrushBuilderClass == UConeBuilder::StaticClass())
+	if (auto LockedDetailBuilder = DetailBuilder.Pin())
 	{
-		REGISTER_PROPERTY_CHANGED(UConeBuilder, Sides);
-		REGISTER_PROPERTY_CHANGED(UConeBuilder, Hollow);
-	}
-	else if (BrushBuilderClass == UCubeBuilder::StaticClass())
-	{
-		REGISTER_PROPERTY_CHANGED(UCubeBuilder, Hollow);
-		REGISTER_PROPERTY_CHANGED(UCubeBuilder, Tessellated);
-	}
-	else if (BrushBuilderClass == UCurvedStairBuilder::StaticClass())
-	{
-		REGISTER_PROPERTY_CHANGED(UCurvedStairBuilder, NumSteps);
-	}
-	else if (BrushBuilderClass == UCylinderBuilder::StaticClass())
-	{
-		REGISTER_PROPERTY_CHANGED(UCylinderBuilder, Sides);
-		REGISTER_PROPERTY_CHANGED(UCylinderBuilder, Hollow);
-	}
-	else if (BrushBuilderClass == ULinearStairBuilder::StaticClass())
-	{
-		REGISTER_PROPERTY_CHANGED(ULinearStairBuilder, NumSteps);
-	}
-	else if (BrushBuilderClass == USpiralStairBuilder::StaticClass())
-	{
-		REGISTER_PROPERTY_CHANGED(USpiralStairBuilder, NumSteps);
-	}
-	else if (BrushBuilderClass == UTetrahedronBuilder::StaticClass())
-	{
-		REGISTER_PROPERTY_CHANGED(UTetrahedronBuilder, SphereExtrapolation);
+		if (BrushBuilderClass == UConeBuilder::StaticClass())
+		{
+			REGISTER_PROPERTY_CHANGED(UConeBuilder, Sides, LockedDetailBuilder);
+			REGISTER_PROPERTY_CHANGED(UConeBuilder, Hollow, LockedDetailBuilder);
+		}
+		else if (BrushBuilderClass == UCubeBuilder::StaticClass())
+		{
+			REGISTER_PROPERTY_CHANGED(UCubeBuilder, Hollow, LockedDetailBuilder);
+			REGISTER_PROPERTY_CHANGED(UCubeBuilder, Tessellated, LockedDetailBuilder);
+		}
+		else if (BrushBuilderClass == UCurvedStairBuilder::StaticClass())
+		{
+			REGISTER_PROPERTY_CHANGED(UCurvedStairBuilder, NumSteps, LockedDetailBuilder);
+		}
+		else if (BrushBuilderClass == UCylinderBuilder::StaticClass())
+		{
+			REGISTER_PROPERTY_CHANGED(UCylinderBuilder, Sides, LockedDetailBuilder);
+			REGISTER_PROPERTY_CHANGED(UCylinderBuilder, Hollow, LockedDetailBuilder);
+		}
+		else if (BrushBuilderClass == ULinearStairBuilder::StaticClass())
+		{
+			REGISTER_PROPERTY_CHANGED(ULinearStairBuilder, NumSteps, LockedDetailBuilder);
+		}
+		else if (BrushBuilderClass == USpiralStairBuilder::StaticClass())
+		{
+			REGISTER_PROPERTY_CHANGED(USpiralStairBuilder, NumSteps, LockedDetailBuilder);
+		}
+		else if (BrushBuilderClass == UTetrahedronBuilder::StaticClass())
+		{
+			REGISTER_PROPERTY_CHANGED(UTetrahedronBuilder, SphereExtrapolation, LockedDetailBuilder);
+		}
 	}
 
 	FOnRefreshDetails DetailsChanged = FOnRefreshDetails::CreateRaw(this, &FAkSurfaceReflectorSetDetailsCustomization::OnEnableValueChanged);
@@ -295,14 +335,19 @@ void FAkSurfaceReflectorSetDetailsCustomization::SetupGeometryModificationHandle
 
 void FAkSurfaceReflectorSetDetailsCustomization::OnEnableValueChanged()
 {
-	ReflectorSetBeingCustomized->ClearOnRefreshDetails();
-	MyDetailLayout->ForceRefreshDetails();
+	if (ReflectorSetBeingCustomized.IsValid())
+	{
+		ReflectorSetBeingCustomized->ClearOnRefreshDetails();
+	}
 }
 
 void FAkSurfaceReflectorSetDetailsCustomization::OnGeometryChanged()
 {
-	ReflectorSetBeingCustomized->UpdatePolys();
-	ReflectorSetBeingCustomized->ClearOnRefreshDetails();
+	if (ReflectorSetBeingCustomized.IsValid())
+	{
+		ReflectorSetBeingCustomized->UpdatePolys();
+		ReflectorSetBeingCustomized->ClearOnRefreshDetails();
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////

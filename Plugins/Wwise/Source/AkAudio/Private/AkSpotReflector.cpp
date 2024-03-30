@@ -1,19 +1,19 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
-
-// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "AkSpotReflector.h"
 #include "AkAudioDevice.h"
@@ -22,8 +22,6 @@ Copyright (c) 2021 Audiokinetic Inc.
 #include "AkRoomComponent.h"
 #include "Engine/Texture2D.h"
 #include "Components/BillboardComponent.h"
-
-#include <AK/SpatialAudio/Common/AkSpatialAudio.h>
 
 AAkSpotReflector::WorldToSpotReflectorsMap AAkSpotReflector::sWorldToSpotReflectors;
 
@@ -49,13 +47,8 @@ AAkSpotReflector::AAkSpotReflector(const FObjectInitializer& ObjectInitializer)
 #endif
 
 	// AActor properties 
-#if UE_4_24_OR_LATER
 	SetHidden(true);
 	SetCanBeDamaged(false);
-#else
-	bHidden = true;
-	bCanBeDamaged = true;
-#endif
 }
 
 void AAkSpotReflector::PostInitializeComponents()
@@ -107,17 +100,16 @@ AkImageSourceID AAkSpotReflector::GetImageSourceID() const
 
 AkAuxBusID AAkSpotReflector::GetAuxBusID() const
 {
-	if (EarlyReflectionAuxBus)
+	if (EarlyReflectionAuxBus || !EarlyReflectionAuxBusName.IsEmpty())
 	{
-		return EarlyReflectionAuxBus->ShortID;
+		return FAkAudioDevice::GetShortID(EarlyReflectionAuxBus, EarlyReflectionAuxBusName);
 	}
-
-	if (EarlyReflectionAuxBusName.IsEmpty())
+	else
 	{
+		// No early reflection aux bus is set. The one assigned in the Wwise Authoring Tool will be used instead.
+		// Skipping call to FAkAudioDevice::GetShortID() to avoid warning.
 		return AK_INVALID_UNIQUE_ID;
 	}
-
-	return FAkAudioDevice::GetIDFromString(EarlyReflectionAuxBusName);
 }
 
 void AAkSpotReflector::SetImageSource(UAkComponent* AkComponent)
@@ -127,28 +119,43 @@ void AAkSpotReflector::SetImageSource(UAkComponent* AkComponent)
 		return;
 
 	const auto& RootTransform = RootComponent->GetComponentTransform();
-	AkImageSourceSettings sourceInfo = AkImageSourceSettings(
-		FAkAudioDevice::FVectorToAKVector(RootTransform.GetTranslation()),
-		DistanceScalingFactor, Level);
 
-#if WITH_EDITOR
-	sourceInfo.SetName(TCHAR_TO_ANSI(*GetActorLabel()));
-#endif // WITH_EDITOR
+	if (SameRoomOnly)
+	{
+		AkRoomID roomID;
+		if (EnableRoomOverride)
+		{
+			if (RoomOverride != nullptr)
+			{
+				UAkRoomComponent* room = Cast<UAkRoomComponent>(RoomOverride->GetComponentByClass(UAkRoomComponent::StaticClass()));
+				if (room != nullptr)
+					roomID = room->GetRoomID();
+			}
+		}
+		else
+		{
+			TArray<UAkRoomComponent*> AkRooms = pDev->FindRoomComponentsAtLocation(RootTransform.GetTranslation(), GetWorld());
+			if (AkRooms.Num() > 0)
+				roomID = AkRooms[0]->GetRoomID();
+		}
+
+		if (roomID != AkComponent->GetSpatialAudioRoomID())
+			return;
+	}
+
+	AkImageSourceSettings sourceInfo = AkImageSourceSettings(
+		FAkAudioDevice::FVectorToAKVector64(RootTransform.GetTranslation()),
+		DistanceScalingFactor, Level);
 
 	if (AcousticTexture)
 	{
-		sourceInfo.SetOneTexture(FAkAudioDevice::GetIDFromString(AcousticTexture->GetName()));
+		sourceInfo.SetOneTexture(AcousticTexture->GetShortID());
 	}
 
-	AkRoomID roomID;
-	TArray<UAkRoomComponent*> AkRooms = pDev->FindRoomComponentsAtLocation(RootTransform.GetTranslation(), GetWorld());
-	if (AkRooms.Num() > 0)
-		roomID = AkRooms[0]->GetRoomID();
-
-	pDev->SetImageSource(this, sourceInfo, GetAuxBusID(), roomID, AkComponent);
+	pDev->SetImageSource(this, sourceInfo, GetAuxBusID(), AkComponent);
 }
 
-void AAkSpotReflector::SetSpotReflectors(UAkComponent* AkComponent)
+void AAkSpotReflector::UpdateSpotReflectors(UAkComponent* AkComponent)
 {
 	FAkAudioDevice* pDev = FAkAudioDevice::Get();
 	if (pDev)
@@ -171,4 +178,13 @@ void AAkSpotReflector::SetSpotReflectors(UAkComponent* AkComponent)
 			}
 		}
 	}
+}
+
+const FString AAkSpotReflector::GetSpotReflectorName() const
+{
+#if WITH_EDITOR
+	return GetActorLabel();
+#else
+	return GetName();
+#endif
 }

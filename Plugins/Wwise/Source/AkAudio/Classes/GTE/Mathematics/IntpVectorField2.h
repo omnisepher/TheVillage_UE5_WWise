@@ -14,7 +14,7 @@
 // Given points (x0[i],y0[i]) which are mapped to (x1[i],y1[i]) for
 // 0 <= i < N, interpolate positions (xIn,yIn) to (xOut,yOut).
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename InputType, typename ComputeType, typename RationalType>
     class IntpVectorField2

@@ -10,7 +10,7 @@
 #include <Mathematics/DistPointAlignedBox.h>
 #include <Mathematics/OrientedBox.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class DCPQuery<Real, Vector<N, Real>, OrientedBox<N, Real>>

@@ -11,7 +11,7 @@
 #include <Mathematics/AlignedBox.h>
 #include <Mathematics/IntrIntervals.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class DCPQuery<Real, AlignedBox<N, Real>, AlignedBox<N, Real>>

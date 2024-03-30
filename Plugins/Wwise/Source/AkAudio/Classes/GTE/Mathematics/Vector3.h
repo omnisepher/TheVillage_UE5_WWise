@@ -9,7 +9,7 @@
 
 #include <Mathematics/Vector.h>
 
-namespace gte
+namespace WwiseGTE
 {
     // Template alias for convenience.
     template <typename Real>

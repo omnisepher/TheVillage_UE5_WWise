@@ -1,16 +1,18 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #include "AkRoomComponentDetailsCustomization.h"
@@ -33,14 +35,20 @@ TSharedRef<IDetailCustomization> FAkRoomComponentDetailsCustomization::MakeInsta
 	return MakeShareable(new FAkRoomComponentDetailsCustomization());
 }
 
-void FAkRoomComponentDetailsCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailLayout)
+void FAkRoomComponentDetailsCustomization::CustomizeDetails(const TSharedPtr<IDetailLayoutBuilder>& InDetailBuilder)
 {
-	DetailLayout.EditCategory("Toggle", FText::GetEmpty(), ECategoryPriority::Important);
-	DetailLayout.EditCategory("Room", FText::GetEmpty(), ECategoryPriority::TypeSpecific);
-	DetailLayout.EditCategory("AkEvent", FText::GetEmpty(), ECategoryPriority::TypeSpecific);
-	MyDetailLayout = &DetailLayout;
+	InDetailBuilder->EditCategory("EnableComponent", FText::GetEmpty(), ECategoryPriority::Important);
+	InDetailBuilder->EditCategory("Room", FText::GetEmpty(), ECategoryPriority::TypeSpecific);
+	InDetailBuilder->EditCategory("AkEvent", FText::GetEmpty(), ECategoryPriority::TypeSpecific);
+	DetailBuilder = InDetailBuilder;
+
+	CustomizeDetails(*InDetailBuilder);
+}
+
+void FAkRoomComponentDetailsCustomization::CustomizeDetails(IDetailLayoutBuilder& InDetailBuilder)
+{
 	TArray<TWeakObjectPtr<UObject>> ObjectsBeingCustomized;
-	DetailLayout.GetObjectsBeingCustomized(ObjectsBeingCustomized);
+	InDetailBuilder.GetObjectsBeingCustomized(ObjectsBeingCustomized);
 
 	for (TWeakObjectPtr<UObject>& Object : ObjectsBeingCustomized)
 	{
@@ -54,7 +62,7 @@ void FAkRoomComponentDetailsCustomization::CustomizeDetails(IDetailLayoutBuilder
 			// (i.e. - only hide the transform if the component has been added to the hierarchy of a blueprint class or actor instance from the editor)
 			if (OuterComponent == nullptr && OuterActor == nullptr)
 			{
-				IDetailCategoryBuilder& TransformCategory = DetailLayout.EditCategory("TransformCommon", LOCTEXT("TransformCommonCategory", "Transform"), ECategoryPriority::Transform);
+				IDetailCategoryBuilder& TransformCategory = InDetailBuilder.EditCategory("TransformCommon", LOCTEXT("TransformCommonCategory", "Transform"), ECategoryPriority::Transform);
 				TransformCategory.SetCategoryVisibility(false);
 				break;
 			}
@@ -69,20 +77,33 @@ void FAkRoomComponentDetailsCustomization::CustomizeDetails(IDetailLayoutBuilder
 	UAkRoomComponent* RoomBeingCustomized = Cast<UAkRoomComponent>(ObjectsBeingCustomized[0].Get());
 	if (RoomBeingCustomized)
 	{
-		IDetailCategoryBuilder& ToggleDetailCategory = DetailLayout.EditCategory("Toggle");
-		auto EnableHandle = DetailLayout.GetProperty("bEnable");
+		IDetailCategoryBuilder& ToggleDetailCategory = InDetailBuilder.EditCategory("EnableComponent");
+		auto EnableHandle = InDetailBuilder.GetProperty("bEnable");
 		EnableHandle->SetOnPropertyValueChanged(FSimpleDelegate::CreateSP(this, &FAkRoomComponentDetailsCustomization::OnEnableValueChanged));
 
 		if (!RoomBeingCustomized->bEnable)
 		{
-			DetailLayout.HideCategory("Room");
+			InDetailBuilder.HideCategory("Room");
+			InDetailBuilder.HideCategory("AkEvent");
+			InDetailBuilder.HideCategory("ReverbZone");
 		}
 	}
 }
 
 void FAkRoomComponentDetailsCustomization::OnEnableValueChanged()
 {
-	MyDetailLayout->ForceRefreshDetails();
+	if (DetailBuilder.IsValid())
+	{
+		IDetailLayoutBuilder* Layout = nullptr;
+		if (auto LockedDetailBuilder = DetailBuilder.Pin())
+		{
+			Layout = LockedDetailBuilder.Get();
+		}
+		if (LIKELY(Layout))
+		{
+			Layout->ForceRefreshDetails();
+		}
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////

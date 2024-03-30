@@ -13,9 +13,9 @@
 // For information on range-based for-loops, see
 // http://en.cppreference.com/w/cpp/language/range-for
 
-namespace gte
+namespace WwiseGTE
 {
-    // The function gte::reverse supports reverse iteration in range-based
+    // The function WwiseGTE::reverse supports reverse iteration in range-based
     // for-loops using the auto keyword.  For example,
     //
     //   std::vector<int> numbers(4);
@@ -27,7 +27,7 @@ namespace gte
     //   }
     //   // Output:  0 1 2 3
     //
-    //   for (auto& number : gte::reverse(numbers))
+    //   for (auto& number : WwiseGTE::reverse(numbers))
     //   {
     //       std::cout << number << ' ';
     //   }

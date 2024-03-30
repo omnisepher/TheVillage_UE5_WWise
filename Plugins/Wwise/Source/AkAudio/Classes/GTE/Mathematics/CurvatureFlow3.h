@@ -9,7 +9,7 @@
 
 #include <Mathematics/PdeFilter3.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class CurvatureFlow3 : public PdeFilter3<Real>

@@ -19,7 +19,7 @@
 // interpolation is desired, set catmullRom to 'false' to obtain B-spline
 // blending.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class IntpTricubic3

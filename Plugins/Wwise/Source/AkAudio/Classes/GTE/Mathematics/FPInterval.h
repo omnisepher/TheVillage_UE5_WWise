@@ -15,7 +15,7 @@
 // invalid construction where e0 > e1.
 #define GTE_THROW_ON_INVALID_INTERVAL
 
-namespace gte
+namespace WwiseGTE
 {
     // The FPType must be 'float' or 'double'.
     template <typename FPType>

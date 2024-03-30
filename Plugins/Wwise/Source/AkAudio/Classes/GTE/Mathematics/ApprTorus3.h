@@ -57,7 +57,7 @@
 // (u,v) with u > v > 0, evaluate H(u,v) and choose the pair that minimizes
 // H(u,v).  The torus radii are r0 = sqrt(u) and r1 = sqrt(u - v).
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class ApprTorus3

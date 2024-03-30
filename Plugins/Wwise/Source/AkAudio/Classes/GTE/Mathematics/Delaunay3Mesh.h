@@ -9,7 +9,7 @@
 
 #include <Mathematics/Delaunay3.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename InputType, typename ComputeType, typename RationalType>
     class Delaunay3Mesh

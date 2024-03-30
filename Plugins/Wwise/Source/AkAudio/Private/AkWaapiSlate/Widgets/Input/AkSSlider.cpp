@@ -1,21 +1,22 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #include "AkWaapiSlate/Widgets/Input/AkSSlider.h"
 #include "AkAudioDevice.h"
-#include "Rendering/DrawElements.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Input/SSlider.h"
 #include "Widgets/Text/STextBlock.h"
@@ -31,7 +32,6 @@ Defines
 
 #define LOCTEXT_NAMESPACE "AkWaapiUMG"
 
-DEFINE_LOG_CATEGORY(LogAkAudioSliderUMG);
 /*------------------------------------------------------------------------------------
 Helpers
 ------------------------------------------------------------------------------------*/
@@ -95,7 +95,7 @@ void AkSSlider::Construct(const AkSSlider::FArguments& InDeclaration)
 		];
 }
 
-TSharedPtr<SSlider> AkSSlider::GetAkSilder() const
+TSharedPtr<SSlider> AkSSlider::GetAkSlider() const
 {
 	return AkScrubberSSlider;
 }
@@ -121,7 +121,7 @@ void AkSSlider::HandleAkSliderValueChanged(float NewValue)
 {
 	if (AkSliderItemId.IsEmpty() || AkSliderItemProperty.IsEmpty())
 	{
-		UE_LOG(LogAkAudioSliderUMG, Log, TEXT("No item or property to control"));
+		UE_LOG(LogAkAudio, Log, TEXT("No item or property to control"));
 		return;
 	}
 	// Construct the arguments Json object"
@@ -142,12 +142,14 @@ void AkSSlider::HandleAkSliderValueChanged(float NewValue)
     {
         return;
     }
+#if AK_SUPPORT_WAAPI
 	TSharedPtr<FJsonObject> outJsonResult;
 	// Request data from Wwise using WAAPI
 	if (!waapiClient->Call(ak::wwise::core::object::setProperty, args, options, outJsonResult))
 	{
-		UE_LOG(LogAkAudioSliderUMG, Log, TEXT("Failed to set property %s on AKSSlider"), *AkSliderItemProperty);
+		UE_LOG(LogAkAudio, Log, TEXT("Failed to set property %s on AKSSlider"), *AkSliderItemProperty);
 	}
+#endif
 }
 
 FReply AkSSlider::OnDrop(const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent)
@@ -261,6 +263,7 @@ inline void AkSSlider::UpdateRange()
 	FAkWaapiClient* waapiClient = FAkWaapiClient::Get();
 	if (waapiClient)
 	{
+#if AK_SUPPORT_WAAPI
 		// Request data from Wwise using WAAPI
 		if (waapiClient->Call(ak::wwise::core::object::getPropertyInfo, args, options, outJsonResult))
 		{
@@ -272,6 +275,7 @@ inline void AkSSlider::UpdateRange()
                 UIMaxValue = uiLimit->GetNumberField(WwiseWaapiHelper::MAX);
 			}
 		}
+#endif
 	}
 }
 

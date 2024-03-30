@@ -1,33 +1,31 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #pragma once
 
 #include "AkAcousticTexture.h"
-#include "AkUEFeatures.h"
+#include "WwiseUEFeatures.h"
 #include "AssetThumbnail.h"
 #include "Framework/Application/SlateApplication.h"
 #include "Widgets/SCompoundWidget.h"
 #include "Editor.h"
 
 #if WITH_EDITOR
-#if UE_4_25_OR_LATER
 #define GEOMETRY_EDIT_DISPLAY_NAME "Brush Editing Mode"
-#else
-#define GEOMETRY_EDIT_DISPLAY_NAME "Geometry Editing Mode"
-#endif
 #endif
 
 class UAkSurfaceReflectorSetComponent;
@@ -58,7 +56,7 @@ public:
 
 	AUDIOKINETICTOOLS_API void Construct(const FArguments& InArgs
 		,TArray<TWeakObjectPtr<UObject>> ObjectsBeingCustomized
-		,IDetailLayoutBuilder* InLayoutBuilder
+		,const TSharedPtr<IDetailLayoutBuilder>& InLayoutBuilder
 	);
 	
 	~SAcousticSurfacesController();
@@ -67,7 +65,7 @@ private:
 	void BuildSlate();
 
 	/** The details layout in the editor */
-	IDetailLayoutBuilder* LayoutBuilder;
+	TWeakPtr<IDetailLayoutBuilder> LayoutBuilder;
 	/** The list of objects being customized. This is stored because we need to change which faces to use when notified that the editor mode is changing.
 	(See OnEditorModeChanged, OnEditorModeExited).
 	*/
@@ -80,6 +78,7 @@ private:
 	FAkSurfacePoly& GetAcousticSurfaceChecked(UAkSurfaceReflectorSetComponent* reflectorSet, int faceIndex);
 	/** Refresh the viewport and details panel in the editor. If reinitVisualizers = true, update the edge map and recreate the text visualizers on the selected USurfaceReflectorSetComponents */
 	void RefreshEditor(bool reinitVisualizers = false) const;
+	void RefreshLayout() const;
 	void BeginModify(FText TransactionText);
 	void EndModify();
 

@@ -20,7 +20,7 @@
 // is described in
 //   https://www.geometrictools.com/Documentation/ApproximateEllipse.pdf
 
-namespace gte
+namespace WwiseGTE
 {
     // The function returns 'true' when the approximation succeeded, in which
     // case the output arrays are nonempty.  If the 'numArcs' is smaller than

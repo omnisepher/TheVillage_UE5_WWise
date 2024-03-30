@@ -10,7 +10,7 @@
 #include <Mathematics/Rectangle.h>
 #include <Mathematics/Vector3.h>
 
-namespace gte
+namespace WwiseGTE
 {
     // A lozenge is the set of points that are equidistant from a rectangle,
     // the common distance called the radius.

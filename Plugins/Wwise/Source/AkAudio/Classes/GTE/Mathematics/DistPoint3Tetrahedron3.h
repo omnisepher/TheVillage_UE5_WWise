@@ -10,7 +10,7 @@
 #include <Mathematics/DistPointTriangle.h>
 #include <Mathematics/Tetrahedron3.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class DCPQuery<Real, Vector3<Real>, Tetrahedron3<Real>>

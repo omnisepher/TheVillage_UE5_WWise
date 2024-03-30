@@ -11,7 +11,7 @@
 #include <Mathematics/Line.h>
 #include <Mathematics/OrientedBox.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class DCPQuery<Real, Line3<Real>, OrientedBox3<Real>>

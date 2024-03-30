@@ -15,7 +15,7 @@
 //
 // The test-intersection queries are based on distance computations.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, Ray3<Real>, Capsule3<Real>>

@@ -1,0 +1,493 @@
+{
+ "SoundBanksInfo": {
+  "Platform": "PS5",
+  "BasePlatform": "PS5",
+  "SchemaVersion": "16",
+  "SoundBankVersion": "150",
+  "SoundBanks": [
+   {
+    "Id": "3161908922",
+    "Type": "User",
+    "GUID": "{5DA71B20-A6BC-46A1-831F-25AB6394F299}",
+    "Language": "SFX",
+    "Hash": "{DA46B17B-A67A-5B48-7469-E1DA1B6E9A7F}",
+    "ObjectPath": "\\SoundBanks\\Default Work Unit\\Main",
+    "ShortName": "Main",
+    "Path": "Main.bnk",
+    "Media": [
+     {
+      "Id": "25432987",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "FootstepsRock_0-07.wav",
+      "CachePath": "SFX/FootstepsRock_0-07_818F3B66.wem"
+     },
+     {
+      "Id": "112367554",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "FootstepsRock_0-04.wav",
+      "CachePath": "SFX/FootstepsRock_0-04_818F3B66.wem"
+     },
+     {
+      "Id": "245397966",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "FootstepsRock_0-01.wav",
+      "CachePath": "SFX/FootstepsRock_0-01_818F3B66.wem"
+     },
+     {
+      "Id": "357953543",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "forest_lullaby.wav",
+      "CachePath": "SFX/forest_lullaby_FBC78EF0.wem"
+     },
+     {
+      "Id": "404283777",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "FireBase.wav",
+      "CachePath": "SFX/FireBase_858CDEE9.wem"
+     },
+     {
+      "Id": "437504527",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "FootstepsGrass_0-03.wav",
+      "CachePath": "SFX/FootstepsGrass_0-03_76312CC1.wem"
+     },
+     {
+      "Id": "508935826",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "Heartbeat.wav",
+      "CachePath": "SFX/Heartbeat_FBC78EF0.wem"
+     },
+     {
+      "Id": "537116116",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "stinger.wav",
+      "CachePath": "SFX/stinger_FBC78EF0.wem"
+     },
+     {
+      "Id": "589126567",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "FootstepsGrass_0-02.wav",
+      "CachePath": "SFX/FootstepsGrass_0-02_005F8CAC.wem"
+     },
+     {
+      "Id": "596560865",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "FootstepsGrass_0-01.wav",
+      "CachePath": "SFX/FootstepsGrass_0-01_ABED0C8C.wem"
+     },
+     {
+      "Id": "639494320",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "FootstepsRock_0-03.wav",
+      "CachePath": "SFX/FootstepsRock_0-03_818F3B66.wem"
+     },
+     {
+      "Id": "640964624",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "FootstepsRock_0-05.wav",
+      "CachePath": "SFX/FootstepsRock_0-05_818F3B66.wem"
+     },
+     {
+      "Id": "675718906",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "Meditation.wav",
+      "CachePath": "SFX/Meditation_E40B0AE7.wem"
+     },
+     {
+      "Id": "684276788",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "FootstepsRock_0-02.wav",
+      "CachePath": "SFX/FootstepsRock_0-02_818F3B66.wem"
+     },
+     {
+      "Id": "689077695",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "FootstepsRock_0.wav",
+      "CachePath": "SFX/FootstepsRock_0_818F3B66.wem"
+     },
+     {
+      "Id": "729889432",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "FootstepsRock_0-06.wav",
+      "CachePath": "SFX/FootstepsRock_0-06_818F3B66.wem"
+     },
+     {
+      "Id": "826639005",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "FootstepsGrass_0-06.wav",
+      "CachePath": "SFX/FootstepsGrass_0-06_B7C92982.wem"
+     },
+     {
+      "Id": "834898865",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "FootstepsRock_0-08.wav",
+      "CachePath": "SFX/FootstepsRock_0-08_818F3B66.wem"
+     },
+     {
+      "Id": "946848897",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "FootstepsGrass_0.wav",
+      "CachePath": "SFX/FootstepsGrass_0_8845F02D.wem"
+     },
+     {
+      "Id": "970040310",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "meditation_theme.wav",
+      "CachePath": "SFX/meditation_theme_FBC78EF0.wem"
+     },
+     {
+      "Id": "1018198658",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "Blizzard.wav",
+      "CachePath": "SFX/Blizzard_15C55F16.wem"
+     },
+     {
+      "Id": "1047019580",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "Icicle.wav",
+      "CachePath": "SFX/Icicle_F7783ABA.wem"
+     }
+    ],
+    "Plugins": {
+     "Custom": [
+      {
+       "Id": "547688741",
+       "Name": "Wwise Guitar Distortion (Custom)",
+       "ObjectPath": "\\Actor-Mixer Hierarchy\\Default Work Unit\\Skill\\IceSkill\\[Effect Slot [0]: (Guitar Distortion)]\\Wwise Guitar Distortion (Custom)",
+       "GUID": "{A7DCBC3D-4E74-4184-A97F-541270CB8488}",
+       "LibName": "Wwise Guitar Distortion",
+       "LibId": "8257539"
+      },
+      {
+       "Id": "1042844212",
+       "Name": "Wwise Time Stretch (Custom)",
+       "ObjectPath": "\\Actor-Mixer Hierarchy\\Default Work Unit\\Character\\Footsteps\\Grass\\[Effect Slot [0]: (Time Stretch)]\\Wwise Time Stretch (Custom)",
+       "GUID": "{F438A0DA-C760-4C0E-83CC-41F10E29046D}",
+       "LibName": "Wwise Time Stretch",
+       "LibId": "8519683"
+      }
+     ]
+    },
+    "Events": [
+     {
+      "Id": "3757312786",
+      "Name": "FireBase",
+      "ObjectPath": "\\Events\\Default Work Unit\\FireBase",
+      "GUID": "{F67B1B74-ED1F-4EAB-A96A-32F9DD10E6E2}",
+      "MaxAttenuation": "600",
+      "DurationType": "Infinite",
+      "MediaRefs": [
+       {
+        "Id": "404283777"
+       }
+      ]
+     },
+     {
+      "Id": "2385628198",
+      "Name": "Footsteps",
+      "ObjectPath": "\\Events\\Default Work Unit\\Footsteps",
+      "GUID": "{4BAB6B63-5D60-4FAC-8F6D-CDB9B4875450}",
+      "DurationType": "OneShot",
+      "DurationMin": "0.16017827",
+      "DurationMax": "0.63332784",
+      "SwitchContainers": [
+       {
+        "SwitchValue": {
+         "GroupType": "Switch",
+         "GroupId": "2385628198",
+         "Id": "2144363834",
+         "GUID": "{25AFDC05-D62B-4E59-8023-4F9E374CDC6C}"
+        },
+        "MediaRefs": [
+         {
+          "Id": "25432987"
+         },
+         {
+          "Id": "112367554"
+         },
+         {
+          "Id": "245397966"
+         },
+         {
+          "Id": "639494320"
+         },
+         {
+          "Id": "640964624"
+         },
+         {
+          "Id": "684276788"
+         },
+         {
+          "Id": "689077695"
+         },
+         {
+          "Id": "729889432"
+         },
+         {
+          "Id": "834898865"
+         }
+        ]
+       },
+       {
+        "SwitchValue": {
+         "GroupType": "Switch",
+         "GroupId": "2385628198",
+         "Id": "4248645337",
+         "GUID": "{1848EBE6-F9FA-45AA-B9AC-7F15A0F4333A}",
+         "Default": "true"
+        },
+        "MediaRefs": [
+         {
+          "Id": "437504527"
+         },
+         {
+          "Id": "589126567"
+         },
+         {
+          "Id": "596560865"
+         },
+         {
+          "Id": "826639005"
+         },
+         {
+          "Id": "946848897"
+         }
+        ],
+        "PluginRefs": {
+         "Custom": [
+          {
+           "Id": "1042844212"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     {
+      "Id": "1750343382",
+      "Name": "GameTheme",
+      "ObjectPath": "\\Events\\Default Work Unit\\GameTheme",
+      "GUID": "{E5DEFE67-BD9D-48EB-8A47-BF49D1DC7ADB}",
+      "DurationType": "Infinite",
+      "MediaRefs": [
+       {
+        "Id": "537116116"
+       }
+      ],
+      "SwitchContainers": [
+       {
+        "SwitchValue": {
+         "GroupType": "State",
+         "GroupId": "1750343382",
+         "Id": "1160234136",
+         "GUID": "{8222F9E8-8988-4CD3-901C-9234FF7F0224}"
+        },
+        "MediaRefs": [
+         {
+          "Id": "970040310"
+         }
+        ]
+       },
+       {
+        "SwitchValue": {
+         "GroupType": "State",
+         "GroupId": "1750343382",
+         "Id": "3625060726",
+         "GUID": "{7BE93782-AA95-46E2-A57E-E6AE31B98FF0}"
+        },
+        "MediaRefs": [
+         {
+          "Id": "357953543"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "Id": "2179486487",
+      "Name": "Heartbeat",
+      "ObjectPath": "\\Events\\Default Work Unit\\Heartbeat",
+      "GUID": "{3FF918C6-8C48-461D-86E2-5A3135CF12D4}",
+      "DurationType": "Infinite",
+      "MediaRefs": [
+       {
+        "Id": "508935826"
+       }
+      ]
+     },
+     {
+      "Id": "3731681489",
+      "Name": "IceSkill",
+      "ObjectPath": "\\Events\\Default Work Unit\\IceSkill",
+      "GUID": "{FD61AE50-E26A-4998-946F-5E1F4FF33916}",
+      "DurationType": "Infinite",
+      "MediaRefs": [
+       {
+        "Id": "1018198658"
+       },
+       {
+        "Id": "1047019580"
+       }
+      ],
+      "PluginRefs": {
+       "Custom": [
+        {
+         "Id": "547688741"
+        }
+       ]
+      }
+     },
+     {
+      "Id": "4114431033",
+      "Name": "Meditation",
+      "ObjectPath": "\\Events\\Default Work Unit\\Meditation",
+      "GUID": "{AADFD8F1-33ED-4B6F-8457-D30E615D9BE5}",
+      "MaxAttenuation": "800",
+      "DurationType": "Infinite",
+      "MediaRefs": [
+       {
+        "Id": "675718906"
+       }
+      ]
+     },
+     {
+      "Id": "38624190",
+      "Name": "TestSound",
+      "ObjectPath": "\\Events\\Default Work Unit\\TestSound",
+      "GUID": "{158E83B7-EE45-4C36-805A-5797E7D87BD6}",
+      "DurationType": "Infinite",
+      "MediaRefs": [
+       {
+        "Id": "1018198658"
+       }
+      ],
+      "PluginRefs": {
+       "Custom": [
+        {
+         "Id": "547688741"
+        }
+       ]
+      }
+     }
+    ],
+    "GameParameters": [
+     {
+      "Id": "1351491183",
+      "Name": "IceSkillCastTime",
+      "ObjectPath": "\\Game Parameters\\Default Work Unit\\IceSkillCastTime",
+      "GUID": "{BC9FDEE6-CE2B-451A-B4A4-7ECD5AAF20D4}"
+     },
+     {
+      "Id": "3677180323",
+      "Name": "Health",
+      "ObjectPath": "\\Game Parameters\\Default Work Unit\\Health",
+      "GUID": "{683C9794-F153-48DE-A501-55539AA28BF0}"
+     }
+    ],
+    "StateGroups": [
+     {
+      "Id": "1750343382",
+      "Name": "GameTheme",
+      "ObjectPath": "\\States\\Default Work Unit\\GameTheme",
+      "GUID": "{65E50ED9-78B7-4D93-BECF-822D8329B004}",
+      "States": [
+       {
+        "Id": "748895195",
+        "Name": "None",
+        "ObjectPath": "\\States\\Default Work Unit\\GameTheme\\None",
+        "GUID": "{99C9662F-2AF0-426F-AA08-A8B6FA86496E}"
+       },
+       {
+        "Id": "1160234136",
+        "Name": "Normal",
+        "ObjectPath": "\\States\\Default Work Unit\\GameTheme\\Normal",
+        "GUID": "{8222F9E8-8988-4CD3-901C-9234FF7F0224}"
+       },
+       {
+        "Id": "3625060726",
+        "Name": "Success",
+        "ObjectPath": "\\States\\Default Work Unit\\GameTheme\\Success",
+        "GUID": "{7BE93782-AA95-46E2-A57E-E6AE31B98FF0}"
+       }
+      ]
+     }
+    ],
+    "SwitchGroups": [
+     {
+      "Id": "2385628198",
+      "Name": "Footsteps",
+      "ObjectPath": "\\Switches\\Default Work Unit\\Footsteps",
+      "GUID": "{6A19E9B8-B410-4FF6-A18D-F495AD02A8D5}",
+      "Switches": [
+       {
+        "Id": "2144363834",
+        "Name": "Rock",
+        "ObjectPath": "\\Switches\\Default Work Unit\\Footsteps\\Rock",
+        "GUID": "{25AFDC05-D62B-4E59-8023-4F9E374CDC6C}"
+       },
+       {
+        "Id": "4248645337",
+        "Name": "Grass",
+        "ObjectPath": "\\Switches\\Default Work Unit\\Footsteps\\Grass",
+        "GUID": "{1848EBE6-F9FA-45AA-B9AC-7F15A0F4333A}"
+       }
+      ]
+     }
+    ],
+    "Triggers": [
+     {
+      "Id": "78360149",
+      "Name": "Stinger",
+      "ObjectPath": "\\Triggers\\Default Work Unit\\Stinger",
+      "GUID": "{FA29AE7A-9117-4938-AD85-A6BBBCCF78D1}"
+     }
+    ]
+   }
+  ],
+  "FileHash": "{70F6AB6D-6195-EC73-158B-FE845B30B7E8}"
+ }
+}

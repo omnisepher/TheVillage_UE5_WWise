@@ -53,7 +53,7 @@
 // as S^{-1} * R^t = R' * S'.  You would need to SetMatrix using S^{-1}*R^t
 // as the input.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class Transform

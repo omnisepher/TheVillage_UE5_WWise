@@ -37,7 +37,7 @@
 // shuffle, and there is a chance that the algorithm can succeed just because
 // of the different ordering of points.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename InputType, typename ComputeType>
     class MinimumVolumeSphere3

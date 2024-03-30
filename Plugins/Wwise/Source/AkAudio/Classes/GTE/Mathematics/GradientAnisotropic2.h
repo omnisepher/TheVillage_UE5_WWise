@@ -10,7 +10,7 @@
 #include <Mathematics/PdeFilter2.h>
 #include <Mathematics/Math.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class GradientAnisotropic2 : public PdeFilter2<Real>

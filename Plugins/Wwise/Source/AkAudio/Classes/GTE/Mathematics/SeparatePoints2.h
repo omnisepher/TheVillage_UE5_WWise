@@ -16,7 +16,7 @@
 // https://www.geometrictools.com/Documentation/MethodOfSeparatingAxes.pdf
 // The ComputeType is for the ConvexHull2 class.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real, typename ComputeType>
     class SeparatePoints2

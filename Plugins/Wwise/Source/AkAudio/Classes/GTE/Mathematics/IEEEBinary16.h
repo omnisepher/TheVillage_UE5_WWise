@@ -11,7 +11,7 @@
 #include <Mathematics/Math.h>
 #include <Mathematics/IEEEBinary.h>
 
-namespace gte
+namespace WwiseGTE
 {
     class IEEEBinary16 : public IEEEBinary<int16_t, uint16_t, 16, 11>
     {
@@ -402,138 +402,138 @@ namespace gte
 
 namespace std
 {
-    inline gte::IEEEBinary16 acos(gte::IEEEBinary16 x)
+    inline WwiseGTE::IEEEBinary16 acos(WwiseGTE::IEEEBinary16 x)
     {
-        return (gte::IEEEBinary16)std::acos((float)x);
+        return (WwiseGTE::IEEEBinary16)std::acos((float)x);
     }
 
-    inline gte::IEEEBinary16 acosh(gte::IEEEBinary16 x)
+    inline WwiseGTE::IEEEBinary16 acosh(WwiseGTE::IEEEBinary16 x)
     {
-        return (gte::IEEEBinary16)std::acosh((float)x);
+        return (WwiseGTE::IEEEBinary16)std::acosh((float)x);
     }
 
-    inline gte::IEEEBinary16 asin(gte::IEEEBinary16 x)
+    inline WwiseGTE::IEEEBinary16 asin(WwiseGTE::IEEEBinary16 x)
     {
-        return (gte::IEEEBinary16)std::asin((float)x);
+        return (WwiseGTE::IEEEBinary16)std::asin((float)x);
     }
 
-    inline gte::IEEEBinary16 asinh(gte::IEEEBinary16 x)
+    inline WwiseGTE::IEEEBinary16 asinh(WwiseGTE::IEEEBinary16 x)
     {
-        return (gte::IEEEBinary16)std::asin((float)x);
+        return (WwiseGTE::IEEEBinary16)std::asin((float)x);
     }
 
-    inline gte::IEEEBinary16 atan(gte::IEEEBinary16 x)
+    inline WwiseGTE::IEEEBinary16 atan(WwiseGTE::IEEEBinary16 x)
     {
-        return (gte::IEEEBinary16)std::atan((float)x);
+        return (WwiseGTE::IEEEBinary16)std::atan((float)x);
     }
 
-    inline gte::IEEEBinary16 atanh(gte::IEEEBinary16 x)
+    inline WwiseGTE::IEEEBinary16 atanh(WwiseGTE::IEEEBinary16 x)
     {
-        return (gte::IEEEBinary16)std::atanh((float)x);
+        return (WwiseGTE::IEEEBinary16)std::atanh((float)x);
     }
 
-    inline gte::IEEEBinary16 atan2(gte::IEEEBinary16 y, gte::IEEEBinary16 x)
+    inline WwiseGTE::IEEEBinary16 atan2(WwiseGTE::IEEEBinary16 y, WwiseGTE::IEEEBinary16 x)
     {
-        return (gte::IEEEBinary16)std::atan2((float)y, (float)x);
+        return (WwiseGTE::IEEEBinary16)std::atan2((float)y, (float)x);
     }
 
-    inline gte::IEEEBinary16 ceil(gte::IEEEBinary16 x)
+    inline WwiseGTE::IEEEBinary16 ceil(WwiseGTE::IEEEBinary16 x)
     {
-        return (gte::IEEEBinary16)std::ceil((float)x);
+        return (WwiseGTE::IEEEBinary16)std::ceil((float)x);
     }
 
-    inline gte::IEEEBinary16 cos(gte::IEEEBinary16 x)
+    inline WwiseGTE::IEEEBinary16 cos(WwiseGTE::IEEEBinary16 x)
     {
-        return (gte::IEEEBinary16)std::cos((float)x);
+        return (WwiseGTE::IEEEBinary16)std::cos((float)x);
     }
 
-    inline gte::IEEEBinary16 cosh(gte::IEEEBinary16 x)
+    inline WwiseGTE::IEEEBinary16 cosh(WwiseGTE::IEEEBinary16 x)
     {
-        return (gte::IEEEBinary16)std::cosh((float)x);
+        return (WwiseGTE::IEEEBinary16)std::cosh((float)x);
     }
 
-    inline gte::IEEEBinary16 exp(gte::IEEEBinary16 x)
+    inline WwiseGTE::IEEEBinary16 exp(WwiseGTE::IEEEBinary16 x)
     {
-        return (gte::IEEEBinary16)std::exp((float)x);
+        return (WwiseGTE::IEEEBinary16)std::exp((float)x);
     }
 
-    inline gte::IEEEBinary16 exp2(gte::IEEEBinary16 x)
+    inline WwiseGTE::IEEEBinary16 exp2(WwiseGTE::IEEEBinary16 x)
     {
-        return (gte::IEEEBinary16)std::exp2((float)x);
+        return (WwiseGTE::IEEEBinary16)std::exp2((float)x);
     }
 
-    inline gte::IEEEBinary16 fabs(gte::IEEEBinary16 x)
+    inline WwiseGTE::IEEEBinary16 fabs(WwiseGTE::IEEEBinary16 x)
     {
-        return (gte::IEEEBinary16)std::fabs((float)x);
+        return (WwiseGTE::IEEEBinary16)std::fabs((float)x);
     }
 
-    inline gte::IEEEBinary16 floor(gte::IEEEBinary16 x)
+    inline WwiseGTE::IEEEBinary16 floor(WwiseGTE::IEEEBinary16 x)
     {
-        return (gte::IEEEBinary16)std::floor((float)x);
+        return (WwiseGTE::IEEEBinary16)std::floor((float)x);
     }
 
-    inline gte::IEEEBinary16 fmod(gte::IEEEBinary16 x, gte::IEEEBinary16 y)
+    inline WwiseGTE::IEEEBinary16 fmod(WwiseGTE::IEEEBinary16 x, WwiseGTE::IEEEBinary16 y)
     {
-        return (gte::IEEEBinary16)std::fmod((float)x, (float)y);
+        return (WwiseGTE::IEEEBinary16)std::fmod((float)x, (float)y);
     }
 
-    inline gte::IEEEBinary16 frexp(gte::IEEEBinary16 x, int* exponent)
+    inline WwiseGTE::IEEEBinary16 frexp(WwiseGTE::IEEEBinary16 x, int* exponent)
     {
-        return (gte::IEEEBinary16)std::frexp((float)x, exponent);
+        return (WwiseGTE::IEEEBinary16)std::frexp((float)x, exponent);
     }
 
-    inline gte::IEEEBinary16 ldexp(gte::IEEEBinary16 x, int exponent)
+    inline WwiseGTE::IEEEBinary16 ldexp(WwiseGTE::IEEEBinary16 x, int exponent)
     {
-        return (gte::IEEEBinary16)std::ldexp((float)x, exponent);
+        return (WwiseGTE::IEEEBinary16)std::ldexp((float)x, exponent);
     }
 
-    inline gte::IEEEBinary16 log(gte::IEEEBinary16 x)
+    inline WwiseGTE::IEEEBinary16 log(WwiseGTE::IEEEBinary16 x)
     {
-        return (gte::IEEEBinary16)std::log((float)x);
+        return (WwiseGTE::IEEEBinary16)std::log((float)x);
     }
 
-    inline gte::IEEEBinary16 log2(gte::IEEEBinary16 x)
+    inline WwiseGTE::IEEEBinary16 log2(WwiseGTE::IEEEBinary16 x)
     {
-        return (gte::IEEEBinary16)std::log2((float)x);
+        return (WwiseGTE::IEEEBinary16)std::log2((float)x);
     }
 
-    inline gte::IEEEBinary16 log10(gte::IEEEBinary16 x)
+    inline WwiseGTE::IEEEBinary16 log10(WwiseGTE::IEEEBinary16 x)
     {
-        return (gte::IEEEBinary16)std::log10((float)x);
+        return (WwiseGTE::IEEEBinary16)std::log10((float)x);
     }
 
-    inline gte::IEEEBinary16 pow(gte::IEEEBinary16 x, gte::IEEEBinary16 y)
+    inline WwiseGTE::IEEEBinary16 pow(WwiseGTE::IEEEBinary16 x, WwiseGTE::IEEEBinary16 y)
     {
-        return (gte::IEEEBinary16)std::pow((float)x, (float)y);
+        return (WwiseGTE::IEEEBinary16)std::pow((float)x, (float)y);
     }
 
-    inline gte::IEEEBinary16 sin(gte::IEEEBinary16 x)
+    inline WwiseGTE::IEEEBinary16 sin(WwiseGTE::IEEEBinary16 x)
     {
-        return (gte::IEEEBinary16)std::sin((float)x);
+        return (WwiseGTE::IEEEBinary16)std::sin((float)x);
     }
 
-    inline gte::IEEEBinary16 sinh(gte::IEEEBinary16 x)
+    inline WwiseGTE::IEEEBinary16 sinh(WwiseGTE::IEEEBinary16 x)
     {
-        return (gte::IEEEBinary16)std::sinh((float)x);
+        return (WwiseGTE::IEEEBinary16)std::sinh((float)x);
     }
 
-    inline gte::IEEEBinary16 sqrt(gte::IEEEBinary16 x)
+    inline WwiseGTE::IEEEBinary16 sqrt(WwiseGTE::IEEEBinary16 x)
     {
-        return (gte::IEEEBinary16)std::sqrt((float)x);
+        return (WwiseGTE::IEEEBinary16)std::sqrt((float)x);
     }
 
-    inline gte::IEEEBinary16 tan(gte::IEEEBinary16 x)
+    inline WwiseGTE::IEEEBinary16 tan(WwiseGTE::IEEEBinary16 x)
     {
-        return (gte::IEEEBinary16)std::tan((float)x);
+        return (WwiseGTE::IEEEBinary16)std::tan((float)x);
     }
 
-    inline gte::IEEEBinary16 tanh(gte::IEEEBinary16 x)
+    inline WwiseGTE::IEEEBinary16 tanh(WwiseGTE::IEEEBinary16 x)
     {
-        return (gte::IEEEBinary16)std::tanh((float)x);
+        return (WwiseGTE::IEEEBinary16)std::tanh((float)x);
     }
 }
 
-namespace gte
+namespace WwiseGTE
 {
     inline IEEEBinary16 atandivpi(IEEEBinary16 x)
     {

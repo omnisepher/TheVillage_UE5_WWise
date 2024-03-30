@@ -9,7 +9,7 @@
 
 #include <cstdint>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Float, typename UInt, int NumBits, int Precision>
     class IEEEBinary

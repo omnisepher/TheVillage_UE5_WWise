@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 // AkSimd.h
@@ -30,10 +29,11 @@ the specific language governing permissions and limitations under the License.
 /// \file 
 /// AKSIMD - SSE implementation
 
-#ifndef _AK_SIMD_SSE_H_
-#define _AK_SIMD_SSE_H_
+#pragma once
 
+#include <AK/SoundEngine/Common/AkSimdTypes.h>
 #include <AK/SoundEngine/Common/AkTypes.h>
+
 #include <xmmintrin.h>
 #include <smmintrin.h>
 #include <emmintrin.h>
@@ -42,48 +42,11 @@ the specific language governing permissions and limitations under the License.
 #endif
 
 ////////////////////////////////////////////////////////////////////////
-/// @name Platform specific defines for prefetching
-//@{
-
-#define AKSIMD_ARCHCACHELINESIZE	(64)				///< Assumed cache line width for architectures on this platform
-#define AKSIMD_ARCHMAXPREFETCHSIZE	(512) 				///< Use this to control how much prefetching maximum is desirable (assuming 8-way cache)		
-/// Cross-platform memory prefetch of effective address assuming non-temporal data
-#define AKSIMD_PREFETCHMEMORY( __offset__, __add__ ) _mm_prefetch(((char *)(__add__))+(__offset__), _MM_HINT_NTA ) 
-
-//@}
-////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////
 /// @name Platform specific memory size alignment for allocation purposes
 //@{
 #define AKSIMD_ALIGNSIZE( __Size__ ) (((__Size__) + 15) & ~15)
 //@}
 ////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////
-/// @name AKSIMD types
-//@{
-
-typedef float	AKSIMD_F32;		///< 32-bit float
-typedef __m128	AKSIMD_V4F32;	///< Vector of 4 32-bit floats
-typedef AKSIMD_V4F32 AKSIMD_V4COND;	 ///< Vector of 4 comparison results
-typedef AKSIMD_V4F32 AKSIMD_V4FCOND;	 ///< Vector of 4 comparison results
-
-typedef __m128i	AKSIMD_V4I32;	///< Vector of 4 32-bit signed integers
-
-struct AKSIMD_V4I32X2 {			///< Pair of 4 32-bit signed integers
-	AKSIMD_V4I32 val[2];
-};
-
-struct AKSIMD_V4I32X4 {			///< Quartet of 4 32-bit signed integers
-	AKSIMD_V4I32 val[4];
-};
-
-typedef AKSIMD_V4I32 AKSIMD_V4ICOND;
-
-//@}
-////////////////////////////////////////////////////////////////////////
-
 
 ////////////////////////////////////////////////////////////////////////
 /// @name AKSIMD loading / setting
@@ -148,6 +111,10 @@ static AkForceInline AKSIMD_V4COND AKSIMD_SETMASK_V4COND( AkUInt32 x )
 /// Stores the lower single-precision, floating-point value.
 /// *p := a0 (see _mm_store_ss)
 #define AKSIMD_STORE1_V4F32( __addr__, __vec__ ) _mm_store_ss( (AkReal32*)(__addr__), (__vec__) )
+
+/// Stores the lower double-precision, floating-point value.
+/// *p := a0 (see _mm_store_sd)
+#define AKSIMD_STORE1_V2F64( __addr__, __vec__ ) _mm_store_sd( (AkReal64*)(__addr__), _mm_castps_pd(__vec__) )
 
 //@}
 ////////////////////////////////////////////////////////////////////////
@@ -343,8 +310,10 @@ static AKSIMD_V4F32 AKSIMD_COMPLEXMUL_SSE3( const AKSIMD_V4F32 vCIn1, const AKSI
 
 #if defined _MSC_VER && ( _MSC_VER <= 1600 )
 	#define AKSIMD_ASSERTFLUSHZEROMODE	AKASSERT( _MM_GET_FLUSH_ZERO_MODE(dummy) == _MM_FLUSH_ZERO_ON )
-#else
+#elif defined(AK_CPU_X86) || defined(AK_CPU_X86_64)
 	#define AKSIMD_ASSERTFLUSHZEROMODE	AKASSERT( _MM_GET_FLUSH_ZERO_MODE() == _MM_FLUSH_ZERO_ON )
+#else
+	#define AKSIMD_ASSERTFLUSHZEROMODE
 #endif
 
 //@}
@@ -502,9 +471,13 @@ static AkForceInline AKSIMD_V4I32X4 AKSIMD_GATHER_V4I64_AND_DEINTERLEAVE_V4I32X4
 /// Return a when control mask is 0, return b when control mask is non zero, control mask is in c and usually provided by above comparison operations
 static AkForceInline AKSIMD_V4F32 AKSIMD_VSEL_V4F32( AKSIMD_V4F32 vA, AKSIMD_V4F32 vB, AKSIMD_V4F32 vMask )
 {
+#if defined(__SSE4_1__)
+	return _mm_blendv_ps(vA, vB, vMask);
+#else
     vB = _mm_and_ps( vB, vMask );
     vA= _mm_andnot_ps( vMask, vA );
     return _mm_or_ps( vA, vB );
+#endif
 }
 
 // (cond1 >= cond2) ? b : a.
@@ -701,6 +674,12 @@ static AkForceInline AKSIMD_V4I32 AKSIMD_CONVERT_V4F32_TO_V4F16(AKSIMD_V4F32 vec
 /// Cast vector of type AKSIMD_V4F32 to AKSIMD_V4COND.
 #define AKSIMD_CAST_V4F32_TO_V4COND( __vec__ ) (__vec__)
 
+/// Cast vector of type AKSIMD_V4COND to AKSIMD_V4I32.
+#define AKSIMD_CAST_V4COND_TO_V4I32( __vec__ )  _mm_castps_si128(__vec__)
+
+/// Cast vector of type AKSIMD_V4I32 to AKSIMD_V4COND.
+#define AKSIMD_CAST_V4I32_TO_V4COND( __vec__ ) _mm_castsi128_ps(__vec__)
+
 //@}
 ////////////////////////////////////////////////////////////////////////
 
@@ -742,7 +721,7 @@ static AkForceInline AKSIMD_V4I32 AKSIMD_CONVERT_V4F32_TO_V4F16(AKSIMD_V4F32 vec
 
 typedef __m64	AKSIMD_V2F32;	///< Vector of 2 32-bit floats
 
-#define AKSIMD_SETZERO_V2F32() _mm_setzero_si64();
+#define AKSIMD_SETZERO_V2F32() _mm_setzero_si64()
 
 #define AKSIMD_CMPGT_V2I32( a, b ) _mm_cmpgt_pi16(a,b)
 
@@ -766,9 +745,7 @@ typedef __m64	AKSIMD_V2F32;	///< Vector of 2 32-bit floats
 
 /// Used when ending a block of code that utilizes any MMX construct on x86 code
 /// so that the x87 FPU can be used again
-#define AKSIMD_MMX_EMPTY _mm_empty();
+#define AKSIMD_MMX_EMPTY _mm_empty()
 
 #endif
 
-
-#endif //_AK_SIMD_SSE_H_

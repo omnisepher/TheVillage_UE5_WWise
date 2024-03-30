@@ -15,7 +15,7 @@
 
 // The queries consider the ellipsoid to be a solid.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, Line3<Real>, Ellipsoid3<Real>>

@@ -36,7 +36,7 @@
 // ConvexHull2::GetTangent.
 //#define GTE_THROW_ON_CONVEXHULL2_INFINITE_LOOP
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename InputType, typename ComputeType>
     class ConvexHull2
@@ -278,7 +278,7 @@ namespace gte
                 }
                 i = (i < j1 ? i + 1 : j0);
             }
-            LogAssert(k < size0, "Unexpected condition.");
+            GTE_LogAssert(k < size0, "Unexpected condition.");
 
             i = iLR;
             for (k = 0; k < size1; ++k)
@@ -290,7 +290,7 @@ namespace gte
                 }
                 i = (i < j3 ? i + 1 : j2);
             }
-            LogAssert(k < size1, "Unexpected condition.");
+            GTE_LogAssert(k < size1, "Unexpected condition.");
 
             int next = j0;
             for (k = 0; k < numMerged; ++k)

@@ -16,7 +16,7 @@
 // much smaller N, in which case you can modify PrecisionCalculator to use the
 // BSPrecision(int32_t,int32_t,int32_t,bool) constructors.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class PrimalQuery2

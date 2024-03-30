@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 // AkSimd.h
@@ -33,21 +32,11 @@ the specific language governing permissions and limitations under the License.
 #pragma once
 
 #if defined AK_CPU_X86 || defined AK_CPU_X86_64
-	#define AKSIMD_GETELEMENT_V4I32( __vName, __num__ )			(__vName).m128i_i32[(__num__)]	///< Retrieve scalar element from vector.
-	#define AKSIMD_GETELEMENT_V4F32( __vName, __num__ )			(__vName).m128_f32[(__num__)]	///< Retrieve scalar element from vector.
-	#define AKSIMD_GETELEMENT_V2F32( __vName, __num__ )			(__vName).m64_f32[(__num__)]	///< Retrieve scalar element from vector.
-	#define AKSIMD_GETELEMENT_V2I64( __vName, __num__ )			(__vName).m128i_i64[(__num__)]	///< Retrieve scalar element from vector.
-	
-	#include <AK/SoundEngine/Platforms/SSE/AkSimd.h>
+		#include <AK/SoundEngine/Platforms/SSE/AkSimd.h>
 #endif
 
 #if defined AK_CPU_ARM_NEON
-	#define AKSIMD_GETELEMENT_V4I32( __vName, __num__ )			(__vName).n128_i32[(__num__)]	///< Retrieve scalar element from vector.
-	#define AKSIMD_GETELEMENT_V4F32( __vName, __num__ )			(__vName).n128_f32[(__num__)]	///< Retrieve scalar element from vector.
-	#define AKSIMD_GETELEMENT_V2F32( __vName, __num__ )			(__vName).n64_f32[(__num__)]	///< Retrieve scalar element from vector.
-	#define AKSIMD_GETELEMENT_V2I64( __vName, __num__ )			(__vName).n128i_i64[(__num__)]	///< Retrieve scalar element from vector.
-	
-	#define AKSIMD_DECLARE_V4F32_TYPE							DirectX::XMVECTORF32
+		#define AKSIMD_DECLARE_V4F32_TYPE							DirectX::XMVECTORF32
 	#define AKSIMD_DECLARE_V4F32( _x, _a, _b, _c, _d )			AKSIMD_DECLARE_V4F32_TYPE _x = { _a, _b, _c, _d }
 
 	#define AKSIMD_DECLARE_V4I32_TYPE							DirectX::XMVECTORI32

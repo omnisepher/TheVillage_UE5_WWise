@@ -147,7 +147,7 @@
 // P1 = V*Y;
 // diff = P0 - P1;  // { 0, 0, 0, 0 }
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class ConvertCoordinates

@@ -7,7 +7,7 @@
 
 #pragma once
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class PdeFilter

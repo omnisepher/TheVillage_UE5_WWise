@@ -15,7 +15,7 @@
 // Degenerate intervals are allowed (t0 = t1).  The queries do not perform
 // validation on the input intervals to test whether t0 <= t1.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, std::array<Real, 2>, std::array<Real, 2>>

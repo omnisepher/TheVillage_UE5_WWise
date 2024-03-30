@@ -11,7 +11,7 @@
 #include <Mathematics/DistPoint3Rectangle3.h>
 #include <Mathematics/Segment.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class DCPQuery<Real, Segment3<Real>, Rectangle3<Real>>

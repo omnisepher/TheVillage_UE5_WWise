@@ -9,7 +9,7 @@
 
 #include <Mathematics/Cone.h>
 
-namespace gte
+namespace WwiseGTE
 {
     // Test for containment of a point by a cone.
     template <int N, typename Real>

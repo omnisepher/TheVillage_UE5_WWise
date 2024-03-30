@@ -9,7 +9,7 @@
 
 #include <Mathematics/Vector.h>
 
-namespace gte
+namespace WwiseGTE
 {
     // Axis-angle representation for N = 3 or N = 4.  When N = 4, the axis
     // must be a vector of the form (x,y,z,0) [affine representation of the

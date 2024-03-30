@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 // AkTls.h -- thread-local storage abstraction
@@ -32,21 +31,8 @@ the specific language governing permissions and limitations under the License.
 #include <AK/AkPlatforms.h>
 #include <AK/SoundEngine/Common/AkSoundEngineExport.h>
 
-#include <stdint.h>
-
-#if defined(AK_WIN) || defined(AK_XBOX)
-#include <AK/Tools/Win32/AkTls.h>
-
-#elif defined (AK_SONY)
-#include <AK/Tools/PS4/AkTls.h>
-
-#elif defined (AK_NX)
-#include <AK/Tools/NX/AkTls.h>
-
-#else
-#include <AK/Tools/POSIX/AkTls.h>
-
-#endif
+typedef AkInt32 AkTlsSlot;
+#define AKTLS_NULL (0)
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,13 +46,13 @@ extern "C" {
 		AkTlsSlot in_slot
 		);
 
-	AK_EXTERNAPIFUNC( uintptr_t, AkTlsGetValue )(
+	AK_EXTERNAPIFUNC(AkUIntPtr, AkTlsGetValue )(
 		AkTlsSlot in_slot
 		);
 
 	AK_EXTERNAPIFUNC( void, AkTlsSetValue )(
 		AkTlsSlot in_slot, 
-		uintptr_t in_value
+		AkUIntPtr in_value
 		);
 
 #ifdef __cplusplus

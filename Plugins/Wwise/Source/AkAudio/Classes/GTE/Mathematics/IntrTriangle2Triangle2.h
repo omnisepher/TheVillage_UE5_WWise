@@ -19,7 +19,7 @@
 // based on the previously mentioned document about the method of separating
 // axes.
 
-namespace gte
+namespace WwiseGTE
 {
     // Test whether two triangles intersect using the method of separating
     // axes.  The set of intersection, if it exists, is not computed.  The

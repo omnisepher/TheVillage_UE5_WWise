@@ -1,16 +1,18 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 /*=============================================================================
@@ -21,11 +23,8 @@ Copyright (c) 2021 Audiokinetic Inc.
 #include "AkInclude.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "AkWaapiUri.h"
-#include "AkWaapiUtils.h"
 #include "AkWaapiJsonManager.h"
 #include "AkWaapiCalls.generated.h"
-
-DECLARE_LOG_CATEGORY_EXTERN(LogAkWaapiCalls, Log, All);
 
 /**
 * Structure for Field Names
@@ -33,10 +32,10 @@ DECLARE_LOG_CATEGORY_EXTERN(LogAkWaapiCalls, Log, All);
 USTRUCT(BlueprintType)
 struct AKAUDIO_API FAkWaapiSubscriptionId
 {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 	
 	FAkWaapiSubscriptionId() {}
-	FAkWaapiSubscriptionId(const uint64_t& SubscribId) : SubscriptionId(SubscribId){}
+	FAkWaapiSubscriptionId(const uint64_t& SubscribeId) : SubscriptionId(SubscribeId){}
 
 	mutable uint64 SubscriptionId = 0;
 };
@@ -48,8 +47,11 @@ DECLARE_DYNAMIC_DELEGATE(FOnWaapiConnectionLost);
 UCLASS(Within = World, config = Engine, defaultconfig)
 class AKAUDIO_API UAkWaapiCalls : public UBlueprintFunctionLibrary
 {
-	GENERATED_UCLASS_BODY()
-	
+	GENERATED_BODY()
+
+public:
+	UAkWaapiCalls(const class FObjectInitializer& ObjectInitializer);
+
     UFUNCTION(BlueprintCallable, Category = "Audiokinetic|WaapiCalls")
     static void SetSubscriptionID(const FAkWaapiSubscriptionId& Subscription, int id);
 
@@ -77,7 +79,7 @@ class AKAUDIO_API UAkWaapiCalls : public UBlueprintFunctionLibrary
 	* @param WaapiUri		The	function that will be called when an event that we would be aware of happens.
 	* @param WaapiArgs		The arguments referenced to the in_uri function.
 	* @param WaapiOptions	Optional flag to get more information about the event happened.
-	* @return out_result	A JSON object that contains useful informations about the Call process to a specific event, gets an error infos in case the Call fails.
+	* @return out_result	A JSON object that contains useful information about the Call process to a specific event, gets an error infos in case the Call fails.
 	*/
 	UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Audiokinetic|WaapiCalls")
 	static FAKWaapiJsonObject CallWaapi(const FAkWaapiUri& WaapiUri, const FAKWaapiJsonObject& WaapiArgs, const FAKWaapiJsonObject& WaapiOptions);
@@ -90,7 +92,7 @@ class AKAUDIO_API UAkWaapiCalls : public UBlueprintFunctionLibrary
 	* @param in_callback		 A delegate to be executed during the subscription event.
 	* @param out_subscriptionId	 Gets the id of this subscription.
 	* @param out_result			 A boolean to ensure that the subscription was successfully done.
-	* @return					 A JSON object that contains useful informations about the subscription process to a specific event, gets an error infos in case the subscription failed. 
+	* @return					 A JSON object that contains useful information about the subscription process to a specific event, gets an error infos in case the subscription failed. 
 	*/
 	UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Audiokinetic|WaapiCalls")
 	static FAKWaapiJsonObject SubscribeToWaapi(const FAkWaapiUri& WaapiUri, const FAKWaapiJsonObject& WaapiOptions, const FOnEventCallback& CallBack, FAkWaapiSubscriptionId& SubscriptionId, bool& SubscriptionDone);
@@ -100,7 +102,7 @@ class AKAUDIO_API UAkWaapiCalls : public UBlueprintFunctionLibrary
 	*
 	* @param SubscriptionId	     Gets the id of the current subscription to the event from which we want to be unsubscribed.
 	* @param UnsubscriptionDone  A boolean to ensure that the unsubscription was successfully done.
-	* @return					 A JSON object that contains useful informations about the unsubscription process from a specific event, gets an error infos in case the unsubscription failed. 
+	* @return					 A JSON object that contains useful information about the unsubscription process from a specific event, gets an error infos in case the unsubscription failed. 
 	*/
 	UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Audiokinetic|WaapiCalls")
 	static FAKWaapiJsonObject Unsubscribe(const FAkWaapiSubscriptionId& SubscriptionId, bool& UnsubscriptionDone);

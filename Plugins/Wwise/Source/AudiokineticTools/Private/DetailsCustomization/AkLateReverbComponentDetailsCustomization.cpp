@@ -1,16 +1,18 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #include "AkLateReverbComponentDetailsCustomization.h"
@@ -38,14 +40,20 @@ TSharedRef<IDetailCustomization> FAkLateReverbComponentDetailsCustomization::Mak
 	return MakeShareable(new FAkLateReverbComponentDetailsCustomization());
 }
 
-void FAkLateReverbComponentDetailsCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailLayout)
+void FAkLateReverbComponentDetailsCustomization::CustomizeDetails(const TSharedPtr<IDetailLayoutBuilder>& InDetailBuilder)
 {
-	DetailLayout.EditCategory("Toggle", FText::GetEmpty(), ECategoryPriority::Important);
-	DetailLayout.EditCategory("Late Reverb", FText::GetEmpty(), ECategoryPriority::TypeSpecific);
-	MyDetailLayout = &DetailLayout;
+	InDetailBuilder->EditCategory("EnableComponent", FText::GetEmpty(), ECategoryPriority::Important);
+	InDetailBuilder->EditCategory("Late Reverb", FText::GetEmpty(), ECategoryPriority::TypeSpecific);
+	DetailBuilder = InDetailBuilder;
+
+	CustomizeDetails(*InDetailBuilder);
+}
+
+void FAkLateReverbComponentDetailsCustomization::CustomizeDetails(IDetailLayoutBuilder& InDetailBuilder)
+{
 	TArray<TWeakObjectPtr<UObject>> ObjectsBeingCustomized;
-	DetailLayout.GetObjectsBeingCustomized(ObjectsBeingCustomized);
-	DetailLayout.HideProperty("AuxBusManual");
+	InDetailBuilder.GetObjectsBeingCustomized(ObjectsBeingCustomized);
+	InDetailBuilder.HideProperty("AuxBusManual");
 	for (TWeakObjectPtr<UObject>& Object : ObjectsBeingCustomized)
 	{
 		UAkLateReverbComponent* LateReverbBeingCustomized = Cast<UAkLateReverbComponent>(Object.Get());
@@ -58,7 +66,7 @@ void FAkLateReverbComponentDetailsCustomization::CustomizeDetails(IDetailLayoutB
 			// (i.e. - only hide the transform if the component has been added to the hierarchy of a blueprint class or actor instance from the editor)
 			if (OuterComponent == nullptr && OuterActor == nullptr)
 			{
-				IDetailCategoryBuilder& TransformCategory = DetailLayout.EditCategory("TransformCommon", LOCTEXT("TransformCommonCategory", "Transform"), ECategoryPriority::Transform);
+				IDetailCategoryBuilder& TransformCategory = InDetailBuilder.EditCategory("TransformCommon", LOCTEXT("TransformCommonCategory", "Transform"), ECategoryPriority::Transform);
 				TransformCategory.SetCategoryVisibility(false);
 				break;
 			}
@@ -73,20 +81,31 @@ void FAkLateReverbComponentDetailsCustomization::CustomizeDetails(IDetailLayoutB
 	UAkLateReverbComponent* LateReverbBeingCustomized = Cast<UAkLateReverbComponent>(ObjectsBeingCustomized[0].Get());
 	if (LateReverbBeingCustomized)
 	{
-		IDetailCategoryBuilder& ToggleDetailCategory = DetailLayout.EditCategory("Toggle");
-		auto EnableHandle = DetailLayout.GetProperty("bEnable");
+		IDetailCategoryBuilder& ToggleDetailCategory = InDetailBuilder.EditCategory("EnableComponent");
+		auto EnableHandle = InDetailBuilder.GetProperty("bEnable");
 		EnableHandle->SetOnPropertyValueChanged(FSimpleDelegate::CreateSP(this, &FAkLateReverbComponentDetailsCustomization::OnEnableValueChanged));
 
 		if (!LateReverbBeingCustomized->bEnable)
 		{
-			DetailLayout.HideCategory("Late Reverb");
+			InDetailBuilder.HideCategory("Late Reverb");
 		}
 	}
 }
 
 void FAkLateReverbComponentDetailsCustomization::OnEnableValueChanged()
 {
-	MyDetailLayout->ForceRefreshDetails();
+	if (DetailBuilder.IsValid())
+	{
+		IDetailLayoutBuilder* Layout = nullptr;
+		if (auto LockedDetailBuilder = DetailBuilder.Pin())
+		{
+			Layout = LockedDetailBuilder.Get();
+		}
+		if (LIKELY(Layout))
+		{
+			Layout->ForceRefreshDetails();
+		}
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////

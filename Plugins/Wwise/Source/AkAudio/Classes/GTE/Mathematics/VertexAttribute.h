@@ -9,7 +9,7 @@
 
 #include <string>
 
-namespace gte
+namespace WwiseGTE
 {
     struct VertexAttribute
     {

@@ -9,7 +9,7 @@
 
 #include <Mathematics/Vector.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class ParametricSurface

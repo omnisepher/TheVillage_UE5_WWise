@@ -26,7 +26,7 @@
 // erosion functions do not have the requirement that the boundary pixels of
 // the binary image inputs be zero.
 
-namespace gte
+namespace WwiseGTE
 {
     class ImageUtility2
     {

@@ -35,7 +35,7 @@
 // float/double when you create a cone using the cone-frustum constructor
 // Cone(ray, angle, minHeight, std::numeric_limits<Real>::max()).
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, AlignedBox<3, Real>, Cone<3, Real>>

@@ -11,7 +11,7 @@
 #include <Mathematics/Cylinder3.h>
 #include <Mathematics/DistPointLine.h>
 
-namespace gte
+namespace WwiseGTE
 {
     // Compute the cylinder axis segment using least-squares fit.  The radius
     // is the maximum distance from points to the axis.  The height is

@@ -1,27 +1,41 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
-
 #include "AkAudioStyle.h"
+
+#include "AkAcousticTexture.h"
 #include "AkAudioDevice.h"
-#include "Framework/Notifications/NotificationManager.h"
+#include "AkAudioEvent.h"
+#include "AkAuxBus.h"
+#include "AkEffectShareSet.h"
+#include "AkRtpc.h"
+#include "AkStateValue.h"
+#include "AkSwitchValue.h"
+#include "AkTrigger.h"
 #include "WaapiPicker/WwiseTreeItem.h"
+
+#include "Engine/Texture2D.h"
+#include "Framework/Notifications/NotificationManager.h"
 #include "Styling/SlateStyle.h"
 #include "Styling/SlateStyleRegistry.h"
-#include "Engine/Texture2D.h"
 #include "Widgets/Notifications/SNotificationList.h"
+#if WITH_EDITOR
+#include "Wwise/Ref/WwiseRefType.h"
+#endif
 
 TSharedPtr< FSlateStyleSet > FAkAudioStyle::StyleInstance = nullptr;
 UMaterial* FAkAudioStyle::TextMaterial = nullptr;
@@ -147,7 +161,7 @@ void SetAkResourceBrushes(FSlateStyleSet& Style)
 	SetAkBrush(Style, "AudiokineticTools.RandomSequenceContainerIcon", "container_random_sequence_nor");
 	SetAkBrush(Style, "AudiokineticTools.BlendContainerIcon", "layer_container_nor");
 	SetAkBrush(Style, "AudiokineticTools.MotionBusIcon", "motion_bus_nor");
-	SetAkBrush(Style, "AudiokineticTools.AkPickerTabIcon", "wwise_logo_32");
+	SetAkBrush(Style, "AudiokineticTools.AkBrowserTabIcon", "wwise_logo_32");
 	SetAkBrush(Style, "AudiokineticTools.EventIcon", "event_nor");
 	SetAkBrush(Style, "AudiokineticTools.AcousticTextureIcon", "acoutex_nor");
 	SetAkBrush(Style, "AudiokineticTools.AuxBusIcon", "auxbus_nor");
@@ -162,6 +176,7 @@ void SetAkResourceBrushes(FSlateStyleSet& Style)
 	SetAkBrush(Style, "AudiokineticTools.SwitchIcon", "switch_nor");
 	SetAkBrush(Style, "AudiokineticTools.SwitchGroupIcon", "switchgroup_nor");
 	SetAkBrush(Style, "AudiokineticTools.TriggerIcon", "trigger_nor");
+	SetAkBrush(Style, "AudiokineticTools.EffectShareSetIcon", "effect_shareset_nor");
 
 	SetClassThumbnail(Style, "ClassThumbnail.AkAcousticTexture", "AkAcousticTexture");
 	SetClassThumbnail(Style, "ClassThumbnail.AkAudioEvent", "AkAudioEvent");
@@ -175,6 +190,7 @@ void SetAkResourceBrushes(FSlateStyleSet& Style)
 	SetClassThumbnail(Style, "ClassThumbnail.AkStateValue", "AkStateValue");
 	SetClassThumbnail(Style, "ClassThumbnail.AkSwitchValue", "AkSwitchValue");
 	SetClassThumbnail(Style, "ClassThumbnail.AkTrigger", "AkTrigger");
+	SetClassThumbnail(Style, "ClassThumbnail.AkEffectShareSet", "AkEffectShareSet");
 
 	SetClassThumbnail(Style, "ClassThumbnail.AkAcousticPortal", "AK_Acoustic_Portal");
 	SetClassIcon(Style, "ClassIcon.AkAcousticPortal", "AK_Acoustic_Portal_Explorer");
@@ -233,8 +249,13 @@ void FAkAudioStyle::Shutdown()
     }
 }
 
-void FAkAudioStyle::DisplayEditorMessgae(const FText& messageText, EWwiseItemType::Type wwiseItemType /* = EWwiseItemType::Type::None*/, float duration /* = 1.5f */)
+void FAkAudioStyle::DisplayEditorMessage(const FText& messageText, EWwiseItemType::Type wwiseItemType /* = EWwiseItemType::Type::None*/, float duration /* = 1.5f */)
 {
+	if (!FApp::CanEverRender())
+	{
+		UE_LOG(LogAkAudio, Display, TEXT("DisplayEditorMessage: %s"), *messageText.ToString());
+		return;
+	}
 	FNotificationInfo Info(messageText);
 	if (wwiseItemType == EWwiseItemType::None)
 		Info.Image = FAkAudioStyle::GetWwiseIcon();
@@ -297,10 +318,97 @@ const FSlateBrush* FAkAudioStyle::GetBrush(EWwiseItemType::Type ItemType)
 	case EWwiseItemType::Switch: return Style.GetBrush("AudiokineticTools.SwitchIcon");
 	case EWwiseItemType::SwitchGroup: return Style.GetBrush("AudiokineticTools.SwitchGroupIcon");
 	case EWwiseItemType::Trigger: return Style.GetBrush("AudiokineticTools.TriggerIcon");
+	case EWwiseItemType::EffectShareSet: return Style.GetBrush("AudiokineticTools.EffectShareSetIcon");
+
 	default:
 		return nullptr;
 	}
 }
+
+#if WITH_EDITOR
+const FSlateBrush* FAkAudioStyle::GetBrush(EWwiseRefType WwiseRefType)
+{
+	EWwiseItemType::Type ItemType = EWwiseItemType::Type::None;
+	switch (WwiseRefType)
+	{
+	case EWwiseRefType::Event:
+		ItemType = EWwiseItemType::Event;
+		break;
+	case EWwiseRefType::SwitchContainer:
+		ItemType = EWwiseItemType::SwitchContainer;
+		break;
+	case EWwiseRefType::Bus:		
+		ItemType = EWwiseItemType::Bus;
+		break;
+	case EWwiseRefType::AuxBus:
+		ItemType = EWwiseItemType::AuxBus;
+		break;
+	case EWwiseRefType::GameParameter:
+		ItemType = EWwiseItemType::GameParameter;
+		break;
+	case EWwiseRefType::StateGroup:
+		ItemType = EWwiseItemType::StateGroup;
+		break;
+	case EWwiseRefType::State:
+		ItemType = EWwiseItemType::State;
+		break;
+	case EWwiseRefType::SwitchGroup:
+		ItemType = EWwiseItemType::SwitchGroup;
+		break;
+	case EWwiseRefType::Switch:
+		ItemType = EWwiseItemType::Switch;
+		break;
+	case EWwiseRefType::Trigger:
+		ItemType = EWwiseItemType::Trigger;
+		break;
+	case EWwiseRefType::AcousticTexture:
+		ItemType = EWwiseItemType::AcousticTexture;
+		break;
+	case EWwiseRefType::PluginShareSet:
+		ItemType = EWwiseItemType::EffectShareSet;
+		break;
+	}
+	return GetBrush(ItemType);
+}
+
+const FSlateBrush* FAkAudioStyle::GetBrush(UClass* Class)
+{
+	EWwiseItemType::Type ItemType = EWwiseItemType::Type::None;
+	if (Class == UAkAudioEvent::StaticClass())
+	{
+		ItemType = EWwiseItemType::Event;
+	}
+	if (Class == UAkAcousticTexture::StaticClass())
+	{
+		ItemType = EWwiseItemType::AcousticTexture;
+	}
+	if (Class == UAkRtpc::StaticClass())
+	{
+		ItemType = EWwiseItemType::GameParameter;
+	}
+	if (Class == UAkStateValue::StaticClass())
+	{
+		ItemType = EWwiseItemType::State;
+	}
+	if (Class == UAkSwitchValue::StaticClass())
+	{
+		ItemType = EWwiseItemType::Switch;
+	}
+	if (Class == UAkTrigger::StaticClass())
+	{
+		ItemType = EWwiseItemType::Trigger;
+	}
+	if (Class == UAkEffectShareSet::StaticClass())
+	{
+		ItemType = EWwiseItemType::EffectShareSet;
+	}
+	if (Class == UAkAuxBus::StaticClass())
+	{
+		ItemType = EWwiseItemType::AuxBus;
+	}
+	return GetBrush(ItemType);
+}
+#endif
 
 const FSlateBrush* FAkAudioStyle::GetBrush(FName PropertyName, const ANSICHAR* Specifier)
 {

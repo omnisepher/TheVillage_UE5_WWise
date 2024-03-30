@@ -17,7 +17,7 @@
 // interesection of aligned boxes is an aligned box, possibly degenerate,
 // where min[d] == max[d] for at least one dimension d.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, AlignedBox2<Real>, AlignedBox2<Real>>

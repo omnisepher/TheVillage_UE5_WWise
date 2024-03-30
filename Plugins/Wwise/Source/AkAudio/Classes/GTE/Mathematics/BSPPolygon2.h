@@ -20,7 +20,7 @@
 #include <fstream>
 #endif
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class BSPPolygon2

@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #ifndef _AKMONITORERROR_H
@@ -30,9 +29,11 @@ the specific language governing permissions and limitations under the License.
 
 #include <AK/SoundEngine/Common/AkSoundEngineExport.h>
 #include <AK/SoundEngine/Common/AkTypes.h>
+#define ERROR_CODE_DEF( in_name, in_msg ){ MonitorErrorInfo(in_name, in_msg)  }
 
 struct AkStreamMgrSettings;
 struct AkDeviceSettings;
+class AkErrorMessageTranslator;
 
 namespace AK
 {
@@ -40,6 +41,33 @@ namespace AK
 
 	namespace Monitor
 	{
+		// This structure contains information related to the error message
+		struct MsgContext
+		{
+			MsgContext(AkPlayingID pId = AK_INVALID_PLAYING_ID, AkGameObjectID goId = AK_INVALID_GAME_OBJECT, AkUniqueID nodeId = AK_INVALID_UNIQUE_ID, bool isBus = false)
+				:	in_playingID{ pId },
+					in_gameObjID{ goId },
+					in_soundID{ nodeId },
+					in_bIsBus{ isBus }
+			{}
+
+			AkPlayingID in_playingID;		///< Related Playing ID if applicable
+			AkGameObjectID in_gameObjID;	///< Related Game Object ID if applicable, AK_INVALID_GAME_OBJECT otherwise
+			AkUniqueID in_soundID;			///< Related Audio Node ID if applicable, AK_INVALID_UNIQUE_ID otherwise
+			bool in_bIsBus;					///< true if in_audioNodeID is a bus
+		};
+
+		struct MonitorErrorInfo
+		{
+			MonitorErrorInfo(const AkOSChar* in_name = nullptr, const AkOSChar* in_message= nullptr)
+				:	m_name{ in_name },
+					m_message{in_message}
+
+			{}
+			const AkOSChar* m_name;
+			const AkOSChar* m_message;
+		};
+
 		///  ErrorLevel
 		enum ErrorLevel
 		{
@@ -51,7 +79,7 @@ namespace AK
 		/// ErrorCode
 		enum ErrorCode
 		{
-			ErrorCode_NoError = 0, // 0-based index into AK::Monitor::s_aszErrorCodes table 
+			ErrorCode_NoError = 0, // 0-based index into AK::Monitor::s_aszMonitorErrorInfos table 
 			ErrorCode_FileNotFound, 
 			ErrorCode_CannotOpenFile,
 			ErrorCode_CannotStartStreamNoMemory,
@@ -68,16 +96,13 @@ namespace AK
 			ErrorCode_VorbisSeekTableRecommended,
 
 			ErrorCode_VorbisDecodeError,
-			ErrorCode_AACDecodeError,
-
-			ErrorCode_xWMACreateDecoderFailed,//Deprecated, keep in place for legacy maintenance.
 
 			ErrorCode_ATRAC9DecodeFailed,
 			ErrorCode_ATRAC9LoopSectionTooSmall,
 
 			ErrorCode_InvalidAudioFileHeader,
 			ErrorCode_AudioFileHeaderTooLarge,
-			ErrorCode_FileTooSmall,
+			ErrorCode_LoopTooSmall,
 
 			ErrorCode_TransitionNotAccurateChannel,
 			ErrorCode_TransitionNotAccuratePluginMismatch,
@@ -112,17 +137,11 @@ namespace AK
 			ErrorCode_EventIDNotFound,
 
 			ErrorCode_InvalidGroupID,
-			ErrorCode_SelectedChildNotAvailable,
 			ErrorCode_SelectedNodeNotAvailable,
 			ErrorCode_SelectedMediaNotAvailable,
 			ErrorCode_NoValidSwitch,
 
-			ErrorCode_SelectedNodeNotAvailablePlay,
-
-			ErrorCode_FeedbackVoiceStarving,
-
 			ErrorCode_BankLoadFailed,
-			ErrorCode_BankUnloadFailed,
 			ErrorCode_ErrorWhileLoadingBank,
 			ErrorCode_InsufficientSpaceToLoadBank,
 			
@@ -133,12 +152,9 @@ namespace AK
 			ErrorCode_SeekAfterEof,
 
 			ErrorCode_UnknownGameObject,
-			ErrorCode_UnknownEmitter,			//Deprecated
-			ErrorCode_UnknownListener, 
-			ErrorCode_GameObjectIsNotListener,
+			ErrorCode_GameObjectNeverRegistered,	//To be used by the Capture Log to replace ErrorCode_UnknownGameObject
+			ErrorCode_DeadGameObject,				//To be used by the Capture Log to replace ErrorCode_UnknownGameObject
 			ErrorCode_GameObjectIsNotEmitter,
-			ErrorCode_UnknownGameObjectEvent,	//Deprecated
-			ErrorCode_GameObjectIsNotEmitterEvent,
 
 			ErrorCode_ExternalSourceNotResolved,
 			ErrorCode_FileFormatMismatch,
@@ -156,16 +172,13 @@ namespace AK
 
 			ErrorCode_OpusRequireSeekTable,
 			ErrorCode_OpusDecodeError,
-			ErrorCode_OpusCreateDecoderFailed,
 			
 			ErrorCode_SourcePluginNotFound,
 
 			ErrorCode_VirtualVoiceLimit,
 
-			ErrorCode_AudioDeviceShareSetNotFound,
-
 			ErrorCode_NotEnoughMemoryToStart,
-			ErrorCode_UnkownOpusError,
+			ErrorCode_UnknownOpusError,			//Deprecated Opus error.
 
 			ErrorCode_AudioDeviceInitFailure,
 			ErrorCode_AudioDeviceRemoveFailure,
@@ -186,8 +199,8 @@ namespace AK
 
 			ErrorCode_3DObjectLimitExceeded,
 
-			ErrorCode_OpusHWDecodeUnavailable,
 			ErrorCode_OpusHWFatalError,
+			ErrorCode_OpusHWDecodeUnavailable,
 			ErrorCode_OpusHWTimeout,
 
 			ErrorCode_SystemAudioObjectsUnavailable,
@@ -198,6 +211,172 @@ namespace AK
 			ErrorCode_SpatialAudio_ReflectionBusError,
 
 			ErrorCode_VorbisHWDecodeUnavailable,
+			ErrorCode_ExternalSourceNoMemorySize,
+
+			ErrorCode_MonitorQueueFull,
+			ErrorCode_MonitorMsgTooLarge,
+
+			ErrorCode_NonCompliantDeviceMemory,
+
+			ErrorCode_JobWorkerFuncCallMismatch,
+			ErrorCode_JobMgrOutOfMemory,
+
+			ErrorCode_InvalidFileSize,
+			ErrorCode_PluginMsg,
+
+			
+			ErrorCode_SinkOpenSL,
+			ErrorCode_AudioOutOfRange,
+			ErrorCode_AudioOutOfRangeOnBus,
+			ErrorCode_AudioOutOfRangeOnBusFx,
+			ErrorCode_AudioOutOfRangeRay,
+			ErrorCode_UnknownDialogueEvent,
+			ErrorCode_FailedPostingEvent,
+			ErrorCode_OutputDeviceInitializationFailed,
+			ErrorCode_UnloadBankFailed,
+
+			ErrorCode_PluginFileNotFound,
+			ErrorCode_PluginFileIncompatible,
+			ErrorCode_PluginFileNotEnoughMemoryToStart,
+			ErrorCode_PluginFileInvalid,
+			ErrorCode_PluginFileRegisterFailed,
+
+			ErrorCode_UnknownArgument,
+
+			ErrorCode_DynamicSequenceAlreadyClosed,
+			ErrorCode_PendingActionDestroyed,
+			ErrorCode_CrossFadeTransitionIgnored,
+			ErrorCode_MusicRendererSeekingFailed,
+
+			//MONITOR_ERRORMSG
+			ErrorCode_DynamicSequenceIdNotFound,
+			ErrorCode_BusNotFoundByName,
+			ErrorCode_AudioDeviceShareSetNotFound,
+			ErrorCode_AudioDeviceShareSetNotFoundByName,
+
+			ErrorCode_SoundEngineTooManyGameObjects,
+			ErrorCode_SoundEngineTooManyPositions,
+			ErrorCode_SoundEngineCantCallOnChildBus,
+			ErrorCode_SoundEnginePlayingIdNotFound,
+			ErrorCode_SoundEngineInvalidTransform,
+			ErrorCode_SoundEngineTooManyEventPosts,
+
+			ErrorCode_AudioSubsystemStoppedResponding,
+			
+			ErrorCode_NotEnoughMemInFunction,
+			ErrorCode_FXNotFound,
+			ErrorCode_SetMixerNotABus,
+			ErrorCode_AudioNodeNotFound,
+			ErrorCode_SetMixerFailed,
+			ErrorCode_SetBusConfigUnsupported,
+			ErrorCode_BusNotFound,
+
+			ErrorCode_MismatchingMediaSize,
+			ErrorCode_IncompatibleBankVersion,
+			ErrorCode_UnexpectedPrepareGameSyncsCall,
+			ErrorCode_MusicEngineNotInitialized,
+			ErrorCode_LoadingBankMismatch,
+
+			ErrorCode_MasterBusStructureNotLoaded,
+			ErrorCode_TooManyChildren,
+			ErrorCode_BankContainUneditableEffect,
+			ErrorCode_MemoryAllocationFailed,
+			ErrorCode_InvalidFloatPriority,
+			ErrorCode_SoundLoadFailedInsufficientMemory,
+			ErrorCode_NXDeviceRegistrationFailed,
+			ErrorCode_MixPluginOnObjectBus,
+
+			ErrorCode_XboxXMAVoiceResetFailed,
+			ErrorCode_XboxACPMessage,
+			ErrorCode_XboxFrameDropped,
+			ErrorCode_XboxACPError,
+			ErrorCode_XboxXMAFatalError,
+			ErrorCode_MissingMusicNodeParent,
+			ErrorCode_HardwareOpusDecoderError,
+			ErrorCode_SetGeometryTooManyTriangleConnected,
+			ErrorCode_SetGeometryTriangleTooLarge,
+			ErrorCode_SetGeometryFailed,
+			ErrorCode_RemovingGeometrySetFailed,
+			ErrorCode_SetGeometryInstanceFailed,
+			ErrorCode_RemovingGeometryInstanceFailed,
+
+			ErrorCode_RevertingToDefaultAudioDevice,
+			ErrorCode_RevertingToDummyAudioDevice,
+			ErrorCode_AudioThreadSuspended,
+			ErrorCode_AudioThreadResumed,
+			ErrorCode_ResetPlaylistActionIgnoredGlobalScope,
+			ErrorCode_ResetPlaylistActionIgnoredContinuous,
+			ErrorCode_PlayingTriggerRateNotSupported,
+			ErrorCode_SetGeometryTriangleIsSkipped,
+			ErrorCode_SetGeometryInstanceInvalidTransform,
+			
+			//AkSpatialAudio:AkMonitorError_WithID
+			ErrorCode_SetGameObjectRadiusSizeError,
+			ErrorCode_SetPortalNonDistinctRoom,
+			ErrorCode_SetPortalInvalidExtent,
+			ErrorCode_SpatialAudio_PortalNotFound,
+
+			//Invalid float
+			ErrorCode_InvalidFloatInFunction,
+			ErrorCode_FLTMAXNotSupported,
+
+
+			ErrorCode_CannotInitializeAmbisonicChannelConfiguration,
+			ErrorCode_CannotInitializePassthrough,
+			ErrorCode_3DAudioUnsupportedSize,
+			ErrorCode_AmbisonicNotAvailable,
+
+			ErrorCode_NoAudioDevice,
+
+			ErrorCode_Support,
+			ErrorCode_ReplayMessage,
+			ErrorCode_GameMessage,
+			ErrorCode_TestMessage,
+			ErrorCode_TranslatorStandardTagTest,
+			ErrorCode_TranslatorWwiseTagTest,
+			ErrorCode_TranslatorStringSizeTest,
+
+			ErrorCode_InvalidParameter,
+
+			ErrorCode_MaxAudioObjExceeded,
+			ErrorCode_MMSNotEnabled,
+			ErrorCode_NotEnoughSystemObj,
+			ErrorCode_NotEnoughSystemObjWin,
+
+			ErrorCode_TransitionNotAccurateSourceTooShort,
+
+			ErrorCode_AlreadyInitialized,
+			ErrorCode_WrongNumberOfArguments,
+			ErrorCode_DataAlignement,
+			ErrorCode_PluginMsgWithShareSet,
+			ErrorCode_SoundEngineNotInit,
+			ErrorCode_NoDefaultSwitch,
+			ErrorCode_CantSetBoundSwitch,
+			ErrorCode_IODeviceInitFailed,
+			ErrorCode_SwitchListEmpty,
+			ErrorCode_NoSwitchSelected,
+			ErrorCode_FilePermissionError,
+
+			ErrorCode_SetEffectOnRendered,
+			ErrorCode_GeometryNotWatertight,
+			
+			ErrorCode_CannotInitialize3DAudio,
+			ErrorCode_CannotInitializeInputCallbacks,
+			ErrorCode_CannotConnectAVAudioEngineSource,
+			
+			ErrorCode_ChannelConfigRequestDenied,
+			ErrorCode_MediaUpdatedFromWwise,
+			ErrorCode_MediaErrorFromWwise,
+			ErrorCode_OutputAlreadyExists,
+			ErrorCode_UnknownStateGroup,
+			ErrorCode_MediaErrorWwiseMRUFull,
+			ErrorCode_AudioOut2ContextCreateError,
+			ErrorCode_AudioOut2UserCreateError,
+
+			ErrorCode_FeedbackOnAudioObjectsBus,
+			ErrorCode_AssetSwapEnabled,
+			
+			ErrorCode_SpatialAudio_SiblingPortal,
 
 			// ALWAYS ADD NEW CODES AT THE END !!!!!!!
 			// Otherwise it may break comm compatibility in a patch
@@ -205,7 +384,7 @@ namespace AK
 			Num_ErrorCodes // THIS STAYS AT END OF ENUM
 		};
 
-		static_assert(Num_ErrorCodes == 108,
+		static_assert(Num_ErrorCodes == 228,
 			"Please document your new ErrorCode "
 			"in 'Documentation/Help/source_en/reference/common_errors_capture_log.xml', "
 			"then you can increment this value."
@@ -220,10 +399,11 @@ namespace AK
 			AkGameObjectID in_gameObjID ///< Related Game Object ID if applicable, AK_INVALID_GAME_OBJECT otherwise
 			);
 
-		extern const AkOSChar* s_aszErrorCodes[ Num_ErrorCodes ];
+		extern const MonitorErrorInfo s_aszMonitorErrorInfos[ Num_ErrorCodes ];
 
 		/// Post a monitoring message or error code. This will be displayed in the Wwise capture
-		/// log.
+		/// log. Since this function doesn't send variable arguments, be sure that the error code you're posting doesn't contain any tag.
+		/// Otherwise, there'll be an undefined behavior
 		/// \return AK_Success if successful, AK_Fail if there was a problem posting the message.
 		///			In optimized mode, this function returns AK_NotCompatible.
 		/// \remark This function is provided as a tracking tool only. It does nothing if it is 
@@ -236,6 +416,26 @@ namespace AK
 			AkUniqueID in_audioNodeID = AK_INVALID_UNIQUE_ID, ///< Related Audio Node ID if applicable, AK_INVALID_UNIQUE_ID otherwise
 			bool in_bIsBus = false		///< true if in_audioNodeID is a bus
 			);
+
+		AK_EXTERNAPIFUNC(AKRESULT, PostCodeVarArg)(
+			ErrorCode in_eError,		///< Error code to be displayed. This code corresponds to a predefined message, that may have parameters that can be passed in the variable arguments. Check the message format at the end of AkMonitorError.h.
+			ErrorLevel in_eErrorLevel,	///< Specifies whether it should be displayed as a message or an error
+			MsgContext msgContext,		///< The message context containing the following information : Related Playing ID if applicable, Related Game Object ID if applicable, AK_INVALID_GAME_OBJECT otherwise,  Related Audio Node ID if applicable, AK_INVALID_UNIQUE_ID otherwise and whether if in_audioNodeID is a bus
+			...							///< The variable arguments, depending on the ErrorCode posted.
+			);
+
+		/// Post a monitoring message. This will be displayed in the Wwise capture log.
+		/// \return AK_Success if successful, AK_Fail if there was a problem posting the message.
+		///			In optimized mode, this function returns AK_NotCompatible.
+		/// \remark This function is provided as a tracking tool only. It does nothing if it is 
+		///			called in the optimized/release configuration and return AK_NotCompatible.
+		AK_EXTERNAPIFUNC(AKRESULT, PostCodeVaList)(
+			ErrorCode in_eError,		///< Error code to be displayed. This code corresponds to a predefined message, that may have parameters that can be passed in the variable arguments. Check the message format at the end of AkMonitorError.h.
+			ErrorLevel in_eErrorLevel,	///< Specifies whether it should be displayed as a message or an error
+			MsgContext msgContext,		///< The message context containing the following information : Related Playing ID if applicable, Related Game Object ID if applicable, AK_INVALID_GAME_OBJECT otherwise,  Related Audio Node ID if applicable, AK_INVALID_UNIQUE_ID otherwise and whether if in_audioNodeID is a bus
+			::va_list args				///< The variable arguments, depending on the ErrorCode posted.
+			);
+
 #ifdef AK_SUPPORT_WCHAR
 		/// Post a unicode monitoring message or error string. This will be displayed in the Wwise capture
 		/// log.
@@ -251,7 +451,9 @@ namespace AK
 			AkUniqueID in_audioNodeID = AK_INVALID_UNIQUE_ID, ///< Related Audio Node ID if applicable, AK_INVALID_UNIQUE_ID otherwise
 			bool in_bIsBus = false		///< true if in_audioNodeID is a bus
 			);
+
 #endif // #ifdef AK_SUPPORT_WCHAR
+
 		/// Post a monitoring message or error string. This will be displayed in the Wwise capture
 		/// log.
 		/// \return AK_Success if successful, AK_Fail if there was a problem posting the message.
@@ -274,6 +476,23 @@ namespace AK
 		AK_EXTERNAPIFUNC( AKRESULT, SetLocalOutput )(
 			AkUInt32 in_uErrorLevel	= ErrorLevel_All, ///< ErrorLevel(s) to enable in output. Default parameters enable all.
 			LocalOutputFunc in_pMonitorFunc = 0 	  ///< Handler for local output. If NULL, the standard platform debug output method is used.
+			);
+
+		/// Add a translator to the wwiseErrorHandler
+		/// The additional translators increase the chance of a monitoring messages or errors
+		/// to be succeffully translated.
+		/// \return AK_Success.
+		///	In optimized/release configuration, this function returns AK_NotCompatible.
+		AK_EXTERNAPIFUNC( AKRESULT, AddTranslator )(
+			AkErrorMessageTranslator* translator,	///< The AkErrorMessageTranslator to add to the WwiseErrorHandler
+			bool overridePreviousTranslators = false		///< Whether or not the newly added translator should override all the previous translators. 
+															///< In both cases, the default translator will remain
+			);
+
+		/// Reset the wwiseErrorHandler to only using the default translator
+		/// \return AK_Success.
+		///	In optimized/release configuration, this function returns AK_NotCompatible.
+		AK_EXTERNAPIFUNC(AKRESULT, ResetTranslator)(
 			);
 
 		/// Get the time stamp shown in the capture log along with monitoring messages.
@@ -338,164 +557,7 @@ namespace AK
 #endif
 
 #ifdef AK_MONITOR_IMPLEMENT_ERRORCODES
-namespace AK
-{
-	namespace Monitor
-	{
-		const AkOSChar* s_aszErrorCodes[ Num_ErrorCodes ] =
-		{
-			AKTEXT("No error"), // ErrorCode_NoError
-			AKTEXT("File not found"), // ErrorCode_FileNotFound,
-			AKTEXT("Cannot open file"), // ErrorCode_CannotOpenFile,
-			AKTEXT("Not enough memory in I/O pool to start stream"), // ErrorCode_CannotStartStreamNoMemory,
-			AKTEXT("Unknown I/O device error"), // ErrorCode_IODevice,
-			AKTEXT("I/O settings incompatible."), // ErrorCode_IncompatibleIOSettings
-
-			AKTEXT("Plug-in unsupported channel configuration"), // ErrorCode_PluginUnsupportedChannelConfiguration,
-			AKTEXT("Plug-in media unavailable"), // ErrorCode_PluginMediaUnavailable,
-			AKTEXT("Plug-in initialization failure"), // ErrorCode_PluginInitialisationFailed,
-			AKTEXT("Plug-in execution failure"), // ErrorCode_PluginProcessingFailed,
-			AKTEXT("Invalid plug-in execution mode"), // ErrorCode_PluginExecutionInvalid
-			AKTEXT("Could not allocate effect"), // ErrorCode_PluginAllocationFailed
-
-AKTEXT("Seek table is not present, or seek table granularity is larger than the maximum decode buffer size. Conversion settings may need to be updated."), // ErrorCode_VorbisSeekTableRecommended,
-
-AKTEXT("Vorbis decoder failure"), // ErrorCode_VorbisDecodeError,
-AKTEXT("AAC decoder failure"), // ErrorCode_AACDecodeError
-
-AKTEXT("Failed creating xWMA decoder"), // ErrorCode_xWMACreateDecoderFailed,
-
-AKTEXT("ATRAC9 decoding failed"), // ErrorCode_ATRAC9DecodeFailed
-AKTEXT("ATRAC9 loop section is too small"), // ErrorCode_ATRAC9LoopSectionTooSmall
-
-AKTEXT("Invalid file header"), // ErrorCode_InvalidAudioFileHeader,
-AKTEXT("File header too large (due to markers or envelope)"), // ErrorCode_AudioFileHeaderTooLarge,
-AKTEXT("File or loop region is too small to be played properly"), // ErrorCode_FileTooSmall,
-
-AKTEXT("Transition not sample-accurate due to mixed channel configurations"), // ErrorCode_TransitionNotAccurateChannel,
-AKTEXT("Transition not sample-accurate due to incompatible audio formats"), // ErrorCode_TransitionNotAccuratePluginMismatch,
-AKTEXT("Transition not sample-accurate due to incompatible encoding parameters"), // ErrorCode_TransitionNotAccurateRejectedByPlugin
-AKTEXT("Transition not sample-accurate due to source starvation"), // ErrorCode_TransitionNotAccurateStarvation,
-AKTEXT("Transition not sample-accurate due to codec internal error"), // ErrorCode_TransitionNotAccurateCodecError,
-AKTEXT("Nothing to play in Dynamic Sequence"), // ErrorCode_NothingToPlay, 
-AKTEXT("Play Failed"), // ErrorCode_PlayFailed,	// Notification meaning the play asked was not done for an out of control reason
-// For example, if The Element has a missing source file.
-
-AKTEXT("Stinger could not be scheduled in this segment or was dropped"), // ErrorCode_StingerCouldNotBeScheduled,
-AKTEXT("Segment look-ahead plus pre-entry duration is longer than previous segment in sequence"), // ErrorCode_TooLongSegmentLookAhead,
-AKTEXT("Cannot schedule music switch transition in upcoming segments: using Exit Cue"), // ErrorCode_CannotScheduleMusicSwitch,
-AKTEXT("Cannot schedule music segments: Stopping music"), // ErrorCode_TooManySimultaneousMusicSegments,
-AKTEXT("Music system is stopped because a music playlist is modified"), // ErrorCode_PlaylistStoppedForEditing
-AKTEXT("Rescheduling music clips because a track was modified"), // ErrorCode_MusicClipsRescheduledAfterTrackEdit
-
-AKTEXT("Failed creating source"), // ErrorCode_CannotPlaySource_Create,
-AKTEXT("Virtual source failed becoming physical"), // ErrorCode_CannotPlaySource_VirtualOff,
-AKTEXT("Error while computing virtual source elapsed time"), // ErrorCode_CannotPlaySource_TimeSkip,
-AKTEXT("Inconsistent source status"), // ErrorCode_CannotPlaySource_InconsistentState,
-AKTEXT("Media was not loaded for this source"),// ErrorCode_MediaNotLoaded,
-AKTEXT("Voice Starvation"), // ErrorCode_VoiceStarving,
-AKTEXT("Source starvation"), // ErrorCode_StreamingSourceStarving,
-AKTEXT("XMA decoder starvation"), // ErrorCode_XMADecoderSourceStarving,
-AKTEXT("XMA decoding error"), // ErrorCode_XMADecodingError
-AKTEXT("Invalid XMA data - Make sure data is allocated from APU memory and is aligned to 2K."), // ErrorCode_InvalidXMAData
-
-AKTEXT("Plug-in not found"), // ErrorCode_PluginNotRegistered,
-AKTEXT("Codec plug-in not registered"), // ErrorCode_CodecNotRegistered,
-AKTEXT("Plug-in version doesn't match sound engine version.  Please ensure the plug-in is compatible with this version of Wwise"), //ErrorCode_PluginVersionMismatch
-
-AKTEXT("Event ID not found"), // ErrorCode_EventIDNotFound,
-
-AKTEXT("Invalid State Group ID"), // ErrorCode_InvalidGroupID,
-AKTEXT("Selected Child Not Available"), // ErrorCode_SelectedChildNotAvailable,
-AKTEXT("Selected Node Not Available"), // ErrorCode_SelectedNodeNotAvailable,
-AKTEXT("Selected Media Not Available"),// ErrorCode_SelectedMediaNotAvailable,
-AKTEXT("No Valid Switch"), // ErrorCode_NoValidSwitch,
-
-AKTEXT("Selected node not available. Make sure the structure associated to the event is loaded or that the event has been prepared"), // ErrorCode_SelectedNodeNotAvailablePlay,
-
-AKTEXT("Motion voice starvation"), // ErrorCode_FeedbackVoiceStarving,
-
-AKTEXT("Bank Load Failed"), // ErrorCode_BankLoadFailed,
-AKTEXT("Bank Unload Failed"), // ErrorCode_BankUnloadFailed,
-AKTEXT("Error while loading bank"), // ErrorCode_ErrorWhileLoadingBank,
-AKTEXT("Insufficient Space to Load Bank"), // ErrorCode_InsufficientSpaceToLoadBank,
-
-AKTEXT("Lower engine command list is full"), // ErrorCode_LowerEngineCommandListFull,
-
-AKTEXT("No marker in file; seeking to specified location"), // ErrorCode_SeekNoMarker
-AKTEXT("Cannot seek in sound that is within a continuous container with special transitions"), // ErrorCode_CannotSeekContinuous
-AKTEXT("Seeking after end of file. Playback will stop"), // ErrorCode_SeekAfterEof
-
-AKTEXT("Unknown game object ID. Make sure the game object is registered before using it and do not use it once it was unregistered."), // ErrorCode_UnknownGameObject,
-
-AKTEXT("Unknown emitter game object ID. Make sure the game object is registered before using it and do not use it once it was unregistered."), // ErrorCode_UnknownEmitter,
-AKTEXT("Unknown listener game object ID. Make sure the game object is registered before using it and do not use it once it was unregistered."), // ErrorCode_UnknownListener,
-AKTEXT("The requested game object is not a listener."), // ErrorCode_GameObjectIsNotListener,
-AKTEXT("The requested game object is not an emitter."), // ErrorCode_GameObjectIsNotEmitter,
-
-AKTEXT("Unknown emitter game object ID on event. Make sure the game object is registered before using it and do not use it once it was unregistered."), // ErrorCode_UnknownGameObjectEvent
-AKTEXT("The requested game object for an event was not registered as an emitter. Make sure the game object is registered as an emitter before using it to post an event."), // ErrorCode_GameObjectIsNotEmitterEvent
-
-AKTEXT("External source missing from PostEvent call"), // ErrorCode_ExternalSourceNotResolved
-AKTEXT("Source file is of different format than expected"), //ErrorCode_FileFormatMismatch
-AKTEXT("Audio command queue is full, blocking caller.  Reduce number of calls to sound engine or boost command queue memory."), // ErrorCode_CommandQueueFull
-AKTEXT("Audio command is too large to fit in the command queue.  Break the command in smaller pieces."), //ErrorCode_CommandTooLarge
-
-AKTEXT("Failed creating XMA decoder: no more XMA voices available"), // ErrorCode_XMACreateDecoderLimitReached
-AKTEXT("Failed seeking in XMA source: stream buffer is smaller than XMA block size"), // ErrorCode_XMAStreamBufferTooSmall
-
-AKTEXT("Triggered a note-scoped or playing-instance-scoped modulator in a global context (such as a bus or bus effect).  Modulator will have global scope."), // ErrorCode_ModulatorScopeError_Inst
-AKTEXT("Triggered a game-object-scoped modulator in a global context (such as a bus or bus effect).  Modulator will have global scope."), // ErrorCode_ModulatorScopeError_Obj
-
-AKTEXT("Ignoring seek after end of playlist"), // ErrorCode_SeekAfterEndOfPlaylist
-
-AKTEXT("Seek table required to seek in Opus sources. Please update conversion settings."), // ErrorCode_OpusRequireSeekTable,
-AKTEXT("Opus decoder failure"), // ErrorCode_OpusDecodeError,
-AKTEXT("Failed creating Opus decoder"), // ErrorCode_OpusCreateDecoderFailed
-
-AKTEXT("Source plugin not found in currently loaded banks."), //ErrorCode_SourcePluginNotFound
-
-AKTEXT("Number of Resume and/or Play-From-Beginning virtual voices has reached warning limit (see Project Settings > Log tab). There may be some infinite, leaked voices."), // ErrorCode_VirtualVoiceLimit
-
-AKTEXT("AK::SoundEngine::AddOutput()/ReplaceOutput() - Device ShareSet not found in Init bank."),	//ErrorCode_AudioDeviceShareSetNotFound
-
-AKTEXT("Not enough memory to start sound."),	//ErrorCode_NotEnoughMemoryToStart
-AKTEXT("Error while decoding Opus header."),	//ErrorCode_UnkownOpusError
-
-AKTEXT("The Output Device specified by AddOutput() or Init() could not be initialized."), //ErrorCode_AudioDeviceInitFailure
-AKTEXT("ReplaceOutput could not properly remove old output device."), // ErrorCode_AudioDeviceRemoveFailure
-AKTEXT("Device ID to remove not found as an active device."), // ErrorCode_AudioDeviceNotFound
-AKTEXT("Device ID not recognized by platform or is disabled."), // ErrorCode_AudioDeviceNotValid
-AKTEXT("Early reflections are not supported on sounds using 3D Position: Listener with Automation. The assigned early reflections bus will be ignored."), // ErrorCode_SpatialAudio_ListenerAutomationNotSupported
-AKTEXT("Duplicated media has different length in two separate banks.  Stopping sound."), // ErrorCode_MediaDuplicationLength
-
-AKTEXT("The hardware-accelerated voice subsystem failed to initialize."), // ErrorCode_HwVoicesSystemInitFailed
-AKTEXT("Hardware accelerated audio decoding failed."), // ErrorCode_HwVoicesDecodeBatchFailed
-AKTEXT("Maximum number of hardware-accelerated voices reached. Voice will not play."), // ErrorCode_HwVoiceLimitReached
-AKTEXT("Failed creating hardware-accelerated voice."), // ErrorCode_HwVoiceInitFailed
-AKTEXT("Opus HW command failure. Sound will glitch."), // ErrorCode_OpusHWCommandFailed
-
-AKTEXT("Non-empty array of listeners specified for AddOutput() but uNumListeners is set to zero."), // ErrorCode_AddOutputListenerIdWithZeroListeners
-
-AKTEXT("3D audio object limit exceeded; object will be mixed."), // ErrorCode_3DObjectLimitExceeded
-
-AKTEXT("AkInitSettings::uNumSamplesPerFrame value unsupported by XAPU, hardware decoding not available. Supported size: 256, 512 and 1024."), //ErrorCode_OpusHWUnavailable
-AKTEXT("Fatal XAPU failure, Opus sounds will glitch while it is being reset."), //ErrorCode_OpusFatalError
-AKTEXT("Opus hardware stopped responding "), //ErrorCode_OpusHWTimeout
-
-AKTEXT("Another process is using Microsoft Spatial Sound objects. Some audio objects may be mixed."), //ErrorCode_SystemAudioObjectsUnavailable
-
-AKTEXT("AddOutput() needs unique Listeners for multi-instance outputs using the same shareset."), //ErrorCode_AddOutputNoDistinctListener
-
-AKTEXT("Plug-in does not support Audio Objects bus configuration."), //ErrorCode_PluginCannotRunOnObjectConfig
-AKTEXT("The playing sound is assigned the same early reflection bus in the Authoring Tool that has been set via AK::SpatialAudio::SetImageSource. Use a unique bus to avoid image source conflicts."), //ErrorCode_SpatialAudio_ReflectionBusError
-AKTEXT("Vorbis Hardware Acceleration library not found. Source will be decoded in software."),  // ErrorCode_VorbisHWDecodeUnavailable
-		};
-
-		static_assert((sizeof(s_aszErrorCodes) / sizeof(s_aszErrorCodes[0])) == AK::Monitor::Num_ErrorCodes, "ARRAYSIZE(AK::Monitor::s_aszErrorCodes) is not matching AK::Monitor::Num_ErrorCodes, make sure they are maintained at the same time.");
-	}
-
-}
+#include <AK/Tools/Common/AkMonitorErrorImpl.h>
 #endif // AK_MONITOR_IMPLEMENT_ERRORCODES
 
 #endif // _AKMONITORERROR_H

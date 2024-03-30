@@ -21,15 +21,14 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #pragma once
 /// \file
-/// Plug-in function necessary to link the Wwise Delay plug-in in the sound engine.
+/// Plug-in function necessary to link the Delay plug-in in the sound engine.
 /// <strong>WARNING</strong>: Include this file only if you wish to link statically with the plugins.  Dynamic Libaries (DLL, so, etc) are automatically detected and do not need this include file.
-/// <br><b>Wwise plugin name:</b>  Wwise Delay
+/// <br><b>Wwise plugin name:</b> Delay
 /// <br><b>Library file:</b> AkDelayFX.lib
 
 AK_STATIC_LINK_PLUGIN(AkDelayFX)

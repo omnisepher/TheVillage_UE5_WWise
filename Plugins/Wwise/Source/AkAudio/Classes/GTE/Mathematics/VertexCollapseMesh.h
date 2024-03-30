@@ -14,7 +14,7 @@
 #include <Mathematics/VETManifoldMesh.h>
 #include <set>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class VertexCollapseMesh

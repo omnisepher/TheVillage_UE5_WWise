@@ -1,16 +1,18 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #include "AkComponentHelpers.h"
@@ -107,7 +109,7 @@ namespace AkComponentHelpers
 		return Primitive.CalcBounds(Transform);
 	}
 
-	void GetPrimitiveTransformAndExtent(const UPrimitiveComponent& Primitive, AkTransform& transform, AkExtent& extent)
+	void GetPrimitiveTransformAndExtent(const UPrimitiveComponent& Primitive, AkWorldTransform& transform, AkExtent& extent)
 	{
 		FRotator rotation = Primitive.GetComponentRotation();
 
@@ -120,11 +122,11 @@ namespace AkComponentHelpers
 		transform.SetOrientation(Front, Up);
 
 		FBoxSphereBounds primitiveBounds = GetPrimitiveBoundsNoRotation(Primitive);
-		extent = FAkAudioDevice::FVectorToAkExtent(primitiveBounds.BoxExtent);
-		AkVector Center;
+		extent = FAkAudioDevice::FVectorToAkExtent(primitiveBounds.BoxExtent); // Potential loss of precision here
+		AkVector64 Center;
 		// For uniformly shaped primitives, primitiveBounds.Origin will be the same as the component position.
 		// For complex meshes and brushes, there will be an offset.
-		FAkAudioDevice::FVectorToAKVector(Primitive.Bounds.Origin, Center);
+		FAkAudioDevice::FVectorToAKVector64(Primitive.Bounds.Origin, Center);
 		transform.SetPosition(Center);
 	}
 

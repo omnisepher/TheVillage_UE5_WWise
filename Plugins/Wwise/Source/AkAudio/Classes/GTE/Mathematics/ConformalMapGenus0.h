@@ -23,7 +23,7 @@
 // The paper is available at https://ieeexplore.ieee.org/document/856998 but
 // is not freely downloadable.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class ConformalMapGenus0

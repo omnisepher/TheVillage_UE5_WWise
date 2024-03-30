@@ -15,7 +15,7 @@
 // maximum{|atan(x) - p(x)| : x in [-1,1]} over all polynomials of
 // degree D subject to the constraints mentioned.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class ATanEstimate

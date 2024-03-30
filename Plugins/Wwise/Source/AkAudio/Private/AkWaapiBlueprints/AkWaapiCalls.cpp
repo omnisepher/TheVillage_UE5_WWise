@@ -1,20 +1,19 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
-
-
-
 
 /*=============================================================================
 	AkWaapiCalls.cpp:
@@ -22,17 +21,10 @@ Copyright (c) 2021 Audiokinetic Inc.
 
 #include "AkWaapiBlueprints/AkWaapiCalls.h"
 #include "AkAudioDevice.h"
-#include "AkWaapiBlueprints/AkWaapiCalls.h"
 #include "AkWaapiBlueprints/AkWaapiUriCustomization.h"
 #include "AkWaapiBlueprints/AkWaapiFieldNamesCustomization.h"
-#include "EngineUtils.h"
-#include "Model.h"
-#include "UObject/UObjectIterator.h"
-#include "Engine/GameEngine.h"
 #include "Async/Async.h"
-#include "Core/Public/Modules/ModuleManager.h"
-
-DEFINE_LOG_CATEGORY(LogAkWaapiCalls);
+#include "Modules/ModuleManager.h"
 
 /*-----------------------------------------------------------------------------
 	AkWaapiCalls.
@@ -93,12 +85,12 @@ FAKWaapiJsonObject UAkWaapiCalls::CallWaapi(const FAkWaapiUri& WaapiUri, const F
 		// Request data from Wwise using WAAPI
 		if (!waapiClient->Call(TCHAR_TO_ANSI(*WaapiUri.Uri), WaapiArgs.WaapiJsonObj.ToSharedRef(), WaapiOptions.WaapiJsonObj.ToSharedRef(), outJsonResult.WaapiJsonObj))
 		{
-			UE_LOG(LogAkWaapiCalls, Log, TEXT("Call Failed"));
+			UE_LOG(LogAkAudio, Log, TEXT("Call Failed"));
 		}
 	}
 	else
 	{
-		UE_LOG(LogAkWaapiCalls, Log, TEXT("Unable to connect to localhost"));
+		UE_LOG(LogAkAudio, Log, TEXT("Unable to connect to localhost"));
 	}
 	return outJsonResult;
 }

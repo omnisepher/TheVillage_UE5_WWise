@@ -9,7 +9,7 @@
 
 #include <vector>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename PixelType>
     class Image

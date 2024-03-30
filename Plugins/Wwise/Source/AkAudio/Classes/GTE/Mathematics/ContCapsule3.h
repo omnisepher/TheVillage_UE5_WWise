@@ -13,7 +13,7 @@
 #include <Mathematics/DistPointSegment.h>
 #include <Mathematics/Hypersphere.h>
 
-namespace gte
+namespace WwiseGTE
 {
     // Compute the axis of the capsule segment using least-squares fitting.
     // The radius is the maximum distance from the points to the axis.

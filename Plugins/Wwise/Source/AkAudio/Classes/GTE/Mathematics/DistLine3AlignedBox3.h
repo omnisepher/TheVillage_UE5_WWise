@@ -11,7 +11,7 @@
 #include <Mathematics/Line.h>
 #include <Mathematics/Vector3.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class DCPQuery<Real, Line3<Real>, AlignedBox3<Real>>

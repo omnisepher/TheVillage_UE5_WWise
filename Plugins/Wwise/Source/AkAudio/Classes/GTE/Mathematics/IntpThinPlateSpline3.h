@@ -19,7 +19,7 @@
 // thin plate splines.
 //   https://www.geometrictools.com/Documentation/ThinPlateSplines.pdf
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class IntpThinPlateSpline3

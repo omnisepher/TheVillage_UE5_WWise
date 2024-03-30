@@ -12,7 +12,7 @@
 // The triangle is represented as an array of three vertices.  The dimension
 // N must be 2 or larger.
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class Triangle

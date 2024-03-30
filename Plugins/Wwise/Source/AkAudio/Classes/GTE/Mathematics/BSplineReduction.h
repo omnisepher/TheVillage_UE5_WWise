@@ -23,7 +23,7 @@
 // control points dramatically to obtain another curve that is close to
 // the original one.
 
-namespace gte
+namespace WwiseGTE
 {
     // The input numCtrlPoints must be 2 or larger.  The input degree must
     // satisfy the condition 1 <= degree <= inControls.size()-1.  The degree

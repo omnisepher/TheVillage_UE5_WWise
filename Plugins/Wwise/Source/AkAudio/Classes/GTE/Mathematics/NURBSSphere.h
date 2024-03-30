@@ -23,7 +23,7 @@
 // base class of the sphere-representing NURBS.  This will allow sharing
 // of the NURBS basis functions and evaluation framework.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class NURBSEighthSphereDegree4

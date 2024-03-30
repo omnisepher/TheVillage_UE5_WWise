@@ -10,7 +10,7 @@
 #include <Mathematics/DistPointOrientedBox.h>
 #include <Mathematics/IntrAlignedBox3Sphere3.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, OrientedBox3<Real>, Sphere3<Real>>

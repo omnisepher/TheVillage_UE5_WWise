@@ -12,7 +12,7 @@
 #include <Mathematics/Hypersphere.h>
 #include <Mathematics/Vector2.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, Circle2<Real>, Circle2<Real>>

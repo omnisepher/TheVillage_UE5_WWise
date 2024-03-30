@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 // AkMMDevice.h -- C++ RIAA object wrappers for Win32 MMDevice enumeration APIs
@@ -31,6 +30,19 @@ the specific language governing permissions and limitations under the License.
 
 #include <AK/SoundEngine/Common/AkSoundEngine.h>
 #include <AK/Tools/Common/AkPlatformFuncs.h>
+
+// Fix for Windows SDK 10.0.17763.0
+#if !defined(_DEBUG)
+namespace Microsoft {
+	namespace WRL {
+		namespace Details {
+			template <typename T>
+			inline void CheckForDuplicateEntries() {}
+		}
+	}
+}
+#endif
+
 #include <mmdeviceapi.h>
 
 namespace AK

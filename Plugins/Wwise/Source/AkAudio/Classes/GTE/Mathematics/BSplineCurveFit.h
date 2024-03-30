@@ -13,7 +13,7 @@
 // The algorithm implemented here is based on the document
 // https://www.geometrictools.com/Documentation/BSplineCurveLeastSquaresFit.pdf
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class BSplineCurveFit

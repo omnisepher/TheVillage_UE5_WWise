@@ -24,7 +24,7 @@
 // 1 when box0.axis[1] separates, 2 when box1.axis[0] separates, or 3 when
 // box1.axis[1] separates.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, AlignedBox2<Real>, OrientedBox2<Real>>

@@ -1,16 +1,18 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #pragma once
@@ -22,12 +24,32 @@ Copyright (c) 2021 Audiokinetic Inc.
 
 #include "AkIOSInitializationSettings.generated.h"
 
+USTRUCT()
+struct FAkIOSAdvancedInitializationSettings : public FAkAdvancedInitializationSettingsWithMultiCoreRendering
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, Category = "Ak Initialization Settings", meta = (ToolTip = "Number of Apple Spatial Audio point sources to allocate for 3D audio use (each point source is a system audio object)."))
+	uint32 uNumSpatialAudioPointSources = 128;
+
+	UPROPERTY(EditAnywhere, Category = "Ak Initialization Settings", meta = (ToolTip = "Print detailed system output information to the system log."))
+	bool bVerboseSystemOutput = false;
+
+	void FillInitializationStructure(FAkInitializationStructure& InitializationStructure) const;
+};
+
 UCLASS(config = Game, defaultconfig)
 class AKAUDIO_API UAkIOSInitializationSettings : public UObject, public IAkPlatformInitialisationSettingsBase
 {
-	GENERATED_UCLASS_BODY()
+	GENERATED_BODY()
 
 public:
+	virtual const TCHAR* GetConfigOverridePlatform() const override
+	{
+		return TEXT("iOS");
+	}
+
+	UAkIOSInitializationSettings(const FObjectInitializer& ObjectInitializer);
 	void FillInitializationStructure(FAkInitializationStructure& InitializationStructure) const override;
 
 	UPROPERTY(Config, EditAnywhere, Category = "Initialization")
@@ -40,5 +62,5 @@ public:
 	FAkCommunicationSettingsWithSystemInitialization CommunicationSettings;
 
 	UPROPERTY(Config, EditAnywhere, Category = "Initialization", AdvancedDisplay)
-	FAkAdvancedInitializationSettings AdvancedSettings;
+	FAkIOSAdvancedInitializationSettings AdvancedSettings;
 };

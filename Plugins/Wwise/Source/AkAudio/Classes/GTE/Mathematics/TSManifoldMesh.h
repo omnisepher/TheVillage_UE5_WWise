@@ -13,7 +13,7 @@
 #include <map>
 #include <memory>
 
-namespace gte
+namespace WwiseGTE
 {
     class TSManifoldMesh
     {

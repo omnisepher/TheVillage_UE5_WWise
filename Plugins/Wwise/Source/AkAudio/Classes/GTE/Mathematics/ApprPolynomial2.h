@@ -33,7 +33,7 @@
 // The original polynomial is evaluated as
 //   w = rng*sum_{i=0}^d c'[i]*((x-xcen)/rng)^i
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class ApprPolynomial2 : public ApprQuery<Real, std::array<Real, 2>>

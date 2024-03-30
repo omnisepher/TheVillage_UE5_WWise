@@ -13,7 +13,7 @@
 
 // The queries consider the circle to be a solid (disk).
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, Segment2<Real>, Circle2<Real>>

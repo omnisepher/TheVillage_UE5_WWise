@@ -1,31 +1,38 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
-
 
 /*------------------------------------------------------------------------------------
 	WwiseTreeItem.h
 ------------------------------------------------------------------------------------*/
 #pragma once
+
+#include "AkAudioType.h"
+#include "AssetRegistry/AssetData.h"
 #include "Engine/GameEngine.h"
 #include "Widgets/Views/STableRow.h"
 #include "WwiseItemType.h"
-
+#if WITH_EDITORONLY_DATA
+#include "Wwise/Metadata/WwiseMetadataBasicReference.h"
+#endif
 /*------------------------------------------------------------------------------------
 	WwiseTreeItem
 ------------------------------------------------------------------------------------*/
-struct FWwiseTreeItem : public TSharedFromThis<FWwiseTreeItem>
+
+struct AKAUDIO_API FWwiseTreeItem : public TSharedFromThis<FWwiseTreeItem>
 {
 private:
 	TArray< TSharedPtr<FWwiseTreeItem> > m_Children;
@@ -39,11 +46,13 @@ public:
 	EWwiseItemType::Type ItemType = EWwiseItemType::None;
 	/** Id of the item */
 	FGuid ItemId;
+	/** ShortId of the item*/
+	uint32 ShortId = 0;
 
 	/** The children of this tree item */
 	const TArray< TSharedPtr<FWwiseTreeItem> > GetChildren() { return m_Children;  }
 	TArray< TSharedPtr<FWwiseTreeItem> >* GetChildrenMutable() { return &m_Children;  }
-
+	
 	/** The number of children of this tree item requested from Wwise*/
 	uint32_t ChildCountInWwise = 0;
 
@@ -56,6 +65,80 @@ public:
 	/** Should this item be visible? */
 	bool IsVisible = true;
 
+	/** The Assets associated with the Tree Item*/
+	TArray<FAssetData> Assets;
+
+	/** The name of the UAsset referenced by this item. If there are more than one, takes the first one found*/
+	FName UAssetName;
+
+	/** The name of the item in the Wwise project*/
+	FString WaapiName;
+
+#if WITH_EDITORONLY_DATA
+	/** Reference to the item in the Wwise Project database */
+	TSharedPtr<FWwiseMetadataBasicReference> WwiseItemRef;
+#endif
+
+	/** Is this item active in the currently opened project? */
+	bool bWaapiRefExists = false;
+
+	/** Is this item in the same path in Wwise and the SoundBanks? */
+	bool bSameLocation = true;
+
+	bool IsExpanded = false;
+
+	bool UEAssetExists() const;
+
+	bool WwiseBankRefExists() const;
+
+	bool WaapiRefExists() const;
+
+	bool IsRenamedInWwise() const;
+
+	bool IsDeletedInWwise() const;
+
+	bool IsNotInWwiseOrSoundBank() const;
+
+	bool IsNewInWwise() const;
+
+	bool IsMovedInWwise() const;
+
+	bool IsSoundBankUpToDate() const;
+
+	bool IsRenamedInSoundBank() const;
+
+	bool IsUAssetMissing() const;
+
+	bool IsUAssetOrphaned() const;
+
+	bool IsNotInSoundBankOrUnreal() const;
+
+	bool IsUAssetUpToDate() const;
+
+	bool HasUniqueUAsset() const;
+
+	bool HasMultipleUAssets() const;
+
+	bool IsUAssetOutOfDate() const;
+	
+	bool IsItemUpToDate() const;
+
+	bool IsFolder() const;
+
+	bool IsAuxBus() const;
+
+	bool ShouldDisplayInfo() const;
+
+	bool IsRootItem() const;
+
+	TSharedPtr<FWwiseTreeItem> GetRoot();
+
+	void SetWaapiRef(bool bExistsInWaapi);
+
+	FString GetSwitchAssetName() const;
+
+	const FString GetDefaultAssetName() const;
+
 	/** Constructor */
 	FWwiseTreeItem(FString InDisplayName, FString InFolderPath, TSharedPtr<FWwiseTreeItem> InParent, EWwiseItemType::Type InItemType, const FGuid& InItemId)
 		: DisplayName(MoveTemp(InDisplayName))
@@ -63,99 +146,55 @@ public:
 		, ItemType(MoveTemp(InItemType))
 		, ItemId(InItemId)
 		, ChildCountInWwise(m_Children.Num())
-        , Parent(MoveTemp(InParent))
-        , IsVisible(true)
-	{}
-
-	void AddChild(TSharedPtr<FWwiseTreeItem> child)
+		, Parent(MoveTemp(InParent))
 	{
-		child->Parent = TWeakPtr<FWwiseTreeItem>(this->AsShared());
-		m_Children.Add(child);
 	}
 
-	void EmptyChildren()
+#if WITH_EDITORONLY_DATA
+	FWwiseTreeItem(const FWwiseMetadataBasicReference& ItemRef, TSharedPtr<FWwiseTreeItem> InParent, EWwiseItemType::Type InItemType)
+		: ItemType(InItemType)
+		, ChildCountInWwise(m_Children.Num())
+		, Parent(MoveTemp(InParent))
 	{
-		m_Children.Empty();
+		WwiseItemRef = MakeShared<FWwiseMetadataBasicReference>(ItemRef.Id, ItemRef.Name, ItemRef.ObjectPath, ItemRef.GUID);
+		ItemId = WwiseItemRef->GUID;
+		DisplayName = WwiseItemRef->Name.ToString();
+		FolderPath = WwiseItemRef->ObjectPath.ToString();
 	}
+#endif
 
-	void RemoveChild(const FGuid & childGuid)
-	{
-		m_Children.RemoveAll([childGuid](TSharedPtr<FWwiseTreeItem> child) { return child->ItemId == childGuid; });
-	}
+	void AddChild(TSharedPtr<FWwiseTreeItem> Child);
 
-	void RemoveChild(const TSharedPtr< FWwiseTreeItem> child)
-	{
-		m_Children.Remove(child);
-	}
+	void AddChildren(TArray<TSharedPtr<FWwiseTreeItem>> Children);
+
+	void EmptyChildren();
+
+	void RemoveChild(const FGuid& childGuid);
+
+	void RemoveChild(const TSharedPtr< FWwiseTreeItem> child);
+
+	void RemoveChildren(const TArray<TSharedPtr<FWwiseTreeItem>> Children);
 	
 	/** Returns true if this item is a child of the specified item */
-	bool IsChildOf(const FWwiseTreeItem& InParent)
-	{
-		auto CurrentParent = Parent.Pin();
-		while (CurrentParent.IsValid())
-		{
-			if (CurrentParent.Get() == &InParent)
-			{
-				return true;
-			}
+	bool IsChildOf(const FWwiseTreeItem& InParent);
 
-			CurrentParent = CurrentParent->Parent.Pin();
-		}
+	bool IsBrowserType() const;
 
-		return false;
-	}
+	bool IsOfType(const TArray<EWwiseItemType::Type>& Types) const;
 
-	bool IsOfType(const TArray<EWwiseItemType::Type>& Types)
-	{
-		for (const auto& Type : Types)
-			if (ItemType == Type)
-				return true;
-
-		return false;
-	}
-
-	bool IsNotOfType(const TArray<EWwiseItemType::Type>& Types)
-	{
-		for (const auto& Type : Types)
-			if (ItemType == Type)
-				return false;
-
-		return true;
-	}
+	bool IsNotOfType(const TArray<EWwiseItemType::Type>& Types) const;
 
 	/** Returns the child item by name or NULL if the child does not exist */
-	TSharedPtr<FWwiseTreeItem> GetChild (const FString& InChildName)
-	{
-		for ( int32 ChildIdx = 0; ChildIdx < m_Children.Num(); ++ChildIdx )
-		{
-			if ( m_Children[ChildIdx]->DisplayName == InChildName )
-			{
-				return m_Children[ChildIdx];
-			}
-		}
+	TSharedPtr<FWwiseTreeItem> GetChild(const FString& InChildName);
 
-		return TSharedPtr<FWwiseTreeItem>();
-	}
+	/** Returns the child item by name or NULL if the child does not exist */
+	TSharedPtr<FWwiseTreeItem> GetChild(const FGuid& InGuid, const AkUInt32 InShortId, const FString& InChildName);
 
 	/** Finds the child who's path matches the one specified */
-	TSharedPtr<FWwiseTreeItem> FindItemRecursive (const FString& InFullPath)
-	{
-		if ( InFullPath == FolderPath )
-		{
-			return SharedThis(this);
-		}
+	TSharedPtr<FWwiseTreeItem> FindItemRecursive(const FString& InFullPath);
 
-		for ( int32 ChildIdx = 0; ChildIdx < m_Children.Num(); ++ChildIdx )
-		{
-			const TSharedPtr<FWwiseTreeItem>& Item = m_Children[ChildIdx]->FindItemRecursive(InFullPath);
-			if ( Item.IsValid() )
-			{
-				return Item;
-			}
-		}
-
-		return TSharedPtr<FWwiseTreeItem>(NULL);
-	}
+	/** Finds the child who's Guid matches the one specified */
+	TSharedPtr<FWwiseTreeItem> FindItemRecursive(const TSharedPtr<FWwiseTreeItem>& InItem);
 
 	struct FCompareWwiseTreeItem
 	{
@@ -265,8 +304,5 @@ public:
 	};
 
 	/** Sort the children by name */
-	void SortChildren ()
-	{
-		m_Children.Sort( FCompareWwiseTreeItem() );
-	}
+	void SortChildren();
 };

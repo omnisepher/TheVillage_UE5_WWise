@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-Version: v2021.1.9  Build: 7847
-Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #pragma once
@@ -30,12 +29,13 @@ Copyright (c) 2006-2022 Audiokinetic Inc.
 #include <map>
 #include <string>
 #include <vector>
+#include <utility>
 
 namespace AK
 {
 	namespace WwiseAuthoringAPI
 	{
-		template<typename VariantType, typename StringType, typename StringCompareType> class AkJsonBase
+		template<typename VariantType, typename StringType, typename StringCompareType> class AkJsonBase final
 		{
 		public:
 
@@ -50,48 +50,34 @@ namespace AK
 				Empty
 			};
 
-			AkJsonBase()
-				: m_eType(Type::Empty)
-				, m_ptr(nullptr)
-			{
-			}
+			AkJsonBase() {}
 
 			AkJsonBase(const VariantType& in_other)
-				: m_eType(Type::Empty)
-				, m_ptr(nullptr)
 			{
 				SetVariant(in_other);
 			}
 
 			AkJsonBase(const Array& in_other)
-				: m_eType(Type::Empty)
-				, m_ptr(nullptr)
 			{
 				SetArray(in_other);
 			}
 
 			AkJsonBase(const Map& in_other)
-				: m_eType(Type::Empty)
-				, m_ptr(nullptr)
 			{
 				SetMap(in_other);
 			}
 
 			AkJsonBase(Type in_eType)
-				: m_eType(Type::Empty)
-				, m_ptr(nullptr)
 			{
 				SetType(in_eType);
 			}
 
 			AkJsonBase(const AkJsonBase& in_other)
-				: m_eType(Type::Empty)
-				, m_ptr(nullptr)
 			{
 				Copy(in_other, *this);
 			}
 
-			AkJsonBase(AkJsonBase&& in_other)
+			AkJsonBase(AkJsonBase&& in_other) noexcept
 			{
 				m_ptr = in_other.m_ptr;
 				m_eType = in_other.m_eType;
@@ -100,7 +86,7 @@ namespace AK
 				in_other.m_eType = Type::Empty;
 			}
 
-			virtual ~AkJsonBase()
+			~AkJsonBase()
 			{
 				Clear();
 			}
@@ -116,17 +102,10 @@ namespace AK
 				return *this;
 			}
 
-			inline AkJsonBase& operator=(AkJsonBase&& in_other)
+			inline AkJsonBase& operator=(AkJsonBase&& in_other) noexcept
 			{
-				Type copyType = this->m_eType;
-				void* copyPtr = this->m_ptr;
-
-				m_ptr = in_other.m_ptr;
-				m_eType = in_other.m_eType;
-
-				in_other.m_eType = copyType;
-				in_other.m_ptr = copyPtr;
-
+				std::swap(this->m_eType, in_other.m_eType);
+				std::swap(this->m_ptr, in_other.m_ptr);
 				return *this;
 			}
 
@@ -134,19 +113,35 @@ namespace AK
 			{
 				SetType(Type::Variant);
 				*m_pVariant = in_other;
+				AKASSERT(*m_pVariant == in_other);
+				AKASSERT(m_pVariant->GetType() == in_other.GetType());
 			}
 
 			void SetArray(const Array& in_other)
 			{
+			#ifdef _DEBUG
+				for (const auto& element : in_other)
+				{
+					AKASSERT(!element.IsEmpty());
+				}
+			#endif
 				SetType(Type::Array);
 				(*m_pArray).assign(in_other.begin(), in_other.end());
+				AKASSERT(m_pArray->size() == in_other.size());
 			}
 
 			void SetMap(const Map& in_other)
 			{
+			#ifdef _DEBUG
+				for (const auto& element : in_other)
+				{
+					AKASSERT(!element.second.IsEmpty());
+				}
+			#endif
 				SetType(Type::Map);
 				(*m_pMap).clear();
 				(*m_pMap).insert(in_other.begin(), in_other.end());
+				AKASSERT(m_pMap->size() == in_other.size());
 			}
 
 			static void Copy(const AkJsonBase& in_rSrc, AkJsonBase& in_rDest)
@@ -154,16 +149,36 @@ namespace AK
 				switch (in_rSrc.GetType())
 				{
 				case Type::Array:
+				{
 					in_rDest.SetArray(in_rSrc.GetArray());
+					AKASSERT(in_rDest.GetType() == Type::Array);
 					break;
+				}
 				case Type::Map:
+				{
 					in_rDest.SetMap(in_rSrc.GetMap());
+					AKASSERT(in_rDest.GetType() == Type::Map);
 					break;
+				}
 				case Type::Variant:
+				{
 					in_rDest.SetVariant(in_rSrc.GetVariant());
+					AKASSERT(in_rDest.GetType() == Type::Variant);
 					break;
-				default:
+				}
+				case Type::Empty:
+				{
 					in_rDest.Clear();
+					AKASSERT(in_rDest.GetType() == Type::Empty);
+					break;
+				}
+				default:
+				{
+					AKASSERT(!"Invalid type copied");
+					in_rDest.Clear();
+					AKASSERT(in_rDest.GetType() == Type::Empty);
+					break;
+				}
 				}
 			}
 
@@ -172,6 +187,7 @@ namespace AK
 				if (in_eType != m_eType)
 				{
 					Clear();
+					AKASSERT(m_ptr == nullptr);
 
 					m_eType = in_eType;
 					switch (in_eType)
@@ -185,17 +201,27 @@ namespace AK
 					case Type::Variant:
 						m_pVariant = new VariantType();
 						break;
+					case Type::Empty:
+						m_eType = Type::Empty;
+						AKASSERT(!L"Cannot assign type empty");
+						break;
 					default:
 						m_eType = Type::Empty;
-						AKASSERT(!L"Invalid node type");
+						AKASSERT(!L"Unknown type assigned");
+						break;
 					}
 				}
+				AKASSERT(m_eType == in_eType);
+				AKASSERT(m_ptr != nullptr);
 			}
 
 			void Clear()
 			{
-				if (!m_ptr)
+				if (m_ptr == nullptr)
+				{
+					AKASSERT(m_eType == Type::Empty);
 					return;
+				}
 
 				switch (m_eType)
 				{
@@ -208,7 +234,10 @@ namespace AK
 				case Type::Variant:
 					delete m_pVariant;
 					break;
+				case Type::Empty:
 				default:
+					// Leak any value pointed to by m_ptr: unknown type
+					AKASSERT(!"Empty-typed variant with non-null value");
 					break;
 				}
 
@@ -216,7 +245,16 @@ namespace AK
 				m_ptr = nullptr;
 			}
 
-			inline Type GetType() const { return m_eType; }
+			inline Type GetType() const
+			{
+				AKASSERT(
+					m_eType == Type::Map ||
+					m_eType == Type::Array ||
+					m_eType == Type::Variant ||
+					m_eType == Type::Empty
+				);
+				return m_eType;
+			}
 
 			inline bool IsArray() const
 			{
@@ -236,36 +274,42 @@ namespace AK
 			inline Array& GetArray() const
 			{
 				AKASSERT(m_eType == Type::Array);
+				AKASSERT(m_pArray != nullptr);
 				return *m_pArray;
 			}
 
 			inline const Map& GetMap() const
 			{
 				AKASSERT(m_eType == Type::Map);
+				AKASSERT(m_pMap != nullptr);
 				return *m_pMap;
 			}
 
 			inline const VariantType& GetVariant() const
 			{
 				AKASSERT(m_eType == Type::Variant);
+				AKASSERT(m_pVariant != nullptr);
 				return *m_pVariant;
 			}
 
 			inline Array& GetArray()
 			{
 				AKASSERT(m_eType == Type::Array);
+				AKASSERT(m_pArray != nullptr);
 				return *m_pArray;
 			}
 
 			inline Map& GetMap()
 			{
 				AKASSERT(m_eType == Type::Map);
+				AKASSERT(m_pMap != nullptr);
 				return *m_pMap;
 			}
 
 			inline VariantType& GetVariant()
 			{
 				AKASSERT(m_eType == Type::Variant);
+				AKASSERT(m_pVariant != nullptr);
 				return *m_pVariant;
 			}
 
@@ -296,7 +340,7 @@ namespace AK
 				{
 					AKASSERT(!"Calling [] operator on AkJsonBase which is NOT a map!");
 				}
-				static AkJsonBase empty;
+				static const AkJsonBase empty;
 				return empty;
 			}
 
@@ -304,7 +348,7 @@ namespace AK
 			{
 				if (m_eType == Type::Array)
 				{
-					AKASSERT(in_index != GetArray().size());
+					AKASSERT(in_index < GetArray().size());
 					if (in_index < GetArray().size())
 						return GetArray()[in_index];
 				}
@@ -312,7 +356,7 @@ namespace AK
 				{
 					AKASSERT(!"Calling [] operator on AkJsonBase which is NOT an array!");
 				}
-				static AkJsonBase empty;
+				static const AkJsonBase empty;
 				return empty;
 			}
 
@@ -325,10 +369,10 @@ namespace AK
 
 		private:
 
-			Type m_eType;
+			Type m_eType = Type::Empty;
 			union
 			{
-				void* m_ptr;
+				void* m_ptr{nullptr};
 				Map* m_pMap;
 				Array* m_pArray;
 				VariantType* m_pVariant;
@@ -364,6 +408,11 @@ namespace AK
 					if (!FromRapidJson(*it, array.back()))
 						return false;
 				}
+			}
+			else if (in_rapidJson.IsNull())
+			{
+				out_node = VariantType();
+				return true;
 			}
 			else
 			{

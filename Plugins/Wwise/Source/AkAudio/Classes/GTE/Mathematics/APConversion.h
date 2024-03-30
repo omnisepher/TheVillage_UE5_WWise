@@ -18,7 +18,7 @@
 // The quadratic field numbers and conversions are described in
 // https://www.geometrictools.com/Documentation/QuadraticFields.pdf
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Rational>
     class APConversion
@@ -38,8 +38,8 @@ namespace gte
             mMaxIterations(maxIterations),
             mThreshold(std::ldexp(mOne, -mPrecision))
         {
-            LogAssert(precision > 0, "Invalid precision.");
-            LogAssert(maxIterations > 0, "Invalid maximum iterations.");
+            GTE_LogAssert(precision > 0, "Invalid precision.");
+            GTE_LogAssert(maxIterations > 0, "Invalid maximum iterations.");
         }
 
         ~APConversion()
@@ -49,14 +49,14 @@ namespace gte
         // Member access.
         void SetPrecision(int32_t precision)
         {
-            LogAssert(precision > 0, "Invalid precision.");
+            GTE_LogAssert(precision > 0, "Invalid precision.");
             mPrecision = precision;
             mThreshold = std::ldexp(mOne, -mPrecision);
         }
 
         void SetMaxIterations(uint32_t maxIterations)
         {
-            LogAssert(maxIterations > 0, "Invalid maximum iterations.");
+            GTE_LogAssert(maxIterations > 0, "Invalid maximum iterations.");
             mMaxIterations = maxIterations;
         }
 
@@ -400,7 +400,7 @@ namespace gte
             // a^4-7*a^2*b^2+b^4 = 0. This implies r^2 - 7*r^2 + 1 = 0. The
             // irrational roots are r = (7 +- sqrt(45))/2, which is a
             // contradiction.
-            LogError("This second derivative cannot be zero at a-b.");
+            GTE_LogError("This second derivative cannot be zero at a-b.");
         }
 
         // Compute a bounding interval for the root, qMin <= q <= qMax, where

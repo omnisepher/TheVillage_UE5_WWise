@@ -1,18 +1,19 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
-
 
 /*=============================================================================
 	AkAudioDevice.h: Audiokinetic audio interface object.
@@ -24,16 +25,18 @@ Copyright (c) 2021 Audiokinetic Inc.
 	AkAudioDevice system headers
 ------------------------------------------------------------------------------------*/
 
-#include "AkInclude.h"
-#include <AK/SoundEngine/Common/AkTypes.h>
-#include "AkBankManager.h"
-#include "AkGameplayTypes.h"
-#include "Engine/EngineBaseTypes.h"
-#include "Engine/EngineTypes.h"
-#include "Engine/StreamableManager.h"
 #include "AkEnvironmentIndex.h"
+#include "AkGameplayTypes.h"
 #include "AkGroupValue.h"
-#include "AkAssetData.h"
+#include "AkInclude.h"
+#include "WwiseUnrealDefines.h"
+#include "AkJobWorkerScheduler.h"
+#include "Wwise/WwiseSharedLanguageId.h"
+#include "Engine/EngineTypes.h"
+
+#include "Wwise/Stats/AkAudio.h"
+#include "Wwise/AkPortalObstructionAndOcclusionService.h"
+#include "Wwise/WwiseSoundEngineUtils.h"
 
 #if WITH_EDITORONLY_DATA
 #include "EditorViewportClient.h"
@@ -41,14 +44,10 @@ Copyright (c) 2021 Audiokinetic Inc.
 
 #define GET_AK_EVENT_NAME(AkEvent, EventName) ((AkEvent) ? ((AkEvent)->GetName()) : (EventName))
 
-AKAUDIO_API DECLARE_LOG_CATEGORY_EXTERN(LogAkAudio, Log, All);
-
 DECLARE_EVENT(FAkAudioDevice, SoundbanksLoaded);
 DECLARE_EVENT(FAkAudioDevice, FOnWwiseProjectModification);
 DECLARE_EVENT_OneParam(FAkAudioDevice, FOnSwitchValueLoaded, UAkGroupValue*);
 DECLARE_DELEGATE_OneParam(FOnSetCurrentAudioCultureCompleted, bool);
-
-constexpr auto AkInitBankName = TEXT("Init");
 
 /*------------------------------------------------------------------------------------
 	Dependencies, helpers & forward declarations.
@@ -58,43 +57,26 @@ class UAkPortalComponent;
 class AkCallbackInfoPool;
 class AkLegacyFileCustomParamPolicy;
 class CAkDiskPackage;
-class FAkBankManager;
 class FAkComponentCallbackManager;
-class AkMediaMemoryManager;
-class IAkUnrealIOHook;
+class FWwiseIOHook;
 class UAkComponent;
 class UAkGameObject;
 class UAkGroupValue;
-class UAkInitBank;
 class UAkLateReverbComponent;
 class UAkRoomComponent;
 class UAkStateValue;
 class UAkSwitchValue;
 class UAkAudioType;
-class UAkMediaAsset;
+class UAkAudioEvent;
+class UAkEffectShareSet;
+class AkXMLErrorMessageTranslator;
+class AkWAAPIErrorMessageTranslator;
+class AkUnrealErrorTranslator;
 
-typedef TSet<UAkComponent*> UAkComponentSet;
+typedef TSet<TWeakObjectPtr<UAkComponent>> UAkComponentSet;
 
 #define DUMMY_GAMEOBJ ((AkGameObjectID)0x2)
 #define SOUNDATLOCATION_GAMEOBJ ((AkGameObjectID)0x3)
-
-/** Define hashing for AkGameObjectID. */
-template<typename ValueType, bool bInAllowDuplicateKeys>
-struct AkGameObjectIdKeyFuncs : TDefaultMapKeyFuncs<AkGameObjectID, ValueType, bInAllowDuplicateKeys>
-{
-	static FORCEINLINE uint32 GetKeyHash(AkGameObjectID Key)
-	{
-		if (sizeof(Key) <= 4)
-		{
-			return (uint32)Key;
-		}
-		else
-		{
-			// Copied from GetTypeHash( const uint64 A ) found in ...\Engine\Source\Runtime\Core\Public\Templates\TypeHash.h
-			return (uint32)Key + ((uint32)(Key >> 32) * 23);
-		}
-	}
-};
 
 
 struct AKAUDIO_API FAkAudioDeviceDelegates
@@ -110,6 +92,9 @@ struct AKAUDIO_API FAkAudioDeviceDelegates
 class AKAUDIO_API FAkAudioDevice final
 {
 public:
+	UE_NONCOPYABLE(FAkAudioDevice);
+	FAkAudioDevice() {}
+
 	/**
 	 * Initializes the audio device and creates sources.
 	 *
@@ -138,9 +123,16 @@ public:
 	void StopAllSounds( bool bShouldStopUISounds = false );
 
 	/**
+	 * Stops all game sounds (and possibly UI) sounds
+	 *
+	 * @param AudioContext Stop sounds associated with this Context only
+	 */
+	void StopAllSounds(EAkAudioContext AudioContext);
+
+	/**
 	 * Stop all audio associated with a scene
 	 *
-	 * @param SceneToFlush		Interface of the scene to flush
+	 * @param WorldToFlush		Interface of the scene to flush
 	 */
 	void Flush(UWorld* WorldToFlush);
 
@@ -150,66 +142,9 @@ public:
 	bool WorldSpatialAudioVolumesUpdated(UWorld* World);
 
 	/**
-	 * Clears all loaded soundbanks
-	 *
-	 * @return Result from ak sound engine 
+	 * Clears all loaded SoundBanks and associated media
 	 */
-	AKRESULT ClearBanks();
-
-	/**
-	 * Load a soundbank
-	 *
-	 * @param in_Bank			The bank to load
-	 * @param out_bankID		Returned bank ID
-	 * @return Result from ak sound engine
-	 */
-	AKRESULT LoadBank(
-		class UAkAudioBank* in_Bank,
-		AkBankID& out_bankID
-	);
-
-	/**
-	 * Load a soundbank asynchronously
-	 *
-	 * @param in_Bank			The bank to load
-	 * @param in_pfnBankCallback Callback function
-	 * @param in_pCookie		Callback cookie (reserved to user, passed to the callback function)
-	 * @param out_bankID		Returned bank ID
-	 * @return Result from ak sound engine
-	 */
-	AKRESULT LoadBank(
-		class UAkAudioBank* in_Bank,
-		AkBankCallbackFunc  in_pfnBankCallback,
-		void* in_pCookie,
-		AkBankID& out_bankID
-	);
-
-	/**
-	 * Load a soundbank asynchronously, flagging completion in the latent action
-	 *
-	 * @param in_Bank			The bank to load
-	 * @param LoadBankLatentAction Blueprint Latent action to flag completion
-	 * @param out_bankID			Returned bank ID
-	 * @return Result from ak sound engine
-	 */
-	AKRESULT LoadBank(
-		class UAkAudioBank* in_Bank,
-		FWaitEndBankAction* LoadBankLatentAction
-	);
-
-	/**
-	 * Load a soundbank asynchronously, using a Blueprint Delegate for completion
-	 *
-	 * @param in_Bank			The bank to load
-	 * @param BankLoadedCallback Blueprint Delegate called upon completion
-	 * @param out_bankID			Returned bank ID
-	 * @return Result from ak sound engine
-	 */
-	AKRESULT LoadBankAsync(
-		class UAkAudioBank* in_Bank,
-		const FOnAkBankCallback& BankLoadedCallback,
-		AkBankID& out_bankID
-	);
+	void ClearSoundBanksAndMedia();
 
 	/**
 	 * Load a soundbank by name
@@ -260,9 +195,10 @@ public:
 	 * @param out_banKID Returned bank ID
 	 */
 	AKRESULT LoadBankFromMemory(
-		const void* in_MemoryPtr,
-		uint32 in_MemorySize,
-		AkBankID& out_bankID
+		const void* MemoryPtr,
+		uint32 MemorySize,
+		AkBankType BankType,
+		AkBankID& OutBankID
 	);
 
 	/**
@@ -277,56 +213,6 @@ public:
 		const FString& in_BankName,
 		const FOnAkBankCallback& BankLoadedCallback,
 		AkBankID &          out_bankID
-	);
-
-	/**
-	 * Unload a soundbank
-	 *
-	 * @param in_Bank			The bank to unload
-	 * @return Result from ak sound engine
-	 */
-	AKRESULT UnloadBank(
-		class UAkAudioBank* in_Bank
-	);
-
-	/**
-	 * Unload a soundbank asynchronously
-	 *
-	 * @param in_Bank			The bank to unload
-	 * @param in_pfnBankCallback Callback function
-	 * @param in_pCookie		Callback cookie (reserved to user, passed to the callback function)
-	 * @return Result from ak sound engine
-	 */
-	AKRESULT UnloadBank(
-		class UAkAudioBank* in_Bank,
-		AkBankCallbackFunc  in_pfnBankCallback,
-		void* in_pCookie
-	);
-
-	/**
-	 * Unload a soundbank asynchronously, flagging completion in the latent action
-	 *
-	 * @param in_Bank			The bank to load
-	 * @param UnloadBankLatentAction Blueprint Latent action to flag completion
-	 * @param out_bankID			Returned bank ID
-	 * @return Result from ak sound engine
-	 */
-	AKRESULT UnloadBank(
-		class UAkAudioBank* in_Bank,
-		FWaitEndBankAction* UnloadBankLatentAction
-	);
-
-	/**
-	 * Unload a soundbank asynchronously, using a Blueprint Delegate for completion
-	 *
-	 * @param in_Bank			The bank to load
-	 * @param BankUnloadedCallback Blueprint Delegate called upon completion
-	 * @param out_bankID			Returned bank ID
-	 * @return Result from ak sound engine
-	 */
-	AKRESULT UnloadBankAsync(
-		class UAkAudioBank* in_Bank,
-		const FOnAkBankCallback& BankUnloadedCallback
 	);
 
 	/**
@@ -358,7 +244,6 @@ public:
 	 *
 	 * @param in_BankName			The bank to unload
 	 * @param UnloadBankLatentAction Blueprint Latent action to flag completion
-	 * @param out_bankID			Returned bank ID
 	 * @return Result from ak sound engine
 	 */
 	AKRESULT UnloadBank(
@@ -377,6 +262,7 @@ public:
 		const void* in_memoryPtr
 	);
 
+
 	/**
 	 * Unload bank with bank data pointer
 	 *
@@ -384,11 +270,13 @@ public:
 	 * @param in_memoryPtr The same bank data pointer used with th LoadBankFromMemory call.
 	 */
 	AKRESULT UnloadBankFromMemoryAsync(
-		AkBankID in_bankID,
+		AkBankID in_bankID, 
 		const void* in_memoryPtr,
-		AkBankCallbackFunc  in_pfnBankCallback,
-		void* in_pCookie
+		AkBankCallbackFunc in_pfnBankCallback,
+		void* in_pCookie, 
+		uint32 BankType
 	);
+
 
 	/**
 	 * Unload a soundbank asynchronously, using a Blueprint Delegate for completion
@@ -402,56 +290,16 @@ public:
 		const FString&     in_BankName,
 		const FOnAkBankCallback& BankUnloadedCallback
 	);
-
-	/**
-	 * Load the audiokinetic 'init' bank
-	 *
-	 * @return Result from ak sound engine 
-	 */
-	AKRESULT LoadInitBank();
-
-	/**
-	 * Unload the audiokinetic 'init' bank
-	 */
-	void UnloadInitBank();
-
-	/**
-	* Load all file packages found in the SoundBanks base path
-	*
-	* @return operation success
-	*/
-	bool LoadAllFilePackages();
-
-	/**
-	* Unload all file packages found in the SoundBanks base path
-	*
-	* @return operation success
-	*/
-	bool UnloadAllFilePackages();
-
-	/**
-	 * Load all banks currently being referenced
-	 */
-	void LoadAllReferencedBanks();
 	
-#if WITH_EDITOR
-	void ReloadAllReferencedBanks();
-
-	/**
-	 * Unload all sound data currently being referenced
-	 */
-	void UnloadAllSoundData();
-
-	/**
-	 * Reload all sound data currently being referenced
-	 */
-	void ReloadAllSoundData();
-#endif
-
 	/**
 	 * FString-friendly GetIDFromString
 	 */
-	static AkUInt32 GetIDFromString(const FString& in_string);
+	static AkUInt32 GetShortIDFromString(const FString& InString);
+
+	/**
+	 * NUll-check asset and if invalid return ID based on BackupName
+	 */
+	static AkUInt32 GetShortID(UAkAudioType* AudioAsset, const FString& BackupName);
 
 	/**
 	 * Indicates the location of a specific Media ID in memory.
@@ -484,14 +332,19 @@ public:
 	FString GetCurrentAudioCulture() const;
 
 	/**
-	 * Get the default language setted in the Wwise project
+	 * Get the default language set in the Wwise project
 	 */
-	FString GetDefaultLanguage() const;
+	FString GetDefaultLanguage();
 
 	/**
 	 * Get the list of available audio cultures
 	 */
 	TArray<FString> GetAvailableAudioCultures() const;
+
+	/**
+	 * Get a FWwiseSharedLanguageId from the name as set in Wwise
+	 */
+	FWwiseLanguageCookedData GetLanguageCookedDataFromString(const FString& WwiseLanguage);
 
 	/**
 	 * Change the audio culture
@@ -508,260 +361,6 @@ public:
 	 */
 	void SetCurrentAudioCultureAsync(const FString& AudioCulture, const FOnSetCurrentAudioCultureCompleted& CompletedCallback);
 
-	/**
-	 * Post an event to ak soundengine
-	 *
-	 * @param in_pEvent			Name of the event to post
-	 * @param in_pComponent		AkComponent on which to play the event
-	 * @param in_uFlags			Bitmask: see \ref AkCallbackType
-	 * @param in_pfnCallback	Callback function
-	 * @param in_pCookie		Callback cookie that will be sent to the callback function along with additional information.
-	 * @param in_bStopWhenOwnerDestroyed If true, then the sound should be stopped if the owning actor is destroyed
-	 * @return ID assigned by ak soundengine
-	 */
-	AkPlayingID PostEvent(
-		class UAkAudioEvent * in_pEvent,
-		AActor * in_pActor,
-        AkUInt32 in_uFlags = 0,
-		AkCallbackFunc in_pfnCallback = NULL,
-		void * in_pCookie = NULL,
-		bool in_bStopWhenOwnerDestroyed = false,
-		const TArray<AkExternalSourceInfo>& in_ExternalSources = TArray<AkExternalSourceInfo>()
-        );
-
-	/**
-	 * Post an event to ak soundengine by name
-	 *
-	 * @param in_EventName		Name of the event to post
-	 * @param in_pComponent		AkComponent on which to play the event
-	 * @param in_uFlags			Bitmask: see \ref AkCallbackType
-	 * @param in_pfnCallback	Callback function
-	 * @param in_pCookie		Callback cookie that will be sent to the callback function along with additional information.
-	 * @param in_bStopWhenOwnerDestroyed If true, then the sound should be stopped if the owning actor is destroyed
-	 * @return ID assigned by ak soundengine
-	 */
-	AkPlayingID PostEvent(
-		const FString& in_EventName, 
-		AActor * in_pActor,
-		AkUInt32 in_uFlags = 0,
-		AkCallbackFunc in_pfnCallback = NULL,
-		void * in_pCookie = NULL,
-		bool in_bStopWhenOwnerDestroyed = false,
-		const TArray<AkExternalSourceInfo>& in_ExternalSources = TArray<AkExternalSourceInfo>()
-		);
-
-	/**
-	 * Post an event to ak soundengine by name
-	 *
-	 * @param in_EventName		Name of the event to post
-	 * @param in_pComponent		AkComponent on which to play the event
-	 * @param PostEventCallback	Callback delegate
-	 * @param in_uFlags			Bitmask: see \ref EAkCallbackType
-	 * @param in_bStopWhenOwnerDestroyed If true, then the sound should be stopped if the owning actor is destroyed
-	 * @return ID assigned by ak soundengine
-	 */
-	AkPlayingID PostEvent(
-		const FString& in_EventName,
-		AActor * in_pActor,
-		const FOnAkPostEventCallback& PostEventCallback,
-		AkUInt32 in_uFlags = 0,
-		bool in_bStopWhenOwnerDestroyed = false,
-		const TArray<AkExternalSourceInfo>& in_ExternalSources = TArray<AkExternalSourceInfo>()
-	);
-
-	AkPlayingID PostEvent(
-		const FString& in_EventName, 
-		AkGameObjectID in_GameObject, 
-		AkUInt32 in_uFlags /*= 0*/, 
-		AkCallbackFunc in_pfnCallback /*= NULL*/, 
-		void* in_pCookie, /*= NULL*/ 
-		const TArray<AkExternalSourceInfo>& in_ExternalSources /*= TArray<AkExternalSourceInfo>()*/
-	);
-
-	/**
-	 * Post an event to ak soundengine by name
-	 *
-	 * @param in_EventName		Name of the event to post
-	 * @param in_pComponent		AkComponent on which to play the event
-	 * @param in_bStopWhenOwnerDestroyed If true, then the sound should be stopped if the owning actor is destroyed
-	 * @param LatentAction		Pointer to a Blueprint latent action.Used in the EndOfEvent callback.
-	 * @return ID assigned by ak soundengine
-	 */
-	AkPlayingID PostEventLatentAction(
-		const FString& EventName,
-		AActor * Actor,
-		bool bStopWhenOwnerDestroyed,
-		FWaitEndOfEventAction* LatentAction,
-		const TArray<AkExternalSourceInfo>& in_ExternalSources = TArray<AkExternalSourceInfo>()
-		);
-
-
-	/**
-	 * Post an event to ak soundengine by name
-	 *
-	 * @param in_EventName		Name of the event to post
-	 * @param in_pComponent		AkComponent on which to play the event
-	 * @param in_uFlags			Bitmask: see \ref AkCallbackType
-	 * @param in_pfnCallback	Callback function
-	 * @param in_pCookie		Callback cookie that will be sent to the callback function along with additional information.
-	 * @return ID assigned by ak soundengine
-	 */
-	AkPlayingID PostEvent(
-		const FString& in_EventName,
-		UAkComponent* in_pComponent,
-		AkUInt32 in_uFlags = 0,
-		AkCallbackFunc in_pfnCallback = NULL,
-		void * in_pCookie = NULL,
-		const TArray<AkExternalSourceInfo>& in_ExternalSources = TArray<AkExternalSourceInfo>()
-	);
-
-	/**
-	 * Post an event to ak soundengine by name
-	 *
-	 * @param in_EventName		Name of the event to post
-	 * @param in_pGameObject	UAkGameObject on which to play the event
-	 * @param PostEventCallback	Callback delegate
-	 * @param in_uFlags			Bitmask: see \ref EAkCallbackType
-	 * @return ID assigned by ak soundengine
-	 */
-	AkPlayingID PostEvent(
-		const FString& in_EventName,
-		UAkGameObject* in_pGameObject,
-		const FOnAkPostEventCallback& PostEventCallback,
-		AkUInt32 in_uFlags = 0,
-		const TArray<AkExternalSourceInfo>& in_ExternalSources = TArray<AkExternalSourceInfo>()
-	);
-
-	/**
-	 * Post an event to ak soundengine by name
-	 *
-	 * @param in_EventName		Name of the event to post
-	 * @param in_pComponent		AkComponent on which to play the event
-	 * @param LatentAction		Pointer to a Blueprint latent action. Used in the EndOfEvent callback.
-	 * @return ID assigned by ak soundengine
-	 */
-	AkPlayingID PostEventLatentAction(
-		const FString& in_EventName,
-		UAkComponent* in_pComponent,
-		FWaitEndOfEventAction* LatentAction,
-		const TArray<AkExternalSourceInfo>& in_ExternalSources = TArray<AkExternalSourceInfo>()
-	);
-
-	/**
-	 * Post an event at location to ak soundengine
-	 *
-	 * @param in_pEvent			Name of the event to post
-	 * @param in_Location		Location at which to play the event
-	 * @return ID assigned by ak soundengine
-	 */
-	AkPlayingID PostEventAtLocation(
-		class UAkAudioEvent * in_pEvent,
-		FVector in_Location,
-		FRotator in_Orientation,
-		class UWorld* in_World
-		);
-
-	/**
-	 * Post an event by name at location to ak soundengine
-	 *
-	 * @param in_pEvent			Name of the event to post
-	 * @param in_Location		Location at which to play the event
-	 * @return ID assigned by ak soundengine
-	 */
-	AkPlayingID PostEventAtLocation(
-		const FString& in_EventName,
-		FVector in_Location,
-		FRotator in_Orientation,
-		class UWorld* in_World
-		);
-
-	/**
-	 * Post an event at location to ak soundengine
-	 *
-	 * @param in_pEvent			Name of the event to post
-	 * @param in_Location		Location at which to play the event
-	 * @return ID assigned by ak soundengine
-	 */
-	TFuture<AkPlayingID> PostEventAtLocationAsync(
-		class UAkAudioEvent* in_pEvent,
-		FVector in_Location,
-		FRotator in_Orientation,
-		class UWorld* in_World
-	);
-
-	/**
-	 * Wait for event asset to be fully loaded and then post the event to ak soundengine
-	 *
-	 * @param AudioEvent				The event to post
-	 * @param Actor						Actor on which to play the event
-	 * @param PostEventCallback			Callback function
-	 * @param CallbackFlags				Bitmask: see \ref AkCallbackType
-	 * @param bStopWhenOwnerDestroyed   If true, then the sound should be stopped if the owning actor is destroyed
-	 * @return ID assigned by ak soundengine
-	 */
-	TFuture<AkPlayingID> PostEventAsync(
-		class UAkAudioEvent* AudioEvent,
-		AActor* Actor,
-		const FOnAkPostEventCallback& PostEventCallback,
-		AkUInt32 CallbackFlags = 0,
-		bool bStopWhenOwnerDestroyed = false,
-		const TSharedPtr<FAkSDKExternalSourceArray, ESPMode::ThreadSafe>& ExternalSources =
-		 MakeShared<FAkSDKExternalSourceArray, ESPMode::ThreadSafe>()
-	);
-
-	/**
-	 * Wait for event asset to be fully loaded and then post the event to ak soundengine
-	 *
-	 * @param AudioEvent		The event to post
-	 * @param GameObject		UAkGameObject on which to play the event
-	 * @param PostEventCallback	Callback delegate
-	 * @param CallbackFlags		Bitmask: see \ref EAkCallbackType
-	 * @return ID assigned by ak soundengine
-	 */
-	TFuture<AkPlayingID> PostEventAsync(
-		class UAkAudioEvent* AudioEvent,
-		UAkGameObject* GameObject,
-		const FOnAkPostEventCallback& PostEventCallback,
-		AkUInt32 CallbackFlags = 0,
-		const TSharedPtr<FAkSDKExternalSourceArray, ESPMode::ThreadSafe>& ExternalSources =
-		 MakeShared<FAkSDKExternalSourceArray, ESPMode::ThreadSafe>()
-	);
-
-	/**
-	 * Post an event to ak soundengine by name
-	 *
-	 * @param AudioEvent				The event to post
-	 * @param Actor						Actor on which to play the event
-	 * @param bStopWhenOwnerDestroyed	If true, then the sound should be stopped if the owning actor is destroyed
-	 * @param LatentAction				Pointer to a Blueprint latent action. Used in the EndOfEvent callback.
-	 * @return ID assigned by ak soundengine
-	 */
-	TFuture<AkPlayingID> PostEventLatentActionAsync(
-		class UAkAudioEvent* AudioEvent,
-		AActor* Actor,
-		bool bStopWhenOwnerDestroyed,
-		FWaitEndOfEventAction* LatentAction,
-		const TSharedPtr<FAkSDKExternalSourceArray, ESPMode::ThreadSafe>& ExternalSources =
-		 MakeShared<FAkSDKExternalSourceArray, ESPMode::ThreadSafe>()
-	);
-
-	/**
-	 * Post an event to ak soundengine by name
-	 *
-	 * @param AudioEvent				The event to post
-	 * @param AkComponent				AkComponent on which to play the event
-	 * @param bStopWhenOwnerDestroyed	If true, then the sound should be stopped if the owning actor is destroyed
-	 * @param LatentAction				Pointer to a Blueprint latent action.Used in the EndOfEvent callback.
-	 * @return ID assigned by ak soundengine
-	 */
-	TFuture<AkPlayingID> PostEventLatentActionAsync(
-		class UAkAudioEvent* AudioEvent,
-		UAkComponent* AkComponent,
-		FWaitEndOfEventAction* LatentAction,
-		const TSharedPtr<FAkSDKExternalSourceArray, ESPMode::ThreadSafe>& ExternalSources =
-		 MakeShared<FAkSDKExternalSourceArray, ESPMode::ThreadSafe>()
-	);
-
 	/** Spawn an AkComponent at a location. Allows, for example, to set a switch on a fire and forget sound.
 	 * @param AkEvent - Wwise Event to post.
 	 * @param Location - Location from which to post the Wwise Event.
@@ -772,68 +371,36 @@ public:
 	 */
 	class UAkComponent* SpawnAkComponentAtLocation( class UAkAudioEvent* AkEvent, FVector Location, FRotator Orientation, bool AutoPost, const FString& EventName, bool AutoDestroy, class UWorld* in_World );
 
-	/**
-	 * Executes an action on all nodes that are referenced in the specified event in an action of type play.
-	 * @param in_EventName Name of the event to post
-	 * @param in_ActionType Action to execute on all the elements that were played using the specified event.
-	 * @param in_pActor Associated actor
-	 * @param in_uTransitionDuration Fade duration
-	 * @param in_eFadeCurve Curve type to be used for the transition
-	 * @param in_PlayingID Associated PlayingID
-	 */
-	AKRESULT ExecuteActionOnEvent(
-		const FString& in_EventName,
-		AkActionOnEventType in_ActionType,
-		AActor* in_pActor,
-		AkTimeMs in_uTransitionDuration = 0,
-		EAkCurveInterpolation in_eFadeCurve = EAkCurveInterpolation::Linear,
-		AkPlayingID in_PlayingID = AK_INVALID_PLAYING_ID
-	);
-
-	/**
-	 * Executes an Action on the content associated to the specified playing ID. 
-	 * @param in_ActionType Action to execute on the specified playing ID.
-	 * @param in_PlayingID Playing ID on which to execute the action.
-	 * @param in_uTransitionDuration Fade duration
-	 * @param in_eFadeCurve Curve type to be used for the transition
-	 */
-	void ExecuteActionOnPlayingID(
-		AkActionOnEventType in_ActionType,
-		AkPlayingID in_PlayingID,
-		AkTimeMs in_uTransitionDuration = 0,
-		EAkCurveInterpolation in_eFadeCuve = EAkCurveInterpolation::Linear
-	);
-
     /** Seek on an event in the ak soundengine.
-    * @param in_EventName            Name of the event on which to seek.
-    * @param in_pComponent           The associated Actor.
-    * @param in_iPosition            Desired percent where playback should restart.
-    * @param in_bSeekToNearestMarker If true, the final seeking position will be made equal to the nearest marker.
+    * @param EventShortID         ID of the event on which to seek.
+    * @param Component            The associated Actor.
+    * @param Position             Desired percent where playback should restart.
+    * @param bSeekToNearestMarker If true, the final seeking position will be made equal to the nearest marker.
     *
     * @return Success or failure.
     */
     AKRESULT SeekOnEvent(
-        const FString& in_EventName,
-        AActor* in_pActor,
-        AkReal32 in_fPercent,
-        bool in_bSeekToNearestMarker = false,
-        AkPlayingID InPlayingID = AK_INVALID_PLAYING_ID
+	    const AkUInt32 EventShortID,
+	    AActor* Actor,
+	    AkReal32 Percent,
+	    bool bSeekToNearestMarker = false,
+	    AkPlayingID PlayingID = AK_INVALID_PLAYING_ID
     );
 
     /** Seek on an event in the ak soundengine.
-    * @param in_EventName            Name of the event on which to seek.
-    * @param in_pComponent           The associated AkComponent.
-    * @param in_fPercent             Desired percent where playback should restart.
-    * @param in_bSeekToNearestMarker If true, the final seeking position will be made equal to the nearest marker.
+    * @param EventShortID         ID of the event on which to seek.
+    * @param Component            The associated AkComponent.
+    * @param Percent              Desired percent where playback should restart.
+    * @param bSeekToNearestMarker If true, the final seeking position will be made equal to the nearest marker.
     *
     * @return Success or failure.
     */
     AKRESULT SeekOnEvent(
-        const FString& in_EventName,
-        UAkComponent* in_pComponent,
-        AkReal32 in_fPercent,
-        bool in_bSeekToNearestMarker = false,
-        AkPlayingID InPlayingID = AK_INVALID_PLAYING_ID
+	    const AkUInt32 EventShortID,
+	    UAkComponent* Component,
+	    AkReal32 Percent,
+	    bool bSeekToNearestMarker = false,
+	    AkPlayingID PlayingID = AK_INVALID_PLAYING_ID
     );
 
 	/**
@@ -1236,11 +803,11 @@ public:
 		);
 
 	/**
-	 * Gets the compounded output ID from shareset and device id.
-	 * Outputs are defined by their type (Audio Device shareset) and their specific system ID.
+	 * Gets the compounded output ID from ShareSet and device id.
+	 * Outputs are defined by their type (Audio Device ShareSet) and their specific system ID.
 	 * A system ID could be reused for other device types on some OS or platforms, hence the compounded ID.
 	 *
-	 * @param in_szShareset Audio Device ShareSet Name, as defined in the Wwise Project.  If Null, will select the Default Output shareset (always available)
+	 * @param in_szShareSet Audio Device ShareSet Name, as defined in the Wwise Project.  If Null, will select the Default Output ShareSet (always available)
 	 * @param in_idDevice Device specific identifier, when multiple devices of the same type are possible. If only one device is possible, leave to 0.
 	 * @return The id of the output
 	 */
@@ -1252,14 +819,14 @@ public:
 
 	/**
 	 * Replaces the main output device previously created during engine initialization with a new output device.
-	 * In addition to simply removing one output device and adding a new one, the new output device will also be used on all of the master buses
+	 * In addition to simply removing one output device and adding a new one, the new output device will also be used on all of the master busses
 	 * that the old output device was associated with, and preserve all listeners that were attached to the old output device.
 	 *
 	 * @param MainOutputSettings	Creation parameters for this output
 	 * 
 	 * @return 
-	 * - AK_InvalidID: The audioDeviceShareset on in_settings was not valid.
-	 * - AK_IDNotFound: The audioDeviceShareset on in_settings doesn't exist.  Possibly, the Init bank isn't loaded yet or was not updated with latest changes.
+	 * - AK_InvalidID: The audioDeviceShareSet on in_settings was not valid.
+	 * - AK_IDNotFound: The audioDeviceShareSet on in_settings doesn't exist.  Possibly, the Init bank isn't loaded yet or was not updated with latest changes.
 	 * - AK_DeviceNotReady: The idDevice on in_settings doesn't match with a valid hardware device.  Either the device doesn't exist or is disabled.  Disconnected devices (headphones) are not considered "not ready" therefore won't cause this error.
 	 * - AK_DeviceNotFound: The in_outputDeviceId provided does not match with any of the output devices that the sound engine is currently using.
 	 * - AK_InvalidParameter: Out of range parameters or unsupported parameter combinations on in_settings
@@ -1353,7 +920,6 @@ public:
 	 */
 	void UnregisterGlobalCallback(FDelegateHandle Handle, AkGlobalCallbackLocation Location);
 
-#ifdef AK_OUTPUT_DEVICE_METERING_ENABLED
 	/**
 	 * Registers a callback to be called to allow the game to access metering data from any output device.
 	 * @param OutputID Output ID, as returned from AddOutput or GetOutputID.  You can pass 0 for the main (default) output
@@ -1373,7 +939,6 @@ public:
 	 * @return AK_Success if callback has been unregistered
 	 */
 	AKRESULT UnregisterOutputDeviceMeteringCallback(AkOutputDeviceID OutputID);
-#endif
 
 	/**
 	 * Obtain a pointer to the singleton instance of FAkAudioDevice
@@ -1381,6 +946,12 @@ public:
 	 * @return Pointer to the singleton instance of FAkAudioDevice
 	 */
 	static FAkAudioDevice* Get();
+
+
+	/**
+	 * Is the Wwise SoundEngine initialized?
+	 */
+	static bool IsInitialized() { return m_bSoundEngineInitialized;  }
 
 	/**
 	 * Gets the system sample rate
@@ -1392,32 +963,32 @@ public:
 	/**
 	 * Enables/disables offline rendering
 	 *
-	 * @param in_bEnable		Set to true to enable offline rendering
+	 * @param bEnable		Set to true to enable offline rendering
 	 */
 	AKRESULT SetOfflineRendering(bool bEnable);
 
 	/**
 	 * Sets the offline rendering frame time in seconds.
 	 *
-	 * @param in_fFrameTimeInSeconds		Frame time in seconds used during offline rendering
+	 * @param FrameTimeInSeconds		Frame time in seconds used during offline rendering
 	 */
 	AKRESULT SetOfflineRenderingFrameTime(AkReal32 FrameTimeInSeconds);
 
 	/**
 	 * Registers a callback used for retrieving audio samples.
 	 *
-	 * @param in_pfnCallback		Capture callback function to register
-	 * @param in_idOutput			The audio device specific id, return by AK::SoundEngine::AddOutput or AK::SoundEngine::GetOutputID
-	 * @param in_pCookie			Callback cookie that will be sent to the callback function along with additional information
+	 * @param Callback		Capture callback function to register
+	 * @param OutputId			The audio device specific id, return by AK::SoundEngine::AddOutput or AK::SoundEngine::GetOutputID
+	 * @param Cookie			Callback cookie that will be sent to the callback function along with additional information
 	 */
 	AKRESULT RegisterCaptureCallback(AkCaptureCallbackFunc Callback, AkOutputDeviceID OutputId = AK_INVALID_OUTPUT_DEVICE_ID, void* Cookie = nullptr);
 
 	/**
 	 * Unregisters a callback used for retrieving audio samples.
 	 *
-	 * @param in_pfnCallback		Capture callback function to register
-	 * @param in_idOutput			The audio device specific id, return by AK::SoundEngine::AddOutput or AK::SoundEngine::GetOutputID
-	 * @param in_pCookie			Callback cookie that will be sent to the callback function along with additional information
+	 * @param Callback		Capture callback function to register
+	 * @param OutputId			The audio device specific id, return by AK::SoundEngine::AddOutput or AK::SoundEngine::GetOutputID
+	 * @param Cookie			Callback cookie that will be sent to the callback function along with additional information
 	 */
 	AKRESULT UnregisterCaptureCallback(AkCaptureCallbackFunc Callback, AkOutputDeviceID OutputId = AK_INVALID_OUTPUT_DEVICE_ID, void* Cookie = nullptr);
 
@@ -1468,17 +1039,27 @@ public:
 	/**
 	* Send a set of triangles to the Spatial Audio Engine
 	*/
-	AKRESULT SetGeometry(AkGeometrySetID AcousticZoneID, const AkGeometryParams& Params);
+	AKRESULT SetGeometry(AkGeometrySetID GeometrySetID, const AkGeometryParams& Params);
+
+	/**
+	* Create a geometry instance in Spatial Audio
+	*/
+	AKRESULT SetGeometryInstance(AkGeometryInstanceID GeometryInstanceID, const AkGeometryInstanceParams& Params);
 
 	/**
 	* Remove a set of triangles from the Spatial Audio Engine
 	*/
-	AKRESULT RemoveGeometrySet(AkGeometrySetID AcousticZoneID);
+	AKRESULT RemoveGeometrySet(AkGeometrySetID GeometrySetID);
+
+	/**
+	* Remove a geometry instance from Spatial Audio
+	*/
+	AKRESULT RemoveGeometryInstance(AkGeometryInstanceID GeometryInstanceID);
 
 	/**
 	* Set the early reflections aux bus for an AK Component
 	*/
-	AKRESULT SetEarlyReflectionsAuxBus(UAkComponent* in_pComponent, const FString& in_AuxBusName);
+	AKRESULT SetEarlyReflectionsAuxBus(UAkComponent* in_pComponent, const AkUInt32 AuxBusID);
 
 	/**
 	* Set the early reflections send volume for an AK Component
@@ -1491,19 +1072,100 @@ public:
 	AKRESULT SetReflectionsOrder(int Order, bool RefreshPaths);
 
 	/**
+	* Sets a game object's obstruction and occlusion levels.
+	*/
+	AKRESULT SetObjectObstructionAndOcclusion(AkGameObjectID in_Object, AkGameObjectID in_listener, AkReal32 Obstruction, AkReal32 Occlusion);
+
+	/**
+	* Sets a game object's obstruction and occlusion levels for each position defined by SetMultiplePositions.
+	*/
+	AKRESULT SetMultipleObstructionAndOcclusion(AkGameObjectID in_Object, AkGameObjectID in_listener, AkObstructionOcclusionValues* ObstructionAndOcclusionValues, AkUInt32 in_uNumObstructionAndOcclusion);
+
+	/**
 	* Set obstruction and occlusion on sounds going through this portal
 	*/
-	AKRESULT SetPortalObstructionAndOcclusion(UAkPortalComponent* in_pPortal, float in_fObstructionValue, float in_fOcclusionValue);
+	AKRESULT SetPortalObstructionAndOcclusion(const UAkPortalComponent* in_pPortal, float in_fObstructionValue, float in_fOcclusionValue);
 
 	/**
 	* Set obstruction on sounds from this game object going through this portal
 	*/
-	AKRESULT SetGameObjectToPortalObstruction(UAkComponent* in_pComponent, UAkPortalComponent* in_pPortal, float in_fObstructionValue);
+	AKRESULT SetGameObjectToPortalObstruction(const UAkComponent* in_pComponent, const UAkPortalComponent* in_pPortal, float in_fObstructionValue);
 
 	/**
 	* Set obstruction on sounds from a first portal going through the next portal
 	*/
-	AKRESULT SetPortalToPortalObstruction(UAkPortalComponent* in_pPortal0, UAkPortalComponent* in_pPortal1, float in_fObstructionValue);
+	AKRESULT SetPortalToPortalObstruction(const UAkPortalComponent* in_pPortal0, const UAkPortalComponent* in_pPortal1, float in_fObstructionValue);
+
+	/** @brief Sets an effect ShareSet on an output device
+	* 
+	* Make sure the new effect ShareSet is included in a soundbank, and that sound bank is loaded. Otherwise you will see errors in the Capture Log.
+	* This function will replace existing effects of the audio device ShareSet.
+	* Audio device effects support is limited to one ShareSet per plug-in type at any time.
+	* Errors are reported in the Wwise Capture Log if the effect cannot be set on the output device.
+	* ShareSet must be in a loaded bank.
+	*
+	*  @param InDeviceID Output ID, as returned from AddOutput or GetOutputID. You can pass 0 for the main (default) output
+	*  @param InFXIndex Effect slot index (0-3)
+	*  @param InFXShareSetID  Effect ShareSet ID; pass AK_INVALID_UNIQUE_ID to use the effect from the Audio Device ShareSet.
+	*  @return Always returns AK_Success
+	*/
+	AKRESULT SetOutputDeviceEffect(AkOutputDeviceID InDeviceID, AkUInt32 InFXIndex, AkUniqueID InFXShareSetID);
+
+	/**  @brief Sets an Effect ShareSet at the specified Bus and Effect slot index.
+	* 
+	* The Bus can either be an Audio Bus or an Auxiliary Bus.
+	* This adds a reference on the audio node to an existing ShareSet.
+	* This function has unspecified behavior when adding an Effect to a currently playing
+	* Bus which does not have any effects, or removing the last Effect on a currently playing bus. 
+	* Make sure the new effect ShareSet is included in a soundbank, and that sound bank is loaded. Otherwise you will see errors in the Capture Log. 
+	* This function will replace existing Effects on the node. If the target node is not at
+	* the top of the hierarchy and is in the Actor-Mixer Hierarchy, the option "Override Parent" in
+	* the Effect section in Wwise must be enabled for this node, otherwise the parent's Effect will
+	* still be the one in use and the call to SetBusEffect will have no impact.
+	* ShareSet must be in a loaded bank.
+	*
+	*  @param InBusName Bus name
+	*  @param InFXIndex Effect slot index (0-3)
+	*  @param InFXShareSetID  Effect ShareSet ID; pass AK_INVALID_UNIQUE_ID to clear the Effect slot
+	*  @return - AK_Success when successfully posted,  AK_IDNotFound if the Bus name doesn't point to a valid bus, AK_InvalidParameter if in_uFXIndex isn't in range.
+	*/
+	AKRESULT SetBusEffect(const FString& InBusName, AkUInt32 InFXIndex, AkUniqueID InFXShareSetID);
+
+	/** @briefSets an Effect ShareSet at the specified Bus and Effect slot index.
+	* 
+	* The Bus can either be an Audio Bus or an Auxiliary Bus.
+	* This adds a reference on the audio node to an existing ShareSet.
+	* This function has unspecified behavior when adding an Effect to a currently playing
+	* Bus which does not have any effects, or removing the last Effect on a currently playing bus. 
+	* Make sure the new effect ShareSet is included in a soundbank, and that sound bank is loaded. Otherwise you will see errors in the Capture Log. 
+	* This function will replace existing Effects on the node. If the target node is not at 
+	* the top of the hierarchy and is in the Actor-Mixer Hierarchy, the option "Override Parent" in
+	* the Effect section in Wwise must be enabled for this node, otherwise the parent's Effect will
+	* still be the one in use and the call to SetBusEffect will have no impact.
+	* ShareSet must be in a loaded bank.
+	*
+	*  @param InBusID Bus Short ID.
+	*  @param InFXIndex Effect slot index (0-3)
+	*  @param InFXShareSetID  Effect ShareSet ID; pass AK_INVALID_UNIQUE_ID to clear the Effect slot
+	*  @return AK_Success when successfully posted, AK_IDNotFound if the Bus name doesn't point to a valid bus, AK_InvalidParameter if in_uFXIndex isn't in range.
+	*/
+	AKRESULT SetBusEffect(AkUniqueID InBusID, AkUInt32 InFXIndex, AkUniqueID InFXShareSetID);
+
+
+	/** @brief Sets an Effect ShareSet at the specified audio node and Effect slot index.
+	* 
+	* The target node cannot be a Bus, to set effects on a bus, use SetBusEffect() instead.
+	* The option "Override Parent" in the Effect section in Wwise must be enabled for this node, otherwise the parent's effect will
+	* still be the one in use and the call to SetActorMixerEffect will have no impact.
+	* ShareSet must be in a loaded bank.
+	*
+	* @param InAudioNodeID Can be a member of the Actor-Mixer or Interactive Music Hierarchy (not a bus).
+	* @param InFXIndex Effect slot index (0-3)
+	* @param InShareSetID ShareSets ID; pass AK_INVALID_UNIQUE_ID to clear the effect slot
+	* @return Always returns AK_Success
+	*/
+	AKRESULT SetActorMixerEffect(AkUniqueID InAudioNodeID, AkUInt32 InFXIndex, AkUniqueID InShareSetID);
+	AKRESULT SetActorMixerEffect(const FString& InBusName, AkUInt32 InFXIndex, AkUniqueID InFXShareSetID);
 
 	/**
 	 * Get an ak audio component, or create it if none exists that fit the attachment criteria.
@@ -1534,6 +1196,16 @@ public:
 	  * Modify the attenuation computations on this game object to simulate sounds with a a larger or smaller area of effect.
 	  */
 	AKRESULT SetAttenuationScalingFactor(UAkComponent* AkComponent, float ScalingFactor);
+
+	/**
+	 * Use the position of a separate AkComponent for distance calculations for a specified listener.
+	 * When <tt>SetDistanceProbe()</tt> is called, Wwise calculates distance attenuation and filtering
+	 * based on the distance between the distance probe AkComponent and the sound source.
+	 * In third-person perspective applications, the distance probe may be set to the player character's position,
+	 * and the listener position to that of the camera. In this scenario, attenuation is based on
+	 * the distance between the character and the sound, whereas panning, spatialization, and spread and focus calculations are base on the camera.
+	 */
+	AKRESULT SetDistanceProbe(UAkComponent* Listener, UAkComponent* DistanceProbe);
 
 	/**
 	 * Starts a Wwise output capture. The output file will be located in the same folder as the SoundBanks.
@@ -1585,11 +1257,6 @@ public:
 	void WakeupFromSuspend();
 
 	/**
-	 * Event called when soundbanks are generated
-	 */
-	SoundbanksLoaded OnSoundbanksLoaded;
-
-	/**
 	 * Event called when the Wwise project is modified
 	 */
 	FOnWwiseProjectModification OnWwiseProjectModification;
@@ -1612,19 +1279,31 @@ public:
 		return AkVector{ (float)in_vect.X, (float)in_vect.Y, (float)in_vect.Z };
 	}
 
+	static inline void FVectorToAKVector64( const FVector & in_vect, AkVector64 & out_vect )
+	{
+		out_vect.X = in_vect.X;
+		out_vect.Y = in_vect.Y;
+		out_vect.Z = in_vect.Z;
+	}
+ 
+	static inline AkVector64 FVectorToAKVector64(const FVector& in_vect)
+	{
+		return AkVector64{ in_vect.X, in_vect.Y, in_vect.Z };
+	}
+
 	static inline AkExtent FVectorToAkExtent(const FVector& in_vect)
 	{
 #if UE_5_0_OR_LATER
-		checkf(in_vect.X <= FLT_MAX && in_vect.Y <= FLT_MAX && in_vect.Z <= FLT_MAX, TEXT("FVectorToAkExtent: Data truncation when converting from FVector to AkVector."));
+		checkf(in_vect.X <= FLT_MAX && in_vect.Y <= FLT_MAX && in_vect.Z <= FLT_MAX, TEXT("FVectorToAkExtent: Data truncation when converting from FVector to AkExtent."));
 #endif
 		/* Unreal: right=y, up=z, front=x */
 		return AkExtent{ (float)in_vect.Y, (float)in_vect.Z, (float)in_vect.X };
 	}
 
-	static inline void FVectorsToAKTransform(const FVector& in_Position, const FVector& in_Front, const FVector& in_Up, AkTransform& out_AkTransform)
+	static inline void FVectorsToAKWorldTransform(const FVector& in_Position, const FVector& in_Front, const FVector& in_Up, AkWorldTransform& out_AkTransform)
 	{
 		// Convert from the UE axis system to the Wwise axis system
-		out_AkTransform.Set(FVectorToAKVector(in_Position), FVectorToAKVector(in_Front), FVectorToAKVector(in_Up));
+		out_AkTransform.Set(FVectorToAKVector64(in_Position), FVectorToAKVector(in_Front), FVectorToAKVector(in_Up));
 	}
 
 	static inline void AKVectorToFVector(const AkVector & in_vect, FVector & out_vect)
@@ -1639,7 +1318,21 @@ public:
 		return FVector(in_vect.X, in_vect.Y, in_vect.Z);
 	}
 
-	FAkBankManager* GetAkBankManager() { return AkBankManager; }
+	// Note that this is a loss of precision due to conversion from 64-bit to 32-bit
+	static inline void AKVector64ToFVector(const AkVector64 & in_vect, FVector & out_vect)
+	{
+		out_vect.X = (float)in_vect.X;
+		out_vect.Y = (float)in_vect.Y;
+		out_vect.Z = (float)in_vect.Z;
+	}
+
+	// Note that this is a loss of precision due to conversion from 64-bit to 32-bit
+	static inline FVector AKVector64ToFVector(const AkVector64& in_vect)
+	{
+		return FVector((float)in_vect.X, (float)in_vect.Y, (float)in_vect.Z);
+	}
+
+	FAkJobWorkerScheduler* GetAkJobWorkerScheduler() { return &AkJobWorkerScheduler; }
 
 	uint8 GetMaxAuxBus() const { return MaxAuxBus; }
 
@@ -1648,11 +1341,6 @@ public:
 		return CallbackInfoPool;
 	}
 	
-	FStreamableManager& GetStreamableManager()
-	{
-		return StreamableManager;
-	}
-
 #if WITH_EDITOR
 	void SetMaxAuxBus(uint8 ValToSet) { MaxAuxBus = ValToSet; }
 #endif
@@ -1683,14 +1371,11 @@ public:
 	/** Get the aux send values corresponding to a point in the world.**/
 	void GetAuxSendValuesAtLocation(FVector Loc, TArray<AkAuxSendValue>& AkAuxSendValues, const UWorld* in_World);
 
-	/** Update all rooms. */
-	void UpdateAllSpatialAudioRooms(UWorld* InWorld);
-
 	/** Update all portals. */
 	void UpdateAllSpatialAudioPortals(UWorld* InWorld);
-
-	/** Update the room connections for all portals */
-	void UpdateRoomsForPortals(UWorld* World);
+	
+	/** Queue an update for all portals in a world to reconnect to their front and back rooms */
+	void PortalsNeedRoomUpdate(UWorld* World) { WorldsInNeedOfPortalRoomsUpdate.Add(World); }
 
 	/** Register a Portal in AK Spatial Audio.  Can be called again to update the portal parameters.	*/
 	void SetSpatialAudioPortal(UAkPortalComponent* in_Portal);
@@ -1701,9 +1386,8 @@ public:
 	void OnActorSpawned(AActor* SpawnedActor);
 
 	UAkComponentSet& GetDefaultListeners() { return m_defaultListeners; }
-	UAkComponentSet& GetDefaultEmitters() { return m_defaultEmitters; }
 
-	void SetListeners(UAkComponent* in_pEmitter, const TArray<UAkComponent*>& in_listenerSet);
+	void SetListeners(UAkComponent* in_pEmitter, const TArray<TWeakObjectPtr<UAkComponent>>& in_listenerSet);
 	void AddDefaultListener(UAkComponent* in_pListener);
 	void RemoveDefaultListener(UAkComponent* in_pListener);
 	void UpdateDefaultActiveListeners();
@@ -1717,7 +1401,7 @@ public:
 	/** Get the listener that has been choosen to be used for Wwise Spatial Audio**/
 	UAkComponent* GetSpatialAudioListener() const;
 
-	AKRESULT SetPosition(UAkComponent* in_akComponent, const AkTransform& in_SoundPosition);
+	AKRESULT SetPosition(UAkComponent* in_akComponent, const AkSoundPosition& in_SoundPosition);
 
 	/** Add a UAkRoomComponent to the spatial index data structure. */
 	void IndexRoom(class UAkRoomComponent* ComponentToAdd);
@@ -1734,7 +1418,7 @@ public:
 
 	AKRESULT SetGameObjectRadius(UAkComponent* in_akComponent, float in_outerRadius, float in_innerRadius);
 
-	AKRESULT SetImageSource(class AAkSpotReflector* in_pSpotReflector, const AkImageSourceSettings& in_ImageSourceInfo, AkUniqueID in_AuxBusID, AkRoomID in_RoomID, UAkComponent* in_AkComponent);
+	AKRESULT SetImageSource(class AAkSpotReflector* in_pSpotReflector, const AkImageSourceSettings& in_ImageSourceInfo, AkUniqueID in_AuxBusID, UAkComponent* in_AkComponent);
 	AKRESULT RemoveImageSource(class AAkSpotReflector* in_pSpotReflector, AkUniqueID in_AuxBusID, UAkComponent* in_AkComponent);
 	AKRESULT ClearImageSources(AkUniqueID in_AuxBusID = AK_INVALID_AUX_ID, UAkComponent* in_AkComponent = NULL);
 
@@ -1742,23 +1426,11 @@ public:
 	static void GetChannelConfig(FAkChannelMask SpeakerConfiguration, AkChannelConfig& config);
 
 	FAkEnvironmentIndex& GetRoomIndex() { return RoomIndex; }
-	
-	static void DelayAssetLoad(UAkAudioType* AssetToDelay) { AssetsWithDelayedLoad.Add(AssetToDelay); }
-	void LoadDelayedAssets();
 
-	static void DelayMediaLoad(UAkMediaAsset* MediaToDelay) { MediasWithDelayedLoad.Add(MediaToDelay); }
-	void LoadDelayedMedias();
+	void AddPortalConnectionToOutdoors(const UWorld* in_world, UAkPortalComponent* in_pPortal);
+	void RemovePortalConnectionToOutdoors(const UWorld* in_world, AkPortalID in_portalID);
+	void GetObsOccServicePortalMap(const TWeakObjectPtr<UAkRoomComponent> InRoom, const UWorld* InWorld, AkObstructionAndOcclusionService::PortalMap& OutPortalMap);
 
-	static void DelaySwitchValueBroadcast(UAkGroupValue* GroupValue) { DelayedSwitchesToBroadcast.Add(GroupValue); }
-	void BroadcastDelayedSwitches();
-
-#if WITH_EDITOR
-	TAtomic<bool> IsBuildingData{ false };
-#endif
-
-	friend class AkEventBasedIntegrationBehavior;
-	friend class AkLegacyIntegrationBehavior;
-	friend class UAkInitBank;
 	struct SetCurrentAudioCultureAsyncTask
 	{
 		enum CompletionType
@@ -1767,11 +1439,12 @@ public:
 			Callback
 		};
 
-		FString NewWwiseLanguage;
-		FThreadSafeBool bIsDone = false;
+		FWwiseLanguageCookedData Language;
+		FThreadSafeBool IsDone = false;
+		FThreadSafeBool Succeeded = false;
 
-		SetCurrentAudioCultureAsyncTask(FString NewLanguage, FSetCurrentAudioCultureAction* LatentAction);
-		SetCurrentAudioCultureAsyncTask(FString NewLanguage, const FOnSetCurrentAudioCultureCompleted& CompletedCallback);
+		SetCurrentAudioCultureAsyncTask(FWwiseLanguageCookedData NewLanguage, FSetCurrentAudioCultureAction* LatentAction);
+		SetCurrentAudioCultureAsyncTask(FWwiseLanguageCookedData NewLanguage, const FOnSetCurrentAudioCultureCompleted& CompletedCallback);
 
 		bool Start();
 		void Update();
@@ -1783,42 +1456,39 @@ public:
 		FOnSetCurrentAudioCultureCompleted SetAudioCultureCompletedCallback;
 	};
 
+	void AddPlayingID(uint32 EventID, uint32 PlayingID, EAkAudioContext AudioContext);
 	bool IsPlayingIDActive(uint32 EventID, uint32 PlayingID);
 	bool IsEventIDActive(uint32 EventID);
 	void RemovePlayingID(uint32 EventID, uint32 PlayingID);
 	void StopEventID(uint32 EventID);
-	
-	void AddToPinnedEventsMap(uint32 PlayingID, UAkAudioEvent* EventToPin);
-	void AddToPinnedMediasMap(uint32 PlayingID, UAkExternalMediaAsset* MediaToPin);
-	void CleanPinnedObjects(uint32 PlayingID);
 
-	static FOnSwitchValueLoaded& GetOnSwitchValueLoaded(uint32 SwitchID);
+	FOnSwitchValueLoaded& GetOnSwitchValueLoaded(uint32 SwitchID);
 	void BroadcastOnSwitchValueLoaded(UAkGroupValue* GroupValue);
+	void SetLocalOutput();
+
+	FAkComponentCallbackManager* GetCallbackManager() { return CallbackManager; }
+	AKRESULT RegisterGameObject(AkGameObjectID GameObjectID, const FString& Name);
+
+	/** Determine whether the Wwise sound engine should be updated for the given world type */
+	static bool ShouldNotifySoundEngine(EWorldType::Type WorldType);
+
+	static void LoadAudioObjectsAfterInitialization(TWeakObjectPtr<UAkAudioType>&& InAudioType);
+	void LoadDelayedObjects();
 
 private:
 	bool EnsureInitialized();
-	
-	/** Determine whether the Wwise sound engine should be updated for the given world type */
-	static bool ShouldNotifySoundEngine(EWorldType::Type WorldType);
 
 	void* AllocatePermanentMemory( int32 Size, /*OUT*/ bool& AllocatedInPool );
 	
 	AKRESULT GetGameObjectID(AActor * in_pActor, AkGameObjectID& io_GameObject );
 
 	template<typename FCreateCallbackPackage>
-	AkPlayingID PostEvent(
-		const FString& in_EventName,
-		const AkGameObjectID in_GameObjectID,
-		const TArray<AkExternalSourceInfo>& in_pExternalSources,
-		FCreateCallbackPackage CreateCallbackPackage
-	);
-
-	template<typename FCreateCallbackPackage>
-	AkPlayingID PostEvent(
-		const FString& in_EventName,
-		UAkGameObject* in_pGameObject,
-		const TArray<AkExternalSourceInfo>& in_pExternalSources,
-		FCreateCallbackPackage CreateCallbackPackage
+	AkPlayingID PostEventWithCallbackPackageOnAkGameObject(
+		const AkUInt32 EventShortID,
+		UAkGameObject* GameObject,
+		const TArray<AkExternalSourceInfo>& ExternalSources,
+		FCreateCallbackPackage CreateCallbackPackage,
+		EAkAudioContext AudioContext
 	);
 
 	template<typename ChannelConfig>
@@ -1832,6 +1502,9 @@ private:
 	// Overload allowing to modify StopWhenOwnerDestroyed after getting the AkComponent
 	AKRESULT GetGameObjectID(AActor * in_pActor, AkGameObjectID& io_GameObject, bool in_bStopWhenOwnerDestroyed );
 
+	/** Update the room connections for all portals */
+	void UpdateRoomsForPortals();
+
 #if WITH_EDITORONLY_DATA
 	UAkComponent* CreateListener(UWorld* World, FEditorViewportClient* ViewportClient = nullptr);
 	TArray<FTransform> ListenerTransforms;
@@ -1842,6 +1515,8 @@ private:
 	*/
 	void EndPIE(const bool bIsSimulating);
 	void BeginPIE(const bool bIsSimulating);
+	void PausePIE(const bool bIsSimulating);
+	void ResumePie(const bool bIsSimulating);
 	void OnSwitchBeginPIEAndSIE(const bool bIsSimulating);
 
 #endif
@@ -1862,7 +1537,11 @@ private:
 
 	/** We keep track of the portals in each world so their rooms can be updated when room and portal parameters change.
 	*/
-	TMap<UWorld*, TArray<class UAkPortalComponent*>> WorldPortalsMap;
+	TMap<UWorld*, TArray<TWeakObjectPtr<UAkPortalComponent>>> WorldPortalsMap;
+
+	typedef WwiseUnrealHelper::AkSpatialAudioIDKeyFuncs<TWeakObjectPtr<UAkPortalComponent>, false> PortalComponentSpatialAudioIDKeyFuncs;
+	typedef TMap<AkPortalID, TWeakObjectPtr<UAkPortalComponent>, FDefaultSetAllocator, PortalComponentSpatialAudioIDKeyFuncs> PortalComponentMap;
+	TMap<const UWorld*, PortalComponentMap> OutdoorsConnectedPortals;
 
 	void CleanupComponentMapsForWorld(UWorld* World);
 
@@ -1871,8 +1550,6 @@ private:
 
 	static bool m_bSoundEngineInitialized;
 	UAkComponentSet m_defaultListeners;
-	UAkComponentSet m_defaultEmitters;
-
 	UAkComponent* m_SpatialAudioListener;
 
 	bool m_isSuspended = false;
@@ -1880,12 +1557,9 @@ private:
 	uint8 MaxAuxBus;
 
 	FAkComponentCallbackManager* CallbackManager;
-	AkMediaMemoryManager* MediaMemoryManager;
 	AkCallbackInfoPool* CallbackInfoPool;
-	FAkBankManager* AkBankManager = nullptr;
-	UAkInitBank* InitBank = nullptr;
-	FStreamableManager StreamableManager;
-	IAkUnrealIOHook* IOHook = nullptr;
+	FAkJobWorkerScheduler AkJobWorkerScheduler;
+	FWwiseIOHook* IOHook = nullptr;
 
 	static bool m_EngineExiting;
 
@@ -1905,24 +1579,27 @@ private:
 
 	TArray<SetCurrentAudioCultureAsyncTask*> AudioCultureAsyncTasks;
 
+	TSet<UWorld*> WorldsInNeedOfPortalRoomsUpdate;
+
 #if !WITH_EDITOR
 	TMap<FCulturePtr, FString> CachedUnrealToWwiseCulture;
 #endif
-
-	static TSet<UAkAudioType*> AssetsWithDelayedLoad;
-	static TSet<UAkMediaAsset*> MediasWithDelayedLoad;
-	static TSet<UAkGroupValue*> DelayedSwitchesToBroadcast;
 	static FCriticalSection EventToPlayingIDMapCriticalSection;
 	static TMap<uint32, TArray<uint32>> EventToPlayingIDMap;
-
-
-	static FCriticalSection PlayingIDToPinnedAudioEventMapCriticalSection;
-	static TMap<uint32, TSet<UAkAudioEvent*>> PlayingIDToPinnedAudioEventMap;
-
-	static FCriticalSection PlayingIDToPinnedExternalSourceMapCriticalSection;
-	static TMap<uint32, TSet<UAkExternalMediaAsset*>> PlayingIDToPinnedExternalSourceMap;
+	static TMap<uint32, EAkAudioContext> PlayingIDToAudioContextMap;
 
 	static void PostEventAtLocationEndOfEventCallback(AkCallbackType in_eType, AkCallbackInfo* in_pCallbackInfo);
 
 	static TMap<uint32, FOnSwitchValueLoaded> OnSwitchValueLoadedMap;
+
+	static TArray<TWeakObjectPtr<UAkAudioType>> AudioObjectsToLoadAfterInitialization;
+
+#if WITH_EDITORONLY_DATA
+#ifndef AK_OPTIMIZED
+	static AkErrorMessageTranslator* m_UnrealErrorTranslator;
+#if AK_SUPPORT_WAAPI
+	static AkWAAPIErrorMessageTranslator m_waapiErrorMessageTranslator;
+#endif //AK_SUPPORT_WAAPI
+#endif //AK_OPTIMIZED
+#endif //WITH_EDITORONLY_DATA
 };

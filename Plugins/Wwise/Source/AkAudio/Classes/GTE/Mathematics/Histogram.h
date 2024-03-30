@@ -11,7 +11,7 @@
 #include <algorithm>
 #include <vector>
 
-namespace gte
+namespace WwiseGTE
 {
     class Histogram
     {

@@ -11,7 +11,7 @@
 #include <Mathematics/Vector3.h>
 #include <vector>
 
-namespace gte
+namespace WwiseGTE
 {
     // Compute the smallest bounding sphere whose center is the average of
     // the input points.

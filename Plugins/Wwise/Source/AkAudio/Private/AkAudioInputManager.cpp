@@ -1,27 +1,33 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
-
 
 #include "AkAudioInputManager.h"
 #include "AkAudioDevice.h"
-// Register staticly linked AudioInput plugin.
-#include <AK/Plugin/AkAudioInputSourceFactory.h>
+#include "AkAudioEvent.h"
 #if WITH_EDITOR
 #include "Editor.h"
 #endif
+#include "Wwise/API/WwiseSoundEngineAPI.h"
+
 #include "Misc/ScopeLock.h"
+
+#include <inttypes.h>
+
+#include "AkComponent.h"
 
 /*------------------------------------------------------------------------------------
 FAudioInputDelegates
@@ -45,12 +51,41 @@ namespace FAkAudioInputHelpers
 	/* A Map of playing ids to input delegates */
 	static TMap<uint32, FAudioInputDelegates> AudioInputDelegates = TMap<uint32, FAudioInputDelegates>();
 
+	static AkSampleType* GetChannel(AkAudioBuffer* Buffer, AkUInt32 in_uIndex)
+	{
+		check(Buffer);
+		check( in_uIndex < Buffer->NumChannels() );
+		return (AkSampleType*)((AkUInt8*)(Buffer->GetInterleavedData()) + ( in_uIndex * sizeof(AkSampleType) * Buffer->MaxFrames() ));
+	}
+
 	static void UpdateDataPointers(AkAudioBuffer* BufferToFill)
 	{
 		AkUInt32 NumChannels = BufferToFill->NumChannels();
 		for (AkUInt32 c = 0; c < NumChannels; ++c)
 		{
-			AudioData[c] = BufferToFill->GetChannel(c);
+			AudioData[c] = GetChannel(BufferToFill, c);
+		}
+	}
+
+	// This is the equivalent of AkAudioBuffer::ZeroPadToMaxFrames, but doesn't use global variables.
+	static void ZeroPadToMaxFrames(AkAudioBuffer* Buffer)
+	{
+		check(Buffer);
+		auto pData = Buffer->GetInterleavedData();
+		check(pData || Buffer->MaxFrames() == 0)
+
+		// The following members MUST be copied locally due to multi-core calls to this function.
+		const AkUInt32 uNumChannels = Buffer->NumChannels();
+		const AkUInt32 uNumCurrentFrames = FMath::Min(Buffer->uValidFrames, Buffer->MaxFrames());
+		const AkUInt32 uNumZeroFrames = Buffer->MaxFrames() - uNumCurrentFrames;
+		if ( uNumZeroFrames )
+		{
+			check(pData);
+			for ( AkUInt32 i = 0; i < uNumChannels; ++i )
+			{
+				FPlatformMemory::Memset( GetChannel(Buffer, i) + uNumCurrentFrames, 0, uNumZeroFrames * sizeof(AkSampleType) );
+			}
+			Buffer->uValidFrames = Buffer->MaxFrames();
 		}
 	}
 
@@ -84,14 +119,18 @@ namespace FAkAudioInputHelpers
 		if (SamplesCallback.IsBound())
 		{
 			UpdateDataPointers(BufferToFill);
-			if (SamplesCallback.Execute((int)NumChannels, (int)NumFrames, AudioData.GetData()))
+			if(auto AudioDataPtr = AudioData.GetData())
 			{
-				BufferToFill->eState = AK_DataReady;
+				if (SamplesCallback.Execute((int)NumChannels, (int)NumFrames, AudioDataPtr))
+				{
+					BufferToFill->eState = AK_DataReady;
+				}
 			}
 		}
 		else
 		{
-			BufferToFill->ZeroPadToMaxFrames();
+			ZeroPadToMaxFrames(BufferToFill);
+
 		}
 	}
 
@@ -128,9 +167,13 @@ namespace FAkAudioInputHelpers
 	*/
 	static void SetAkAudioInputCallbacks()
 	{
-		SetAudioInputCallbacks(&FAkAudioInputHelpers::GetAudioSamples,
-							   &FAkAudioInputHelpers::GetAudioFormat,
-							   nullptr);
+		auto* SoundEngine = IWwiseSoundEngineAPI::Get();
+		if (UNLIKELY(!SoundEngine)) return;
+
+		SoundEngine->AudioInputPlugin->SetAudioInputCallbacks(
+			&FAkAudioInputHelpers::GetAudioSamples,
+			&FAkAudioInputHelpers::GetAudioFormat,
+			nullptr);
 	}
 	/* Protects against calling Wwise sound engine SetAudioInputCallbacks function more than once */
 	static bool bIsInitialized = false;
@@ -200,61 +243,137 @@ FAkAudioInputManager
 ------------------------------------------------------------------------------------*/
 
 AkPlayingID FAkAudioInputManager::PostAudioInputEvent(
-    class UAkAudioEvent * Event,
+    UAkAudioEvent * Event,
     AActor * Actor,
     FAkGlobalAudioInputDelegate AudioSamplesDelegate,
-    FAkGlobalAudioFormatDelegate AudioFormatDelegate
+    FAkGlobalAudioFormatDelegate AudioFormatDelegate,
+	EAkAudioContext AudioContext
 )
 {
-    return FAkAudioInputHelpers::PostAudioInputEvent([Event, Actor](FAkAudioDevice* AkDevice)
-           {
-               return AkDevice->PostEvent(Event, Actor, AkCallbackType::AK_EndOfEvent, &FAkAudioInputHelpers::EventCallback);
-           }, AudioSamplesDelegate, AudioFormatDelegate);
-}
+	if (!IsValid(Event))
+	{
+		UE_LOG(LogAkAudio, Warning, TEXT("FAkAudioInputManager::PostAudioInputEvent: Invalid AkEvent."))
+		return AK_INVALID_PLAYING_ID;
+	}
+	if (!IsValid(Actor))
+	{
+		UE_LOG(LogAkAudio, Warning, TEXT("FAkAudioInputManager::PostAudioInputEvent: Invalid Actor playing AkEvent %s."), *Event->GetName())
+		return AK_INVALID_PLAYING_ID;
+	}
 
-
-AkPlayingID FAkAudioInputManager::PostAudioInputEvent(
-    const FString& EventName,
-    AActor * Actor,
-    FAkGlobalAudioInputDelegate AudioSamplesDelegate,
-    FAkGlobalAudioFormatDelegate AudioFormatDelegate
-    )
-{
-    return FAkAudioInputHelpers::PostAudioInputEvent([EventName, Actor](FAkAudioDevice* AkDevice)
-           {
-              return AkDevice->PostEvent(EventName, Actor, AkCallbackType::AK_EndOfEvent, &FAkAudioInputHelpers::EventCallback);
-           }, AudioSamplesDelegate, AudioFormatDelegate);
-}
-
-AkPlayingID FAkAudioInputManager::PostAudioInputEvent(
-    const FString& EventName,
-    UAkComponent* Component,
-    FAkGlobalAudioInputDelegate AudioSamplesDelegate,
-    FAkGlobalAudioFormatDelegate AudioFormatDelegate
-    )
-{
-    return FAkAudioInputHelpers::PostAudioInputEvent([EventName, Component](FAkAudioDevice* AkDevice)
-           {
-              return AkDevice->PostEvent(EventName, Component, AkCallbackType::AK_EndOfEvent, &FAkAudioInputHelpers::EventCallback);
-           }, AudioSamplesDelegate, AudioFormatDelegate);
-}
-
-AkPlayingID FAkAudioInputManager::PostAudioInputEvent(
-	const FString& EventName, 
-	AkGameObjectID GameObject, 
-	FAkGlobalAudioInputDelegate AudioSamplesDelegate, 
-	FAkGlobalAudioFormatDelegate AudioFormatDelegate)
-{
-	return FAkAudioInputHelpers::PostAudioInputEvent([EventName, GameObject](FAkAudioDevice* AkDevice)
-	{			
-		TArray<AkExternalSourceInfo> ExternSource;
-		return AkDevice->PostEvent(
-			EventName, 
-			GameObject, 
-			AkCallbackType::AK_EndOfEvent, 
+	return FAkAudioInputHelpers::PostAudioInputEvent([Event, Actor, AudioContext](FAkAudioDevice* AkDevice)
+	{
+		const auto Result = Event->PostOnActor(
+			Actor,
+			nullptr,
 			&FAkAudioInputHelpers::EventCallback,
 			nullptr,
-			ExternSource
-		);
+			AkCallbackType::AK_EndOfEvent,
+			nullptr,
+			false,
+			AudioContext);
+		UE_CLOG(UNLIKELY(Result == AK_INVALID_PLAYING_ID), LogAkAudio, Warning,
+			TEXT("FAkAudioInputManager::PostAudioInputEvent: Failed posting input event %s to actor %s."), *Event->GetName(), *Actor->GetName());
+		UE_CLOG(LIKELY(Result != AK_INVALID_PLAYING_ID), LogAkAudio, VeryVerbose,
+			TEXT("FAkAudioInputManager::PostAudioInputEvent: Posted input event %s to actor %s. PlayId=%" PRIu32), *Event->GetName(), *Actor->GetName(), Result);
+		return Result;
+	}, AudioSamplesDelegate, AudioFormatDelegate);
+}
+
+AkPlayingID FAkAudioInputManager::PostAudioInputEvent(
+	UAkAudioEvent* Event,
+	UAkComponent* Component,
+	FAkGlobalAudioInputDelegate AudioSamplesDelegate,
+	FAkGlobalAudioFormatDelegate AudioFormatDelegate,
+	EAkAudioContext AudioContext)
+{
+	if (!IsValid(Event))
+	{
+		UE_LOG(LogAkAudio, Warning, TEXT("FAkAudioInputManager::PostAudioInputEvent: Invalid AkEvent."))
+		return AK_INVALID_PLAYING_ID;
+	}
+	if (!Component)
+	{
+		UE_LOG(LogAkAudio, Warning, TEXT("FAkAudioInputManager::PostAudioInputEvent: Invalid Component playing AkEvent %s."), *Event->GetName())
+		return AK_INVALID_PLAYING_ID;
+	}
+
+	return FAkAudioInputHelpers::PostAudioInputEvent([Event, Component, AudioContext](FAkAudioDevice* AkDevice)
+	{
+		const auto Result = Event->PostOnComponent(
+			Component,
+			nullptr,
+			&FAkAudioInputHelpers::EventCallback,
+			nullptr,
+			AkCallbackType::AK_EndOfEvent,
+			nullptr,
+			false,
+			AudioContext);
+		UE_CLOG(UNLIKELY(Result == AK_INVALID_PLAYING_ID), LogAkAudio, Warning,
+			TEXT("FAkAudioInputManager::PostAudioInputEvent: Failed posting input event %s to component %s."), *Event->GetName(), *Component->GetName());
+		UE_CLOG(LIKELY(Result != AK_INVALID_PLAYING_ID), LogAkAudio, VeryVerbose,
+			TEXT("FAkAudioInputManager::PostAudioInputEvent: Posted input event %s to component %s. PlayId=%" PRIu32), *Event->GetName(), *Component->GetName(), Result);
+		return Result;
+	}, AudioSamplesDelegate, AudioFormatDelegate);
+}
+
+AkPlayingID FAkAudioInputManager::PostAudioInputEvent(
+	UAkAudioEvent* Event,
+	AkGameObjectID GameObject,
+	FAkGlobalAudioInputDelegate AudioSamplesDelegate,
+	FAkGlobalAudioFormatDelegate AudioFormatDelegate,
+	EAkAudioContext AudioContext)
+{
+	if (!IsValid(Event))
+	{
+		UE_LOG(LogAkAudio, Warning, TEXT("FAkAudioInputManager::PostAudioInputEvent: Invalid AkEvent."))
+		return AK_INVALID_PLAYING_ID;
+	}
+	if (GameObject == AK_INVALID_GAME_OBJECT)
+	{
+		UE_LOG(LogAkAudio, Warning, TEXT("FAkAudioInputManager::PostAudioInputEvent: Invalid GameObject playing AkEvent %s."), *Event->GetName())
+		return AK_INVALID_PLAYING_ID;
+	}
+	return FAkAudioInputHelpers::PostAudioInputEvent([Event, GameObject, AudioContext](FAkAudioDevice* AkDevice)
+	{
+		const auto Result = Event->PostOnGameObjectID(
+			GameObject,
+			nullptr,
+			&FAkAudioInputHelpers::EventCallback,
+			nullptr,
+			AkCallbackType::AK_EndOfEvent,
+			nullptr,
+			AudioContext);
+		UE_CLOG(UNLIKELY(Result == AK_INVALID_PLAYING_ID), LogAkAudio, Warning,
+			TEXT("FAkAudioInputManager::PostAudioInputEvent: Failed posting input event %s to %" PRIu64 "."), *Event->GetName(), GameObject);
+		UE_CLOG(LIKELY(Result != AK_INVALID_PLAYING_ID), LogAkAudio, VeryVerbose,
+			TEXT("FAkAudioInputManager::PostAudioInputEvent: Posted input event %s to %" PRIu64 ". PlayId=%" PRIu32), *Event->GetName(), GameObject, Result);
+		return Result;
+	}, AudioSamplesDelegate, AudioFormatDelegate);
+}
+
+AkPlayingID FAkAudioInputManager::PostAudioInputEvent(UAkAudioEvent* Event,
+	FAkGlobalAudioInputDelegate AudioSamplesDelegate, FAkGlobalAudioFormatDelegate AudioFormatDelegate,
+	EAkAudioContext AudioContext)
+{
+	if (!IsValid(Event))
+	{
+		UE_LOG(LogAkAudio, Warning, TEXT("FAkAudioInputManager::PostAudioInputEvent: Invalid AkEvent."))
+		return AK_INVALID_PLAYING_ID;
+	}
+	return FAkAudioInputHelpers::PostAudioInputEvent([Event, AudioContext](FAkAudioDevice* AkDevice)
+	{
+		const auto Result = Event->PostAmbient(
+			nullptr,
+			&FAkAudioInputHelpers::EventCallback,
+			nullptr,
+			AkCallbackType::AK_EndOfEvent,
+			nullptr,
+			AudioContext);
+		UE_CLOG(UNLIKELY(Result == AK_INVALID_PLAYING_ID), LogAkAudio, Warning,
+			TEXT("FAkAudioInputManager::PostAudioInputEvent: Failed posting ambient input event %s."), *Event->GetName());
+		UE_CLOG(LIKELY(Result != AK_INVALID_PLAYING_ID), LogAkAudio, VeryVerbose,
+			TEXT("FAkAudioInputManager::PostAudioInputEvent: Posted ambient input event %s. PlayId=%" PRIu32), *Event->GetName(), Result);
+		return Result;
 	}, AudioSamplesDelegate, AudioFormatDelegate);
 }

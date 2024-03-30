@@ -25,7 +25,7 @@
 // and Charles F. Van Loan, The Johns Hopkins Press, Baltimore MD, Fourth
 // Printing 1993.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class LinearSystem

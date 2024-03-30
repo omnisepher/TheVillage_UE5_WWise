@@ -15,7 +15,7 @@
 // can change, which invalidates the container ordering.  If objects do not
 // change while the container persists, these are safe to use.
 
-namespace gte
+namespace WwiseGTE
 {
     // wp0 == wp1
     template <typename T>

@@ -19,7 +19,7 @@
 // indices to the fitting functions are valid.
 #define GTE_APPR_QUERY_VALIDATE_INDICES
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real, typename ObservationType>
     class ApprQuery

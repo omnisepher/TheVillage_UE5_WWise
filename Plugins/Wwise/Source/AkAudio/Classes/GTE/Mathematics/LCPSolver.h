@@ -31,7 +31,7 @@
 //
 //#define GTE_THROW_ON_LCPSOLVER_ERRORS
 
-namespace gte
+namespace WwiseGTE
 {
     // Support templates for number of dimensions known at compile time or
     // known only at run time.

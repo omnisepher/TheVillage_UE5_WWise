@@ -9,7 +9,7 @@
 
 #include <Mathematics/ParticleSystem.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class MassSpringCurve : public ParticleSystem<N, Real>

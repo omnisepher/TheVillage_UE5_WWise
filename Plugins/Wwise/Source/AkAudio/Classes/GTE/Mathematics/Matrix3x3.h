@@ -10,7 +10,7 @@
 #include <Mathematics/Matrix.h>
 #include <Mathematics/Vector3.h>
 
-namespace gte
+namespace WwiseGTE
 {
     // Template alias for convenience.
     template <typename Real>

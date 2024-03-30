@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<WwiseDocument Type="WorkUnit" ID="{1DEC10FC-2733-4CA4-8FE4-C98B0139CC79}" SchemaVersion="103">
+<WwiseDocument Type="WorkUnit" ID="{1DEC10FC-2733-4CA4-8FE4-C98B0139CC79}" SchemaVersion="119">
 	<AudioObjects>
 		<WorkUnit Name="Default Work Unit" ID="{1DEC10FC-2733-4CA4-8FE4-C98B0139CC79}" PersistMode="Standalone">
 			<ChildrenList>
@@ -58,6 +58,42 @@
 												<FocusUsage>
 													<CurveUsageInfo Platform="Linked" CurveToUse="None"/>
 												</FocusUsage>
+												<ObstructionVolumeUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</ObstructionVolumeUsage>
+												<ObstructionLPFUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</ObstructionLPFUsage>
+												<ObstructionHPFUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</ObstructionHPFUsage>
+												<OcclusionVolumeUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</OcclusionVolumeUsage>
+												<OcclusionLPFUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</OcclusionLPFUsage>
+												<OcclusionHPFUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</OcclusionHPFUsage>
+												<DiffractionVolumeUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</DiffractionVolumeUsage>
+												<DiffractionLPFUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</DiffractionLPFUsage>
+												<DiffractionHPFUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</DiffractionHPFUsage>
+												<TransmissionVolumeUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</TransmissionVolumeUsage>
+												<TransmissionLPFUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</TransmissionLPFUsage>
+												<TransmissionHPFUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</TransmissionHPFUsage>
 											</CurveUsageInfoList>
 										</Attenuation>
 									</Custom>
@@ -145,7 +181,6 @@
 													</MediaIDList>
 												</AudioFileSource>
 											</ChildrenList>
-											<ObjectLists/>
 											<ActiveSourceList>
 												<ActiveSource Name="FootstepsRock_0-01" ID="{A44D59FD-2970-4D9F-95A7-5588290B3D50}" Platform="Linked"/>
 											</ActiveSourceList>
@@ -168,7 +203,6 @@
 													</MediaIDList>
 												</AudioFileSource>
 											</ChildrenList>
-											<ObjectLists/>
 											<ActiveSourceList>
 												<ActiveSource Name="FootstepsRock_0-02" ID="{A04C5983-3F66-4C81-9B9D-58BC97690A94}" Platform="Linked"/>
 											</ActiveSourceList>
@@ -191,7 +225,6 @@
 													</MediaIDList>
 												</AudioFileSource>
 											</ChildrenList>
-											<ObjectLists/>
 											<ActiveSourceList>
 												<ActiveSource Name="FootstepsRock_0-03" ID="{6A837030-EF45-45E0-B858-69F9F71117BC}" Platform="Linked"/>
 											</ActiveSourceList>
@@ -214,7 +247,6 @@
 													</MediaIDList>
 												</AudioFileSource>
 											</ChildrenList>
-											<ObjectLists/>
 											<ActiveSourceList>
 												<ActiveSource Name="FootstepsRock_0-04" ID="{25C9FA31-8532-4407-89A1-579698EDF665}" Platform="Linked"/>
 											</ActiveSourceList>
@@ -237,7 +269,6 @@
 													</MediaIDList>
 												</AudioFileSource>
 											</ChildrenList>
-											<ObjectLists/>
 											<ActiveSourceList>
 												<ActiveSource Name="FootstepsRock_0-05" ID="{990F2916-5EBE-4C1D-8985-95B9FEAD9152}" Platform="Linked"/>
 											</ActiveSourceList>
@@ -260,7 +291,6 @@
 													</MediaIDList>
 												</AudioFileSource>
 											</ChildrenList>
-											<ObjectLists/>
 											<ActiveSourceList>
 												<ActiveSource Name="FootstepsRock_0-06" ID="{449D1281-4832-4D0E-88AF-A71FFF6A9B7F}" Platform="Linked"/>
 											</ActiveSourceList>
@@ -283,7 +313,6 @@
 													</MediaIDList>
 												</AudioFileSource>
 											</ChildrenList>
-											<ObjectLists/>
 											<ActiveSourceList>
 												<ActiveSource Name="FootstepsRock_0-07" ID="{FD72FAA8-C82F-46C3-90E7-7E883FC83F2C}" Platform="Linked"/>
 											</ActiveSourceList>
@@ -306,7 +335,6 @@
 													</MediaIDList>
 												</AudioFileSource>
 											</ChildrenList>
-											<ObjectLists/>
 											<ActiveSourceList>
 												<ActiveSource Name="FootstepsRock_0-08" ID="{0964E480-8C61-4C02-8883-F529FB973355}" Platform="Linked"/>
 											</ActiveSourceList>
@@ -329,13 +357,11 @@
 													</MediaIDList>
 												</AudioFileSource>
 											</ChildrenList>
-											<ObjectLists/>
 											<ActiveSourceList>
 												<ActiveSource Name="FootstepsRock_0" ID="{01D799BB-E332-480D-B1FA-079BAFF78321}" Platform="Linked"/>
 											</ActiveSourceList>
 										</Sound>
 									</ChildrenList>
-									<ObjectLists/>
 								</RandomSequenceContainer>
 								<RandomSequenceContainer Name="Grass" ID="{9AA2A816-F40C-4042-8CF7-69542EE055A7}" ShortID="115255334">
 									<PropertyList>
@@ -345,17 +371,6 @@
 									<ReferenceList>
 										<Reference Name="Conversion">
 											<ObjectRef Name="Default Conversion Settings" ID="{6D1B890C-9826-4384-BF07-C15223E9FB56}" WorkUnitID="{772F7880-6EA0-443D-B166-D3082FABEA0D}"/>
-										</Reference>
-										<Reference Name="Effect0">
-											<Custom>
-												<Effect Name="Wwise Time Stretch (Custom)" ID="{F438A0DA-C760-4C0E-83CC-41F10E29046D}" ShortID="1042844212" PluginName="Wwise Time Stretch" CompanyID="0" PluginID="130" PluginType="3">
-													<PropertyList>
-														<Property Name="OutputGain" Type="Real32" Value="1"/>
-														<Property Name="TimeStretch" Type="Real32" Value="72"/>
-														<Property Name="TimeStretchRandom" Type="Real32" Value="16"/>
-													</PropertyList>
-												</Effect>
-											</Custom>
 										</Reference>
 										<Reference Name="OutputBus">
 											<ObjectRef Name="Master Audio Bus" ID="{1514A4D8-1DA6-412A-A17E-75CA0C2149F3}" WorkUnitID="{F35516A2-1238-4A22-B717-087F7A5BF494}"/>
@@ -387,7 +402,6 @@
 													</MediaIDList>
 												</AudioFileSource>
 											</ChildrenList>
-											<ObjectLists/>
 											<ActiveSourceList>
 												<ActiveSource Name="FootstepsGrass_0-01" ID="{4BE1F539-CF04-4C90-8145-223546CBBC82}" Platform="Linked"/>
 											</ActiveSourceList>
@@ -417,7 +431,6 @@
 													</MediaIDList>
 												</AudioFileSource>
 											</ChildrenList>
-											<ObjectLists/>
 											<ActiveSourceList>
 												<ActiveSource Name="FootstepsGrass_0-02" ID="{CF3D9E3D-5877-4455-AEEA-01ABD9B4E722}" Platform="Linked"/>
 											</ActiveSourceList>
@@ -447,7 +460,6 @@
 													</MediaIDList>
 												</AudioFileSource>
 											</ChildrenList>
-											<ObjectLists/>
 											<ActiveSourceList>
 												<ActiveSource Name="FootstepsGrass_0-03" ID="{308B6A87-BD1F-434F-8842-0509DD255517}" Platform="Linked"/>
 											</ActiveSourceList>
@@ -477,7 +489,6 @@
 													</MediaIDList>
 												</AudioFileSource>
 											</ChildrenList>
-											<ObjectLists/>
 											<ActiveSourceList>
 												<ActiveSource Name="FootstepsGrass_0-06" ID="{D7430730-F50D-4F47-B42D-03504FDAA4C2}" Platform="Linked"/>
 											</ActiveSourceList>
@@ -507,16 +518,36 @@
 													</MediaIDList>
 												</AudioFileSource>
 											</ChildrenList>
-											<ObjectLists/>
 											<ActiveSourceList>
 												<ActiveSource Name="FootstepsGrass_0" ID="{52D86764-93A2-4458-A842-FF85FF2BD94D}" Platform="Linked"/>
 											</ActiveSourceList>
 										</Sound>
 									</ChildrenList>
-									<ObjectLists/>
+									<ObjectLists>
+										<ObjectList Name="Effects">
+											<Reference>
+												<Local>
+													<EffectSlot Name="" ID="{0312F9A4-B9AE-4FF1-94D5-FB9614384863}" ShortID="980029095">
+														<ReferenceList>
+															<Reference Name="Effect">
+																<Custom>
+																	<Effect Name="Wwise Time Stretch (Custom)" ID="{F438A0DA-C760-4C0E-83CC-41F10E29046D}" ShortID="1042844212" PluginName="Wwise Time Stretch" CompanyID="0" PluginID="130" PluginType="3">
+																		<PropertyList>
+																			<Property Name="OutputGain" Type="Real32" Value="1"/>
+																			<Property Name="TimeStretch" Type="Real32" Value="72"/>
+																			<Property Name="TimeStretchRandom" Type="Real32" Value="16"/>
+																		</PropertyList>
+																	</Effect>
+																</Custom>
+															</Reference>
+														</ReferenceList>
+													</EffectSlot>
+												</Local>
+											</Reference>
+										</ObjectList>
+									</ObjectLists>
 								</RandomSequenceContainer>
 							</ChildrenList>
-							<ObjectLists/>
 							<GroupingInfo>
 								<GroupingBehaviorList>
 									<GroupingBehavior>
@@ -549,43 +580,6 @@
 									<ValueList>
 										<Value>-6</Value>
 									</ValueList>
-									<RTPCList>
-										<RTPC Name="" ID="{181531BE-351F-4CB7-9A48-F240A9F82E37}" ShortID="274966640">
-											<ReferenceList>
-												<Reference Name="ControlInput">
-													<ObjectRef Name="Health" ID="{683C9794-F153-48DE-A501-55539AA28BF0}" WorkUnitID="{8D6C56E5-2675-4C66-AD96-6B129EC6E745}"/>
-												</Reference>
-											</ReferenceList>
-											<Curve Name="" ID="{05A688F3-44D3-4F28-821C-5B53D554483D}">
-												<PropertyList>
-													<Property Name="Flags" Type="int32" Value="3"/>
-												</PropertyList>
-												<PointList>
-													<Point>
-														<XPos>0</XPos>
-														<YPos>0</YPos>
-														<Flags>5</Flags>
-													</Point>
-													<Point>
-														<XPos>10</XPos>
-														<YPos>0</YPos>
-														<Flags>0</Flags>
-														<SegmentShape>Log1</SegmentShape>
-													</Point>
-													<Point>
-														<XPos>40</XPos>
-														<YPos>-200</YPos>
-														<Flags>0</Flags>
-													</Point>
-													<Point>
-														<XPos>100</XPos>
-														<YPos>-200</YPos>
-														<Flags>37</Flags>
-													</Point>
-												</PointList>
-											</Curve>
-										</RTPC>
-									</RTPCList>
 								</Property>
 							</PropertyList>
 							<ReferenceList>
@@ -605,7 +599,56 @@
 									</MediaIDList>
 								</AudioFileSource>
 							</ChildrenList>
-							<ObjectLists/>
+							<ObjectLists>
+								<ObjectList Name="RTPC">
+									<Reference>
+										<Local>
+											<RTPC Name="" ID="{181531BE-351F-4CB7-9A48-F240A9F82E37}" ShortID="274966640">
+												<PropertyList>
+													<Property Name="PropertyName" Type="string" Value="Volume"/>
+												</PropertyList>
+												<ReferenceList>
+													<Reference Name="ControlInput">
+														<ObjectRef Name="Health" ID="{683C9794-F153-48DE-A501-55539AA28BF0}" WorkUnitID="{8D6C56E5-2675-4C66-AD96-6B129EC6E745}"/>
+													</Reference>
+													<Reference Name="Curve">
+														<Custom>
+															<Curve Name="" ID="{05A688F3-44D3-4F28-821C-5B53D554483D}">
+																<PropertyList>
+																	<Property Name="Flags" Type="int32" Value="3"/>
+																</PropertyList>
+																<PointList>
+																	<Point>
+																		<XPos>0</XPos>
+																		<YPos>0</YPos>
+																		<Flags>5</Flags>
+																	</Point>
+																	<Point>
+																		<XPos>10</XPos>
+																		<YPos>0</YPos>
+																		<Flags>0</Flags>
+																		<SegmentShape>Log1</SegmentShape>
+																	</Point>
+																	<Point>
+																		<XPos>40</XPos>
+																		<YPos>-200</YPos>
+																		<Flags>0</Flags>
+																	</Point>
+																	<Point>
+																		<XPos>100</XPos>
+																		<YPos>-200</YPos>
+																		<Flags>37</Flags>
+																	</Point>
+																</PointList>
+															</Curve>
+														</Custom>
+													</Reference>
+												</ReferenceList>
+											</RTPC>
+										</Local>
+									</Reference>
+								</ObjectList>
+							</ObjectLists>
 							<ActiveSourceList>
 								<ActiveSource Name="Heartbeat" ID="{6FAF01B7-A731-4FF6-9593-9342AA9E4D0E}" Platform="Linked"/>
 							</ActiveSourceList>
@@ -617,34 +660,6 @@
 						<ActorMixer Name="IceSkill" ID="{9FF47CE2-8778-403C-A455-85052140C1E5}" ShortID="936349666">
 							<PropertyList>
 								<Property Name="Color" Type="int16" Value="2"/>
-								<Property Name="MakeUpGain" Type="Real64">
-									<RTPCList>
-										<RTPC Name="" ID="{3F117CF2-3B41-4877-B834-39230F8E3CDE}" ShortID="712433545">
-											<ReferenceList>
-												<Reference Name="ControlInput">
-													<ObjectRef Name="IceSkillCastTime" ID="{BC9FDEE6-CE2B-451A-B4A4-7ECD5AAF20D4}" WorkUnitID="{8D6C56E5-2675-4C66-AD96-6B129EC6E745}"/>
-												</Reference>
-											</ReferenceList>
-											<Curve Name="" ID="{5D2BDEE7-3C32-4AC6-95FE-E8786DE2C414}">
-												<PropertyList>
-													<Property Name="Flags" Type="int32" Value="3"/>
-												</PropertyList>
-												<PointList>
-													<Point>
-														<XPos>0</XPos>
-														<YPos>-2</YPos>
-														<Flags>5</Flags>
-													</Point>
-													<Point>
-														<XPos>5</XPos>
-														<YPos>2</YPos>
-														<Flags>37</Flags>
-													</Point>
-												</PointList>
-											</Curve>
-										</RTPC>
-									</RTPCList>
-								</Property>
 								<Property Name="OverrideColor" Type="bool" Value="True"/>
 								<Property Name="Volume" Type="Real64">
 									<ValueList>
@@ -655,43 +670,6 @@
 							<ReferenceList>
 								<Reference Name="Conversion">
 									<ObjectRef Name="Default Conversion Settings" ID="{6D1B890C-9826-4384-BF07-C15223E9FB56}" WorkUnitID="{772F7880-6EA0-443D-B166-D3082FABEA0D}"/>
-								</Reference>
-								<Reference Name="Effect0">
-									<Custom>
-										<Effect Name="Wwise Guitar Distortion (Custom)" ID="{A7DCBC3D-4E74-4184-A97F-541270CB8488}" ShortID="547688741" PluginName="Wwise Guitar Distortion" CompanyID="0" PluginID="126" PluginType="3">
-											<PropertyList>
-												<Property Name="DistortionType" Type="int32" Value="1"/>
-												<Property Name="WetDryMix" Type="Real32" Value="0">
-													<RTPCList>
-														<RTPC Name="" ID="{6E7D59A2-B2DE-4527-AC06-1F996117858C}" ShortID="269333216">
-															<ReferenceList>
-																<Reference Name="ControlInput">
-																	<ObjectRef Name="IceSkillCastTime" ID="{BC9FDEE6-CE2B-451A-B4A4-7ECD5AAF20D4}" WorkUnitID="{8D6C56E5-2675-4C66-AD96-6B129EC6E745}"/>
-																</Reference>
-															</ReferenceList>
-															<Curve Name="" ID="{2E129237-9FAA-4FB5-AFF7-B77475BE4678}">
-																<PropertyList>
-																	<Property Name="Flags" Type="int32" Value="1"/>
-																</PropertyList>
-																<PointList>
-																	<Point>
-																		<XPos>0</XPos>
-																		<YPos>0</YPos>
-																		<Flags>5</Flags>
-																	</Point>
-																	<Point>
-																		<XPos>5</XPos>
-																		<YPos>20</YPos>
-																		<Flags>37</Flags>
-																	</Point>
-																</PointList>
-															</Curve>
-														</RTPC>
-													</RTPCList>
-												</Property>
-											</PropertyList>
-										</Effect>
-									</Custom>
 								</Reference>
 								<Reference Name="OutputBus">
 									<ObjectRef Name="Master Audio Bus" ID="{1514A4D8-1DA6-412A-A17E-75CA0C2149F3}" WorkUnitID="{F35516A2-1238-4A22-B717-087F7A5BF494}"/>
@@ -782,6 +760,42 @@
 														<FocusUsage>
 															<CurveUsageInfo Platform="Linked" CurveToUse="None"/>
 														</FocusUsage>
+														<ObstructionVolumeUsage>
+															<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+														</ObstructionVolumeUsage>
+														<ObstructionLPFUsage>
+															<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+														</ObstructionLPFUsage>
+														<ObstructionHPFUsage>
+															<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+														</ObstructionHPFUsage>
+														<OcclusionVolumeUsage>
+															<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+														</OcclusionVolumeUsage>
+														<OcclusionLPFUsage>
+															<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+														</OcclusionLPFUsage>
+														<OcclusionHPFUsage>
+															<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+														</OcclusionHPFUsage>
+														<DiffractionVolumeUsage>
+															<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+														</DiffractionVolumeUsage>
+														<DiffractionLPFUsage>
+															<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+														</DiffractionLPFUsage>
+														<DiffractionHPFUsage>
+															<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+														</DiffractionHPFUsage>
+														<TransmissionVolumeUsage>
+															<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+														</TransmissionVolumeUsage>
+														<TransmissionLPFUsage>
+															<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+														</TransmissionLPFUsage>
+														<TransmissionHPFUsage>
+															<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+														</TransmissionHPFUsage>
 													</CurveUsageInfoList>
 												</Attenuation>
 											</Custom>
@@ -810,7 +824,6 @@
 											</MediaIDList>
 										</AudioFileSource>
 									</ChildrenList>
-									<ObjectLists/>
 									<ActiveSourceList>
 										<ActiveSource Name="Blizzard" ID="{05C24E18-FA56-405E-821C-2E0B7A39BC22}" Platform="Linked"/>
 									</ActiveSourceList>
@@ -903,6 +916,42 @@
 														<FocusUsage>
 															<CurveUsageInfo Platform="Linked" CurveToUse="None"/>
 														</FocusUsage>
+														<ObstructionVolumeUsage>
+															<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+														</ObstructionVolumeUsage>
+														<ObstructionLPFUsage>
+															<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+														</ObstructionLPFUsage>
+														<ObstructionHPFUsage>
+															<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+														</ObstructionHPFUsage>
+														<OcclusionVolumeUsage>
+															<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+														</OcclusionVolumeUsage>
+														<OcclusionLPFUsage>
+															<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+														</OcclusionLPFUsage>
+														<OcclusionHPFUsage>
+															<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+														</OcclusionHPFUsage>
+														<DiffractionVolumeUsage>
+															<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+														</DiffractionVolumeUsage>
+														<DiffractionLPFUsage>
+															<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+														</DiffractionLPFUsage>
+														<DiffractionHPFUsage>
+															<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+														</DiffractionHPFUsage>
+														<TransmissionVolumeUsage>
+															<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+														</TransmissionVolumeUsage>
+														<TransmissionLPFUsage>
+															<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+														</TransmissionLPFUsage>
+														<TransmissionHPFUsage>
+															<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+														</TransmissionHPFUsage>
 													</CurveUsageInfoList>
 												</Attenuation>
 											</Custom>
@@ -930,13 +979,109 @@
 											</MediaIDList>
 										</AudioFileSource>
 									</ChildrenList>
-									<ObjectLists/>
 									<ActiveSourceList>
 										<ActiveSource Name="Icicle" ID="{780B0097-A997-4ECC-A1BB-DB353B6842E9}" Platform="Linked"/>
 									</ActiveSourceList>
 								</Sound>
 							</ChildrenList>
-							<ObjectLists/>
+							<ObjectLists>
+								<ObjectList Name="Effects">
+									<Reference>
+										<Local>
+											<EffectSlot Name="" ID="{84D96102-4BE3-474A-B259-10B23EC5B161}" ShortID="1008723246">
+												<ReferenceList>
+													<Reference Name="Effect">
+														<Custom>
+															<Effect Name="Wwise Guitar Distortion (Custom)" ID="{A7DCBC3D-4E74-4184-A97F-541270CB8488}" ShortID="547688741" PluginName="Wwise Guitar Distortion" CompanyID="0" PluginID="126" PluginType="3">
+																<PropertyList>
+																	<Property Name="DistortionType" Type="int32" Value="1"/>
+																	<Property Name="WetDryMix" Type="Real32" Value="0"/>
+																</PropertyList>
+																<ObjectLists>
+																	<ObjectList Name="RTPC">
+																		<Reference>
+																			<Local>
+																				<RTPC Name="" ID="{6E7D59A2-B2DE-4527-AC06-1F996117858C}" ShortID="269333216">
+																					<PropertyList>
+																						<Property Name="PropertyName" Type="string" Value="WetDryMix"/>
+																					</PropertyList>
+																					<ReferenceList>
+																						<Reference Name="ControlInput">
+																							<ObjectRef Name="IceSkillCastTime" ID="{BC9FDEE6-CE2B-451A-B4A4-7ECD5AAF20D4}" WorkUnitID="{8D6C56E5-2675-4C66-AD96-6B129EC6E745}"/>
+																						</Reference>
+																						<Reference Name="Curve">
+																							<Custom>
+																								<Curve Name="" ID="{2E129237-9FAA-4FB5-AFF7-B77475BE4678}">
+																									<PropertyList>
+																										<Property Name="Flags" Type="int32" Value="1"/>
+																									</PropertyList>
+																									<PointList>
+																										<Point>
+																											<XPos>0</XPos>
+																											<YPos>0</YPos>
+																											<Flags>5</Flags>
+																										</Point>
+																										<Point>
+																											<XPos>5</XPos>
+																											<YPos>20</YPos>
+																											<Flags>37</Flags>
+																										</Point>
+																									</PointList>
+																								</Curve>
+																							</Custom>
+																						</Reference>
+																					</ReferenceList>
+																				</RTPC>
+																			</Local>
+																		</Reference>
+																	</ObjectList>
+																</ObjectLists>
+															</Effect>
+														</Custom>
+													</Reference>
+												</ReferenceList>
+											</EffectSlot>
+										</Local>
+									</Reference>
+								</ObjectList>
+								<ObjectList Name="RTPC">
+									<Reference>
+										<Local>
+											<RTPC Name="" ID="{3F117CF2-3B41-4877-B834-39230F8E3CDE}" ShortID="712433545">
+												<PropertyList>
+													<Property Name="PropertyName" Type="string" Value="MakeUpGain"/>
+												</PropertyList>
+												<ReferenceList>
+													<Reference Name="ControlInput">
+														<ObjectRef Name="IceSkillCastTime" ID="{BC9FDEE6-CE2B-451A-B4A4-7ECD5AAF20D4}" WorkUnitID="{8D6C56E5-2675-4C66-AD96-6B129EC6E745}"/>
+													</Reference>
+													<Reference Name="Curve">
+														<Custom>
+															<Curve Name="" ID="{5D2BDEE7-3C32-4AC6-95FE-E8786DE2C414}">
+																<PropertyList>
+																	<Property Name="Flags" Type="int32" Value="3"/>
+																</PropertyList>
+																<PointList>
+																	<Point>
+																		<XPos>0</XPos>
+																		<YPos>-2</YPos>
+																		<Flags>5</Flags>
+																	</Point>
+																	<Point>
+																		<XPos>5</XPos>
+																		<YPos>2</YPos>
+																		<Flags>37</Flags>
+																	</Point>
+																</PointList>
+															</Curve>
+														</Custom>
+													</Reference>
+												</ReferenceList>
+											</RTPC>
+										</Local>
+									</Reference>
+								</ObjectList>
+							</ObjectLists>
 						</ActorMixer>
 					</ChildrenList>
 				</Folder>
@@ -1025,6 +1170,42 @@
 												<FocusUsage>
 													<CurveUsageInfo Platform="Linked" CurveToUse="None"/>
 												</FocusUsage>
+												<ObstructionVolumeUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</ObstructionVolumeUsage>
+												<ObstructionLPFUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</ObstructionLPFUsage>
+												<ObstructionHPFUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</ObstructionHPFUsage>
+												<OcclusionVolumeUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</OcclusionVolumeUsage>
+												<OcclusionLPFUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</OcclusionLPFUsage>
+												<OcclusionHPFUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</OcclusionHPFUsage>
+												<DiffractionVolumeUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</DiffractionVolumeUsage>
+												<DiffractionLPFUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</DiffractionLPFUsage>
+												<DiffractionHPFUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</DiffractionHPFUsage>
+												<TransmissionVolumeUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</TransmissionVolumeUsage>
+												<TransmissionLPFUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</TransmissionLPFUsage>
+												<TransmissionHPFUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</TransmissionHPFUsage>
 											</CurveUsageInfoList>
 										</Attenuation>
 									</Custom>
@@ -1051,7 +1232,6 @@
 									</MediaIDList>
 								</AudioFileSource>
 							</ChildrenList>
-							<ObjectLists/>
 							<ActiveSourceList>
 								<ActiveSource Name="Meditation" ID="{DA164C97-26F6-401D-8B84-22D8689F36BB}" Platform="Linked"/>
 							</ActiveSourceList>
@@ -1139,6 +1319,42 @@
 												<FocusUsage>
 													<CurveUsageInfo Platform="Linked" CurveToUse="None"/>
 												</FocusUsage>
+												<ObstructionVolumeUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</ObstructionVolumeUsage>
+												<ObstructionLPFUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</ObstructionLPFUsage>
+												<ObstructionHPFUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</ObstructionHPFUsage>
+												<OcclusionVolumeUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</OcclusionVolumeUsage>
+												<OcclusionLPFUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</OcclusionLPFUsage>
+												<OcclusionHPFUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</OcclusionHPFUsage>
+												<DiffractionVolumeUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</DiffractionVolumeUsage>
+												<DiffractionLPFUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</DiffractionLPFUsage>
+												<DiffractionHPFUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</DiffractionHPFUsage>
+												<TransmissionVolumeUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</TransmissionVolumeUsage>
+												<TransmissionLPFUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</TransmissionLPFUsage>
+												<TransmissionHPFUsage>
+													<CurveUsageInfo Platform="Linked" CurveToUse="UseProject"/>
+												</TransmissionHPFUsage>
 											</CurveUsageInfoList>
 										</Attenuation>
 									</Custom>
@@ -1165,25 +1381,32 @@
 									<MediaIDList>
 										<MediaID ID="404283777"/>
 									</MediaIDList>
-									<PluginInnerObjectList>
-										<List Name="Markers">
-											<PluginInnerObject Name="" ID="{3ED2C549-658B-4EF3-9563-3B23FAC21DFF}" PluginName="Marker" CompanyID="0" PluginID="993">
-												<PropertyList>
-													<Property Name="Label" Type="string" Value="BlueFireOn"/>
-													<Property Name="Time" Type="Real64" Value="3.88074442656175"/>
-												</PropertyList>
-											</PluginInnerObject>
-											<PluginInnerObject Name="" ID="{A0110FC2-D06E-4400-B3A1-A0C1D6EB7536}" PluginName="Marker" CompanyID="0" PluginID="993">
-												<PropertyList>
-													<Property Name="Label" Type="string" Value="BlueFireOff"/>
-													<Property Name="Time" Type="Real64" Value="8.60056872913686"/>
-												</PropertyList>
-											</PluginInnerObject>
-										</List>
-									</PluginInnerObjectList>
+									<ObjectLists>
+										<ObjectList Name="Markers">
+											<Reference>
+												<Local>
+													<Marker Name="" ID="{3ED2C549-658B-4EF3-9563-3B23FAC21DFF}">
+														<PropertyList>
+															<Property Name="Label" Type="string" Value="BlueFireOn"/>
+															<Property Name="Time" Type="Real64" Value="3.88074442656175"/>
+														</PropertyList>
+													</Marker>
+												</Local>
+											</Reference>
+											<Reference>
+												<Local>
+													<Marker Name="" ID="{A0110FC2-D06E-4400-B3A1-A0C1D6EB7536}">
+														<PropertyList>
+															<Property Name="Label" Type="string" Value="BlueFireOff"/>
+															<Property Name="Time" Type="Real64" Value="8.60056872913686"/>
+														</PropertyList>
+													</Marker>
+												</Local>
+											</Reference>
+										</ObjectList>
+									</ObjectLists>
 								</AudioFileSource>
 							</ChildrenList>
-							<ObjectLists/>
 							<ActiveSourceList>
 								<ActiveSource Name="FireBase" ID="{FC178EB6-81C5-489B-8028-479FB9FEB414}" Platform="Linked"/>
 							</ActiveSourceList>

@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 /// \file
@@ -76,6 +75,7 @@ namespace AK
 				OperationResult_Succeed = 0,	///< The operation succeeded
 				OperationResult_Failed,			///< The operation failed
 				OperationResult_TimedOut,		///< The operation timed out
+				OperationResult_Cancelled,		///< The operation was cancelled
 				OperationResult_NotImplemented	///< The operation is not implemented
 			};
 
@@ -83,8 +83,9 @@ namespace AK
 			/// needs to be displayed.
 			enum OperationMenuType
 			{
-				OperationMenuType_WorkUnits = 0,///< The menu is displayed in the Workgroup Manager's 'Work Units' tab
-				OperationMenuType_Sources,		///< The menu is displayed in the Workgroup Manager's 'Sources' tab
+				OperationMenuType_WorkUnits = 0,///< The menu is displayed in the File Manager's 'Work Units' tab
+				OperationMenuType_Sources,		///< The menu is displayed in the File Manager's 'Sources' tab
+				OperationMenuType_Generated,	///< The menu is displayed in the File Manager's 'Generated' tab
 				OperationMenuType_Explorer		///< The menu is displayed in the Project Explorer
 			};
 
@@ -115,8 +116,8 @@ namespace AK
 				virtual void Destroy() = 0;
 			};
 
-			/// The result returned by DoOperation for a Move, Rename or Delete operation
-			/// A instance of this class is allocated by the plugin and freed by Wwise
+			/// The result returned by DoOperation for a Move, Rename or Delete operation.
+			/// An instance of this class is allocated by the plugin and freed by Wwise.
 			/// The operation ID must be identified by :
 			/// PluginInfo::m_dwMoveCommandID, PluginInfo::m_dwMoveNoUICommandID,
 			/// PluginInfo::m_dwRenameCommandID or PluginInfo::m_dwRenameNoUICommandID
@@ -147,8 +148,8 @@ namespace AK
 			/// SourceControlContainers::IAkMap template parameter structure.
 			struct FilenameToStatusMapItem
 			{
-				BSTR m_bstrStatus;				///< Text displayed in the Workgroup Manager's 'Status' column
-				BSTR m_bstrOwner;				///< Text displayed in the Workgroup Manager's 'Owners' column
+				BSTR m_bstrStatus;				///< Text displayed in the File Manager's 'Status' column
+				BSTR m_bstrOwner;				///< Text displayed in the File Manager's 'Owners' column
 			};
 
 			/// Operation list item. This is the type used in the AK::Wwise::ISourceControl::OperationList SourceControlContainers::IAkList template class.
@@ -174,6 +175,11 @@ namespace AK
 			/// - AK::Wwise::SourceControlContainers::IAkList
 			typedef SourceControlContainers::IAkList<LPCWSTR, LPCWSTR> StringList;
 			
+			/// Boolean List. When Wwise needs to pass a boolean list, it gives this container to the plug-in.
+			/// \sa
+			/// - AK::Wwise::SourceControlContainers::IAkList
+			typedef SourceControlContainers::IAkList<bool> BooleanList;
+			
 			/// Plug-in ID list. When Wwise needs to have the list of plug-ins that a DLL contains, it requests
 			/// the list of plug-in IDs using a function exported by the DLL.
 			typedef SourceControlContainers::IAkList<GUID> PluginIDList;
@@ -198,7 +204,7 @@ namespace AK
 			/// - AK::Wwise::SourceControlContainers::IAkMap
 			typedef SourceControlContainers::IAkMap<LPCWSTR, LPCWSTR, FilenameToIconMapItem, const FilenameToIconMapItem&> FilenameToIconMap;
 		
-			/// When the Workgroup Manager needs to fill in the 'Status' and 'Owners' columns of work units or source lists,
+			/// When the File Manager needs to fill in the 'Status' and 'Owners' columns of work units or source lists,
 			/// the plug-in needs to fill in this map with the corresponding text. File names are used as keys, and are associated
 			/// to the text to be displayed in the 'Status' and 'Owners' columns.
 			/// \sa
@@ -207,6 +213,8 @@ namespace AK
 			typedef SourceControlContainers::IAkMap<LPCWSTR, LPCWSTR, FilenameToStatusMapItem, const FilenameToStatusMapItem&> FilenameToStatusMap;
 
 			//@}
+
+			typedef SourceControlContainers::IAkMap<LPCWSTR, LPCWSTR, LPCWSTR, LPCWSTR> IConnectParameterMap;
 
 			/// Plug-in information structure. This structure gives a simple overview of the plug-in's capabilities.
 			class PluginInfo
@@ -224,10 +232,13 @@ namespace AK
 				DWORD m_dwDeleteCommandID;		///< Indicates the command ID for the Delete command, s_dwInvalidOperationID (-1) if not supported
 				DWORD m_dwRevertCommandID;		///< Indicates the command ID for the Revert command, s_dwInvalidOperationID (-1) if not supported
 				DWORD m_dwDiffCommandID;		///< Indicates the command ID for the Diff command, s_dwInvalidOperationID (-1) if not supported
-				DWORD m_dwCheckOutCommandID;	///< Indicates the command ID for the Diff command, s_dwInvalidOperationID (-1) if not supported
+				DWORD m_dwCheckOutCommandID;	///< Indicates the command ID for the CheckOut command, s_dwInvalidOperationID (-1) if not supported
 				DWORD m_dwRenameNoUICommandID;	///< Indicates the command ID for the Rename command, showing no User Interface, s_dwInvalidOperationID (-1) if not supported
 				DWORD m_dwMoveNoUICommandID;	///< Indicates the command ID for the Move command, showing no User Interface, s_dwInvalidOperationID (-1) if not supported
+				DWORD m_dwAddNoUICommandID;		///< Indicates the command ID for the Add command, showing no User Interface, s_dwInvalidOperationID (-1) if not supported
 				DWORD m_dwDeleteNoUICommandID;	///< Indicates the command ID for the Delete command, showing no User Interface, s_dwInvalidOperationID (-1) if not supported
+				DWORD m_dwRevertNoUICommandID;	///< Indicates the command ID for the Revert command, showing no User Interface, s_dwInvalidOperationID (-1) if not supported
+				DWORD m_dwCheckOutNoUICommandID;///< Indicates the command ID for the CheckOut command, showing no User Interface, s_dwInvalidOperationID (-1) if not supported
 				bool m_bStatusIconAvailable;	///< Indicates that the plug-in supports Project Explorer custom icons
 			};
 
@@ -243,6 +254,12 @@ namespace AK
 
 			/// This function destroys the plug-in. The implementation is generally '{ delete this; }'.
 			virtual void Destroy() = 0;
+
+			/// This method connects the source control plugin
+			virtual OperationResult Connect(const IConnectParameterMap & parameterMap) = 0;
+
+			/// This method disconnects the source control plugin
+			virtual OperationResult Disconnect() = 0;
 
 			/// This function is called when the user clicks the 'Config...' button in the Project Settings.
 			/// \return True if the user accepts the configuration, False otherwise
@@ -270,7 +287,7 @@ namespace AK
 				DWORD in_dwOperationID	///< The ID of the operation, as specified in OperationListItem
 				) = 0;
 
-			/// Gets the text to be displayed in the 'Status' and 'Owners' columns of the Workgroup Manager.
+			/// Gets the text to be displayed in the 'Status' and 'Owners' columns of the File Manager.
 			/// \return The result of the operation
 			virtual AK::Wwise::ISourceControl::OperationResult GetFileStatus( 
 				const StringList& in_rFilenameList,		///< A list of the file names for which Wwise needs to get the status
@@ -287,7 +304,17 @@ namespace AK
 				DWORD in_dwTimeoutMs = INFINITE			///< The maximum timeout in millisecond for the request to be cancelled, pass INFINITE for no timeout
 				) = 0;
 
-			/// Gets the files that should be displayed in the Workgroup Manager file list, but that are not on the local disk.
+			/// Combines GetFileStatus() and GetFileStatusIcons() to get the source control file icons and the text to be displayed in the 'Status' and 'Owners'
+			/// columns of the File Manager.
+			/// \return The result of the operation
+			virtual AK::Wwise::ISourceControl::OperationResult GetFileStatusAndIcons( 
+				const StringList& in_rFilenameList,		///< A list of the file names for which Wwise needs to get the icons
+				FilenameToStatusMap& out_rFileStatusMap,///< The returned 'Filename To Status' map
+				FilenameToIconMap& out_rFileIconsMap,	///< The returned 'Filename To Icons' map
+				DWORD in_dwTimeoutMs = INFINITE			///< The maximum timeout in millisecond for the request to be cancelled, pass INFINITE for no timeout
+				) = 0;
+
+			/// Gets the files that should be displayed in the File Manager file list, but that are not on the local disk.
 			/// Deleted files that need to be submitted to the server are an example of implementation.
 			/// \return The result of the operation
 			virtual AK::Wwise::ISourceControl::OperationResult GetMissingFilesInDirectories( 
@@ -295,12 +322,12 @@ namespace AK
 				StringList& out_rFilenameList			///< The returned missing files
 				) = 0;
 
-			/// Performs an operation on files. This function is called when the user clicks on a source control operation
-			/// in a menu.
+			/// Performs an operation on files. This function is called when the user clicks on a source control operation in a menu.
+			/// The returned IOperationResult must be allocated on the heap and freed by the caller using IOperationResult::Destroy.
 			/// For Rename and Move operations in No-User-Interface mode, in_pTargetFilenameList contains the list of target names are known in advance.
-			virtual IOperationResult* DoOperation( 
+			[[nodiscard]] virtual IOperationResult* DoOperation( 
 				DWORD in_dwOperationID,							///< The ID of the operation that the user selected from the menu
-				const StringList& in_rFilenameList,				///< A list of the names of the files that the user selected in the Workgroup Manager or in the Project Explorer.
+				const StringList& in_rFilenameList,				///< A list of the names of the files that the user selected in the File Manager or in the Project Explorer.
 				const StringList* in_pTargetFilenameList = NULL	///< Optional: A list of the names of the destination files.  Pass NULL when not specified.
 				) = 0;
 
@@ -331,6 +358,21 @@ namespace AK
 				const StringList& in_rFilenameList,			///< The files to query
 				StringList& out_rFilenameList,				///< Out: The files that can have the operation done
 				FilenameToStatusMap& out_rFileStatusMap		///< Out: The file status of all files
+				) = 0;
+
+			/// This methods returns whether the specified operation can be applied to each file.
+			/// \return The result of the operation	
+			virtual AK::Wwise::ISourceControl::OperationResult CheckFilesForOperation( 
+				DWORD in_dwOperationID,						///< The operation to verify on each file
+				const StringList& in_rFilenameList,			///< The files to query
+				BooleanList& out_rFileStatusList			///< Out: For each file in in_rFilenameList, whether in_dwOperationID can be applied.
+				) = 0;
+
+			/// This methods returns a boolean for each file, indicating whether the file is under source control.
+			/// \return The result of the operation	
+			virtual AK::Wwise::ISourceControl::OperationResult FilesUnderSourceControl( 
+				const StringList& in_rFilenameList,			///< The files to query
+				BooleanList& out_rFileStatusList			///< Out: List of source control file status.
 				) = 0;
 
 			//@}

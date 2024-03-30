@@ -12,7 +12,7 @@
 #include <array>
 #include <limits>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class PdeFilter3 : public PdeFilter<Real>

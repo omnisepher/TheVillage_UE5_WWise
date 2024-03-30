@@ -14,7 +14,7 @@
 // 'false' if it is not.  All queries require that the number of vertices
 // satisfies N >= 3.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class PointInPolygon2

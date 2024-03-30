@@ -1,27 +1,32 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #include "SAkGeometrySurfaceOverrideController.h"
 
-#include "AkGeometryComponent.h"
 #include "DetailCategoryBuilder.h"
 #include "DetailLayoutBuilder.h"
-#include "Editor/TransBuffer.h"
 #include "PropertyCustomizationHelpers.h"
-#include "Widgets/Input/SNumericEntryBox.h"
+#include "Editor/TransBuffer.h"
 #include "Widgets/Input/SCheckBox.h"
+#include "Widgets/Input/SNumericEntryBox.h"
+#include "Widgets/Layout/SBox.h"
+
+#include "AkGeometryComponent.h"
+#include "WwiseUEFeatures.h"
 
 namespace AkGeometryUI
 {
@@ -115,7 +120,7 @@ EVisibility SSurfacePropertiesLabels::TransmissionLossVisibility() const
 // SAkGeometrySurfaceController
 // ==================================================
 
-void SAkGeometrySurfaceController::Construct(const FArguments& InArgs, TWeakObjectPtr<UObject> ObjectBeingCustomized, IDetailLayoutBuilder* InLayoutBuilder)
+void SAkGeometrySurfaceController::Construct(const FArguments& InArgs, TWeakObjectPtr<UObject> ObjectBeingCustomized, const TSharedPtr<IDetailLayoutBuilder>& InLayoutBuilder)
 {
 	LayoutBuilder = InLayoutBuilder;
 	ComponentBeingCustomized = Cast<UAkGeometryComponent>(ObjectBeingCustomized);
@@ -167,7 +172,15 @@ void SAkGeometrySurfaceController::OnTextureAssetChanged(const FAssetData& InAss
 	FAkGeometrySurfaceOverride* SurfaceProperties = GetSurfaceOverride();
 	if (SurfaceProperties != nullptr)
 	{
-		SurfaceProperties->AcousticTexture = Cast<UAkAcousticTexture>(InAssetData.GetAsset());
+		UAkAcousticTexture* AcousticTexture = Cast<UAkAcousticTexture>(InAssetData.GetAsset());
+		if (SurfaceProperties->AcousticTexture != AcousticTexture)
+		{
+			SurfaceProperties->AcousticTexture = AcousticTexture;
+			if (ComponentBeingCustomized != nullptr)
+			{
+				ComponentBeingCustomized->SurfacePropertiesChanged();
+			}
+		}
 	}
 
 	EndModify();
@@ -224,7 +237,7 @@ void SAkGeometrySurfaceController::OnEnableTransmissionLossOverrideChanged(EChec
 
 void SAkGeometrySurfaceController::BuildSlate()
 {
-	FSlateFontInfo selectionInfoFont = LayoutBuilder != nullptr ? LayoutBuilder->GetDetailFontItalic() : FEditorStyle::GetFontStyle("TinyText");
+	FSlateFontInfo selectionInfoFont = LayoutBuilder.IsValid() ? LayoutBuilder.Pin()->GetDetailFontItalic() : FAkAppStyle::Get().GetFontStyle("TinyText");
 
 	ChildSlot
 	[
@@ -314,7 +327,7 @@ FAkGeometrySurfaceOverride* SAkGeometryCollisionMeshSurfaceController::GetSurfac
 	return &(ComponentBeingCustomized->CollisionMeshSurfaceOverride);
 }
 
-void SAkGeometryStaticMeshSurfaceController::Construct(const FArguments& InArgs, TWeakObjectPtr<UObject> ObjectBeingCustomized, IDetailLayoutBuilder* InLayoutBuilder, UMaterialInterface* InMaterialKey)
+void SAkGeometryStaticMeshSurfaceController::Construct(const FArguments& InArgs, TWeakObjectPtr<UObject> ObjectBeingCustomized, const TSharedPtr<IDetailLayoutBuilder>& InLayoutBuilder, UMaterialInterface* InMaterialKey)
 {
 	MaterialKey = InMaterialKey;
 	SAkGeometrySurfaceController::Construct(InArgs, ObjectBeingCustomized, InLayoutBuilder);

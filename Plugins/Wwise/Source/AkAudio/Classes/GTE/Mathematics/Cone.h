@@ -101,7 +101,7 @@
 // intersection of two intervals, where either or both intervals are
 // semi-infinite.
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class Cone

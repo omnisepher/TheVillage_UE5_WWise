@@ -14,7 +14,7 @@
 // Support for determining the number of bits of precision required to compute
 // an expression using BSNumber or BSRational.
 
-namespace gte
+namespace WwiseGTE
 {
     class BSPrecision
     {

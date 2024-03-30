@@ -19,8 +19,8 @@ public:
 
 	FOnAkPostEventCallback BindCallback;
 
-	UFUNCTION()
-	void BlueFireCallback(EAkCallbackType CallbackType, UAkCallbackInfo* CallbackInfo);
+	/*UFUNCTION()
+	void BlueFireCallback(EAkCallbackType CallbackType, UAkCallbackInfo* CallbackInfo);*/
 
 protected:
 	// Called when the game starts or when spawned

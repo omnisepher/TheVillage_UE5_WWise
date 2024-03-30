@@ -21,7 +21,7 @@
 // of quaternions.  See
 // https://www.geometrictools.com/Documentation/Quaternions.pdf
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class Quaternion

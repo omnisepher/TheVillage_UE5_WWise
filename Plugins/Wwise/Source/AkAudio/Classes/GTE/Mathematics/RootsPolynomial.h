@@ -51,7 +51,7 @@ extern void RootsLowDegreeBlock(int);
 #define GTE_ROOTS_LOW_DEGREE_BLOCK(block)
 #endif
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class RootsPolynomial

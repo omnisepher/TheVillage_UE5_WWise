@@ -38,7 +38,7 @@
 // TODO: The constants in GetEstimate are those of the published paper.
 // Modify these to match the aforementioned GT document.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class ChebyshevRatio

@@ -11,7 +11,7 @@
 #include <Mathematics/Line.h>
 #include <Mathematics/Segment.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class DCPQuery<Real, Line<N, Real>, Segment<N, Real>>

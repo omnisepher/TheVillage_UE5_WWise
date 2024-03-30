@@ -10,7 +10,7 @@
 #include <Mathematics/IntrLine2Line2.h>
 #include <Mathematics/Ray.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, Ray2<Real>, Ray2<Real>>

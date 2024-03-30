@@ -19,7 +19,7 @@
 // and floating-point rounding errors have caused problems in the edge
 // insertions.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename InputType, typename ComputeType>
     class ConstrainedDelaunay2 : public Delaunay2<InputType, ComputeType>

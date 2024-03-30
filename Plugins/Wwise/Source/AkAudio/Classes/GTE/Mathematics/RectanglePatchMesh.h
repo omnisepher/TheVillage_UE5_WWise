@@ -11,7 +11,7 @@
 #include <Mathematics/ParametricSurface.h>
 #include <memory>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class RectanglePatchMesh : public Mesh<Real>

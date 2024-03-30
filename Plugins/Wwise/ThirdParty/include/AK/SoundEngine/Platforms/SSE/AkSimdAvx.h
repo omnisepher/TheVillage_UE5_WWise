@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 // AkSimdAvx.h
@@ -80,6 +79,9 @@ typedef AKSIMD_V8I32 AKSIMD_V8ICOND;
 /// Populates the full vector with the 8 floating point values provided
 #define AKSIMD_SETV_V8F32( _h, _g, _f, _e, _d, _c, _b, _a ) _mm256_set_ps( (_h), (_g), (_f), (_e), (_d), (_c), (_b), (_a) )
 
+/// Populates the full vector with the 4 double-prec floating point values provided
+#define AKSIMD_SETV_V4F64( _d, _c, _b, _a )  _mm256_castpd_ps( _mm256_set_pd( (_d), (_c), (_b), (_a) ) )
+
 /// Sets the eight single-precision, floating-point values to zero (see
 /// _mm_setzero_ps)
 #define AKSIMD_SETZERO_V8F32() _mm256_setzero_ps()
@@ -93,9 +95,14 @@ typedef AKSIMD_V8I32 AKSIMD_V8ICOND;
 /// Note that this should be utilized instead of, e.g. adding & utilizing a macro "AKSIMD_INSERT_V8I32(m, i, idx)"
 /// Because there is no direct corresponding instruction for an insert into 256. You should load into 128s
 /// and use that. Some compilers do not handle _mm256_insert_epi32 (etc) well, or even include them
-#define AKSIMD_SET_V2F128( m1, m2) _mm256_setr_m128(m1, m2)
+#define AKSIMD_SETV_V2F128( m2, m1) _mm256_set_m128(m2, m1)
 
 #define AKSIMD_INSERT_V2F128( a, m128, idx) _mm256_insertf128_ps(a, m128, idx)
+
+#define AKSIMD_GETELEMENT_V8F32( __vName, __num__ )			((AkReal32*)&(__vName))[(__num__)]
+#define AKSIMD_GETELEMENT_V4F64( __vName, __num__ )			((AkReal64*)&(__vName))[(__num__)]
+#define AKSIMD_GETELEMENT_V8I32( __vName, __num__ )			((AkInt32*)&(__vName))[(__num__)]
+#define AKSIMD_GETELEMENT_V4I64( __vName, __num__ )			((AkInt64*)&(__vName))[(__num__)]
 
 //@}
 ////////////////////////////////////////////////////////////////////////
@@ -173,10 +180,10 @@ typedef AKSIMD_V8I32 AKSIMD_V8ICOND;
 AkForceInline void AKSIMD_TRANSPOSE8X4_V8F32(AKSIMD_V8F32& A, AKSIMD_V8F32& B, AKSIMD_V8F32& C, AKSIMD_V8F32& D)
 {
 	AKSIMD_V8F32 tmp1, tmp2, tmp3, tmp4;
-	tmp1 = AKSIMD_SHUFFLE_V8F32(A, B, AKSIMD_SHUFFLE(1, 0, 1, 0));
-	tmp2 = AKSIMD_SHUFFLE_V8F32(A, B, AKSIMD_SHUFFLE(3, 2, 3, 2));
-	tmp3 = AKSIMD_SHUFFLE_V8F32(C, D, AKSIMD_SHUFFLE(1, 0, 1, 0));
-	tmp4 = AKSIMD_SHUFFLE_V8F32(C, D, AKSIMD_SHUFFLE(3, 2, 3, 2));
+	tmp1 = AKSIMD_SHUFFLE_V8F32(A, B, AKSIMD_SHUFFLE(1,0,1,0));
+	tmp2 = AKSIMD_SHUFFLE_V8F32(A, B, AKSIMD_SHUFFLE(3,2,3,2));
+	tmp3 = AKSIMD_SHUFFLE_V8F32(C, D, AKSIMD_SHUFFLE(1,0,1,0));
+	tmp4 = AKSIMD_SHUFFLE_V8F32(C, D, AKSIMD_SHUFFLE(3,2,3,2));
 
 	A = AKSIMD_SHUFFLE_V8F32(tmp1, tmp3, AKSIMD_SHUFFLE(2, 0, 2, 0));
 	B = AKSIMD_SHUFFLE_V8F32(tmp1, tmp3, AKSIMD_SHUFFLE(3, 1, 3, 1));
@@ -256,6 +263,7 @@ AkForceInline void AKSIMD_TRANSPOSE8X4_V8F32(AKSIMD_V8F32& A, AKSIMD_V8F32& B, A
 #define AKSIMD_OR_V8F32( a, b ) _mm256_or_ps(a,b)
 #define AKSIMD_AND_V8F32( a, b) _mm256_and_ps(a,b)
 #define AKSIMD_NOT_V8F32( a ) _mm256_xor_ps(a,_mm256_castsi256_ps(_mm256_set1_epi32(~0)))
+#define AKSIMD_ANDNOT_V8F32( a, b ) _mm256_andnot_ps(a, b)
 
 /// horizontal add across the entire vector -  vVec will be updated to contain the sum of every input element of vVec
 /// \akwarning
@@ -431,6 +439,18 @@ static AkForceInline AKSIMD_V8F32 AKSIMD_VSEL_V8F32( AKSIMD_V8F32 vA, AKSIMD_V8F
 /// Cast vector of type AKSIMD_V8I32 to type AKSIMD_V8F32. This intrinsic is only
 /// used for compilation and does not generate any instructions, thus it has zero latency.
 #define AKSIMD_CAST_V8I32_TO_V8F32( __vec__ ) _mm256_castsi256_ps(__vec__)
+
+/// Cast vector of type AKSIMD_V8COND to AKSIMD_V8F32.
+#define AKSIMD_CAST_V8COND_TO_V8F32( __vec__ ) (__vec__)
+
+/// Cast vector of type AKSIMD_V8F32 to AKSIMD_V8COND.
+#define AKSIMD_CAST_V8F32_TO_V8COND( __vec__ ) (__vec__)
+
+/// Cast vector of type AKSIMD_V8COND to AKSIMD_V8I32.
+#define AKSIMD_CAST_V8COND_TO_V8I32( __vec__ )  _mm256_castps_si256(__vec__)
+
+/// Cast vector of type AKSIMD_V8I32 to AKSIMD_V8COND.
+#define AKSIMD_CAST_V8I32_TO_V8COND( __vec__ ) _mm256_castsi256_ps(__vec__)
 
 //@}
 ////////////////////////////////////////////////////////////////////////

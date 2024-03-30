@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 /**
@@ -691,25 +690,12 @@ namespace AK::Wwise::Plugin
 		};
 
 		/**
-		 * \brief The unique generator instance for this particular plug-in.
+		 * \brief Array of all used interfaces for the plug-in.
 		 * 
-		 * This is used to link the generator to the instantiate function, as defined statically.
-		 * 
-		 * It is known there is only one bridging interface between the C interface of the plug-in and the host, which
-		 * means it's effectively limited to instantiating one instance at a time, where the host pre-fills its instance
-		 * data, calls the Instantiate function, and then retrieves the new instance, as provided by the
-		 * plug-in.
-		 * 
-		 * As such, this unique g_instance to do instantiation is not a new requirement, but merely an acknowledgement
-		 * the Instantiate function is not reentrant.
-		 */
-		static PluginInfoGenerator* g_instance;
-
-		/**
-		 * \brief Current array of interfaces, used in the bridge between host and plug-in.
-		 * 
-		 * This array is writable and updated both by the host and the plug-in. Its data is then copied to the static
-		 * instances of the plug-in (Interface) and copied to a new array, that is returned by the Instantiate method.
+		 * It is used as a template before instantiation to create a local temporary plug-in info.
+		 * A copy of its content is made in which the host fills instances it provides.
+		 * At instantiation, this local copy is merged with the instantiated plug-in's interface
+		 * instances into a finalized array that is returned by the Instantiate method.
 		 * 
 		 * Contained in the m_pluginInfo member variable.
 		 */
@@ -722,30 +708,26 @@ namespace AK::Wwise::Plugin
 		 * ak_wwise_plugin_container structure. As such, in the current version of the SDK, this is not reentrant, as
 		 * there is only one structure used to transfer data.
 		 * 
-		 * \warning This function is not reentrant. See \ref g_instance and \ref m_interfaceArray for more information.
+		 * \warning This function is not reentrant. See \ref m_interfaceArray for more information.
 		 * 
 		 * \param in_pluginInfo Plug-in structure to instantiate.
 		 * \return InterfaceArrayItem* The new instance: A copy of the structure, containing the instantiated pointers.
 		 */
 		static InterfaceArrayItem* Instantiate(PluginInfo* in_pluginInfo)
 		{
-			if (!g_instance)
-			{
-				return nullptr;
-			}
-			GenerateConstructorArray<>::UpdateCInterface(g_instance->m_interfaceArray);
+			GenerateConstructorArray<>::UpdateCInterface(in_pluginInfo->m_interfaces);
 
 			// Instantiate the user plug-in
 			auto prevPluginInfo = PluginInfoTLS<>::tls_pluginInfo;
 			PluginInfoTLS<>::tls_pluginInfo = in_pluginInfo;
 
 			auto plugin = new PluginT;
-				
+
 			PluginInfoTLS<>::tls_pluginInfo = prevPluginInfo;
 
 			// Create the resulting array and send it back to the host
 			InterfaceArrayItem* result = new InterfaceArrayItem[k_interfaceCount];
-			GenerateConstructorArray<>::Constructor(result, g_instance->m_interfaceArray, plugin);
+			GenerateConstructorArray<>::Constructor(result, in_pluginInfo->m_interfaces, plugin);
 			return result;
 		}
 
@@ -784,10 +766,7 @@ namespace AK::Wwise::Plugin
 				Disembody,
 				k_interfaceCount,
 				GenerateInterfaceArray(m_interfaceArray)
-			)
-		{
-			g_instance = this;
-		}
+			) {}
 		PluginInfoGenerator(
 			const AkUInt32* in_companyID,
 			const AkUInt32* in_pluginID,
@@ -803,14 +782,8 @@ namespace AK::Wwise::Plugin
 				Disembody,
 				k_interfaceCount,
 				GenerateInterfaceArray(m_interfaceArray)
-			)
-		{
-			g_instance = this;
-		}
-		~PluginInfoGenerator()
-		{
-			g_instance = nullptr;
-		}
+			) {}
+		~PluginInfoGenerator() = default;
 	};
 
 	template <bool _>
@@ -818,9 +791,6 @@ namespace AK::Wwise::Plugin
 	thread_local
 #endif
 	PluginInfo* PluginInfoTLS<_>::tls_pluginInfo = nullptr;
-
-	template <typename PluginT>
-	PluginInfoGenerator<PluginT>* PluginInfoGenerator<PluginT>::g_instance = nullptr;
 } // of namespace AK::Wwise::Plugin
 
 /// \cond DOXYGEN_SKIP
@@ -850,7 +820,13 @@ namespace AK::Wwise::Plugin
  * 
  * \param ContainerName Container name.
  */
-#define AK_DECLARE_PLUGIN_CONTAINER(ContainerName) extern AK::Wwise::Plugin::PluginContainer& GetPluginContainer ## ContainerName()
+#ifdef AK_WIN
+#define AK_DECLARE_PLUGIN_CONTAINER(ContainerName) \
+	extern "C" __declspec(dllexport) AK::Wwise::Plugin::PluginContainer* GetPluginContainer ## ContainerName()
+#else
+#define AK_DECLARE_PLUGIN_CONTAINER(ContainerName) \
+	extern "C" __attribute__ ((visibility ("default"))) AK::Wwise::Plugin::PluginContainer* GetPluginContainer ## ContainerName()
+#endif
 
 /**
  * \brief (C++) Defines the unique plug-in container.
@@ -860,10 +836,11 @@ namespace AK::Wwise::Plugin
  * \param ContainerName Container name. 
  */
 #define AK_DEFINE_PLUGIN_CONTAINER(ContainerName) \
-	AK::Wwise::Plugin::PluginContainer& GetPluginContainer ## ContainerName() \
+	extern "C" \
+	AK::Wwise::Plugin::PluginContainer* GetPluginContainer ## ContainerName() \
 	{ \
 		static AK::Wwise::Plugin::PluginContainer singleton; \
-		return singleton; \
+		return &singleton; \
 	}
 
 /**
@@ -879,11 +856,11 @@ namespace AK::Wwise::Plugin
 #ifdef AK_WIN
 #define AK_EXPORT_PLUGIN_CONTAINER(ContainerName) \
 	extern "C" __declspec(dllexport) AK::Wwise::Plugin::PluginContainer * ak_wwise_plugin_container_export_ ## ContainerName; \
-	AK::Wwise::Plugin::PluginContainer * ak_wwise_plugin_container_export_ ## ContainerName = &GetPluginContainer ## ContainerName()
+	AK::Wwise::Plugin::PluginContainer * ak_wwise_plugin_container_export_ ## ContainerName = GetPluginContainer ## ContainerName()
 #else
 #define AK_EXPORT_PLUGIN_CONTAINER(ContainerName) \
 	extern "C" __attribute__ ((visibility ("default"))) AK::Wwise::Plugin::PluginContainer * ak_wwise_plugin_container_export_lib ## ContainerName; \
-	AK::Wwise::Plugin::PluginContainer * ak_wwise_plugin_container_export_lib ## ContainerName = &GetPluginContainer ## ContainerName()
+	AK::Wwise::Plugin::PluginContainer * ak_wwise_plugin_container_export_lib ## ContainerName = GetPluginContainer ## ContainerName()
 #endif
 
 /**
@@ -910,8 +887,8 @@ namespace AK::Wwise::Plugin
 			UserGeneratedPluginInfo() : \
 				PluginInfoGenerator(&AudioEngineRegisteredName ## Registration) \
 			{ \
-				m_pluginInfo.m_next = GetPluginContainer ## ContainerName().m_pluginInfos; \
-				GetPluginContainer ## ContainerName().m_pluginInfos = &m_pluginInfo; \
+				m_pluginInfo.m_next = GetPluginContainer ## ContainerName()->m_pluginInfos; \
+				GetPluginContainer ## ContainerName()->m_pluginInfos = &m_pluginInfo; \
 			} \
 		} g_singleton; \
 	} }
@@ -941,8 +918,8 @@ namespace AK::Wwise::Plugin
 			UserGeneratedPluginInfo() : \
 				PluginInfoGenerator(&m_companyID, &m_pluginID, &m_type) \
 			{ \
-				m_pluginInfo.m_next = GetPluginContainer ## ContainerName().m_pluginInfos; \
-				GetPluginContainer ## ContainerName().m_pluginInfos = &m_pluginInfo; \
+				m_pluginInfo.m_next = GetPluginContainer ## ContainerName()->m_pluginInfos; \
+				GetPluginContainer ## ContainerName()->m_pluginInfos = &m_pluginInfo; \
 			} \
 		} g_singleton; \
 	} }

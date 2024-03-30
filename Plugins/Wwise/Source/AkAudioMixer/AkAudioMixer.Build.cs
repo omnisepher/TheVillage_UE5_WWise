@@ -1,42 +1,52 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
-namespace UnrealBuildTool.Rules
+using UnrealBuildTool;
+
+public class AkAudioMixer : ModuleRules
 {
-	public class AkAudioMixer : ModuleRules
+	public AkAudioMixer(ReadOnlyTargetRules Target) : base(Target)
 	{
-		public AkAudioMixer(ReadOnlyTargetRules Target) : base(Target)
-		{
-			bAddDefaultIncludePaths = true;
-			bEnforceIWYU = true;
-			bTreatAsEngineModule = true;
-			PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-			PrivateDependencyModuleNames.AddRange(
-				new string[]
-				{
-					"AkAudio",
-					"AudioMixer",
-					"AudioMixerCore",
-					"Core",
-					"CoreUObject",
-					"Engine"
-				}
-				);
+		PrivateDependencyModuleNames.AddRange(
+			new string[]
+			{
+				"Core",
+				"CoreUObject",
+				"Engine",
 
-			PublicDefinitions.Add("WITH_OGGVORBIS");
-		}
+				"AudioMixer",
+				"AudioMixerCore",
+#if UE_5_0_OR_LATER
+				"BinkAudioDecoder",
+#endif
+
+				"AkAudio",
+				"WwiseSoundEngine",
+				"WwiseUtils"
+			}
+		);
+
+		PublicDefinitions.Add("WITH_OGGVORBIS");
+
+#if UE_5_3_OR_LATER
+		bLegacyParentIncludePaths = false;
+		CppStandard = CppStandardVersion.Default;
+#endif
 	}
 }

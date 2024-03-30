@@ -69,7 +69,7 @@
 //        minHeap.Update(records[vertex.next], Weight(positions, vn));
 //    }
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename KeyType, typename ValueType>
     class MinHeap

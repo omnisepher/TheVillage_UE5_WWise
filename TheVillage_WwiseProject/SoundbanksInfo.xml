@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="utf-8"?>
+<SoundBanksInfo Platform="Windows" BasePlatform="Windows" SchemaVersion="16" SoundBankVersion="150">
+	<RootPaths>
+		<ProjectRoot>.</ProjectRoot>
+		<SourceFilesRoot>.cache/Windows</SourceFilesRoot>
+		<SoundBanksRoot>.</SoundBanksRoot>
+		<ExternalSourcesInputFile></ExternalSourcesInputFile>
+		<ExternalSourcesOutputRoot>GeneratedSoundBanks/Windows</ExternalSourcesOutputRoot>
+	</RootPaths>
+	<DialogueEvents/>
+	<SoundBanks>
+		<SoundBank Id="1355168291" Type="User" Language="SFX" Hash="{AB2E9625-9FA4-EBFD-7315-9480894C14A7}">
+			<ShortName>Init</ShortName>
+			<Path>Init.bnk</Path>
+			<Plugins>
+				<AudioDevices>
+					<Plugin Id="2317455096" Name="No_Output" LibName="No Output" LibId="11862023"/>
+					<Plugin Id="3859886410" Name="System" LibName="System" LibId="11403271"/>
+				</AudioDevices>
+			</Plugins>
+			<Busses>
+				<Bus Id="3803692087" Name="Master Audio Bus"/>
+			</Busses>
+			<GameParameters>
+				<GameParameter Id="1351491183" Name="IceSkillCastTime"/>
+				<GameParameter Id="3677180323" Name="Health"/>
+			</GameParameters>
+			<StateGroups>
+				<StateGroup Id="1750343382" Name="GameTheme">
+					<States>
+						<State Id="748895195" Name="None"/>
+						<State Id="1160234136" Name="Normal"/>
+						<State Id="3625060726" Name="Success"/>
+					</States>
+				</StateGroup>
+			</StateGroups>
+			<SwitchGroups>
+				<SwitchGroup Id="2385628198" Name="Footsteps">
+					<Switches>
+						<Switch Id="2144363834" Name="Rock"/>
+						<Switch Id="4248645337" Name="Grass"/>
+					</Switches>
+				</SwitchGroup>
+			</SwitchGroups>
+		</SoundBank>
+		<SoundBank Id="3161908922" Type="User" Language="SFX" Hash="{13E1BB24-7241-4297-0CA7-3DB08F2CD86B}">
+			<ShortName>Main</ShortName>
+			<Path>Main.bnk</Path>
+			<Media>
+				<File Id="25432987" Language="SFX" Streaming="false" Location="Memory">
+					<ShortName>FootstepsRock_0-07.wav</ShortName>
+					<CachePath>SFX/FootstepsRock_0-07_8E324C96.wem</CachePath>
+				</File>
+				<File Id="112367554" Language="SFX" Streaming="false" Location="Memory">
+					<ShortName>FootstepsRock_0-04.wav</ShortName>
+					<CachePath>SFX/FootstepsRock_0-04_8E324C96.wem</CachePath>
+				</File>
+				<File Id="245397966" Language="SFX" Streaming="false" Location="Memory">
+					<ShortName>FootstepsRock_0-01.wav</ShortName>
+					<CachePath>SFX/FootstepsRock_0-01_8E324C96.wem</CachePath>
+				</File>
+				<File Id="357953543" Language="SFX" Streaming="false" Location="Memory">
+					<ShortName>forest_lullaby.wav</ShortName>
+					<CachePath>SFX/forest_lullaby_56CEF360.wem</CachePath>
+				</File>
+				<File Id="404283777" Language="SFX" Streaming="false" Location="Memory">
+					<ShortName>FireBase.wav</ShortName>
+					<CachePath>SFX/FireBase_100382D9.wem</CachePath>
+				</File>
+				<File Id="437504527" Language="SFX" Streaming="false" Location="Memory">
+					<ShortName>FootstepsGrass_0-03.wav</ShortName>
+					<CachePath>SFX/FootstepsGrass_0-03_6FB759F1.wem</CachePath>
+				</File>
+				<File Id="508935826" Language="SFX" Streaming="false" Location="Memory">
+					<ShortName>Heartbeat.wav</ShortName>
+					<CachePath>SFX/Heartbeat_56CEF360.wem</CachePath>
+				</File>
+				<File Id="537116116" Language="SFX" Streaming="false" Location="Memory">
+					<ShortName>stinger.wav</ShortName>
+					<CachePath>SFX/stinger_56CEF360.wem</CachePath>
+				</File>
+				<File Id="589126567" Language="SFX" Streaming="false" Location="Memory">
+					<ShortName>FootstepsGrass_0-02.wav</ShortName>
+					<CachePath>SFX/FootstepsGrass_0-02_0F95E75C.wem</CachePath>
+				</File>
+				<File Id="596560865" Language="SFX" Streaming="false" Location="Memory">
+					<ShortName>FootstepsGrass_0-01.wav</ShortName>
+					<CachePath>SFX/FootstepsGrass_0-01_1E42E93C.wem</CachePath>
+				</File>
+				<File Id="639494320" Language="SFX" Streaming="false" Location="Memory">
+					<ShortName>FootstepsRock_0-03.wav</ShortName>
+					<CachePath>SFX/FootstepsRock_0-03_8E324C96.wem</CachePath>
+				</File>
+				<File Id="640964624" Language="SFX" Streaming="false" Location="Memory">
+					<ShortName>FootstepsRock_0-05.wav</ShortName>
+					<CachePath>SFX/FootstepsRock_0-05_8E324C96.wem</CachePath>
+				</File>
+				<File Id="675718906" Language="SFX" Streaming="false" Location="Memory">
+					<ShortName>Meditation.wav</ShortName>
+					<CachePath>SFX/Meditation_4F22C137.wem</CachePath>
+				</File>
+				<File Id="684276788" Language="SFX" Streaming="false" Location="Memory">
+					<ShortName>FootstepsRock_0-02.wav</ShortName>
+					<CachePath>SFX/FootstepsRock_0-02_8E324C96.wem</CachePath>
+				</File>
+				<File Id="689077695" Language="SFX" Streaming="false" Location="Memory">
+					<ShortName>FootstepsRock_0.wav</ShortName>
+					<CachePath>SFX/FootstepsRock_0_8E324C96.wem</CachePath>
+				</File>
+				<File Id="729889432" Language="SFX" Streaming="false" Location="Memory">
+					<ShortName>FootstepsRock_0-06.wav</ShortName>
+					<CachePath>SFX/FootstepsRock_0-06_8E324C96.wem</CachePath>
+				</File>
+				<File Id="826639005" Language="SFX" Streaming="false" Location="Memory">
+					<ShortName>FootstepsGrass_0-06.wav</ShortName>
+					<CachePath>SFX/FootstepsGrass_0-06_137C5572.wem</CachePath>
+				</File>
+				<File Id="834898865" Language="SFX" Streaming="false" Location="Memory">
+					<ShortName>FootstepsRock_0-08.wav</ShortName>
+					<CachePath>SFX/FootstepsRock_0-08_8E324C96.wem</CachePath>
+				</File>
+				<File Id="946848897" Language="SFX" Streaming="false" Location="Memory">
+					<ShortName>FootstepsGrass_0.wav</ShortName>
+					<CachePath>SFX/FootstepsGrass_0_F3FE389D.wem</CachePath>
+				</File>
+				<File Id="970040310" Language="SFX" Streaming="false" Location="Memory">
+					<ShortName>meditation_theme.wav</ShortName>
+					<CachePath>SFX/meditation_theme_56CEF360.wem</CachePath>
+				</File>
+				<File Id="1018198658" Language="SFX" Streaming="false" Location="Memory">
+					<ShortName>Blizzard.wav</ShortName>
+					<CachePath>SFX/Blizzard_77538206.wem</CachePath>
+				</File>
+				<File Id="1047019580" Language="SFX" Streaming="false" Location="Memory">
+					<ShortName>Icicle.wav</ShortName>
+					<CachePath>SFX/Icicle_9DBAB02A.wem</CachePath>
+				</File>
+			</Media>
+			<Plugins>
+				<Custom>
+					<Plugin Id="547688741" Name="Wwise Guitar Distortion (Custom)" LibName="Wwise Guitar Distortion" LibId="8257539"/>
+					<Plugin Id="1042844212" Name="Wwise Time Stretch (Custom)" LibName="Wwise Time Stretch" LibId="8519683"/>
+				</Custom>
+			</Plugins>
+			<Events>
+				<Event Id="3757312786" Name="FireBase">
+					<MediaRefs>
+						<MediaRef Id="404283777"/>
+					</MediaRefs>
+				</Event>
+				<Event Id="2385628198" Name="Footsteps">
+					<SwitchContainers>
+						<SwitchContainer>
+							<SwitchValue GroupType="Switch" GroupId="2385628198" Id="2144363834"/>
+							<MediaRefs>
+								<MediaRef Id="25432987"/>
+								<MediaRef Id="112367554"/>
+								<MediaRef Id="245397966"/>
+								<MediaRef Id="639494320"/>
+								<MediaRef Id="640964624"/>
+								<MediaRef Id="684276788"/>
+								<MediaRef Id="689077695"/>
+								<MediaRef Id="729889432"/>
+								<MediaRef Id="834898865"/>
+							</MediaRefs>
+						</SwitchContainer>
+						<SwitchContainer>
+							<SwitchValue GroupType="Switch" GroupId="2385628198" Id="4248645337" Default="true"/>
+							<MediaRefs>
+								<MediaRef Id="437504527"/>
+								<MediaRef Id="589126567"/>
+								<MediaRef Id="596560865"/>
+								<MediaRef Id="826639005"/>
+								<MediaRef Id="946848897"/>
+							</MediaRefs>
+							<PluginRefs>
+								<Custom>
+									<PluginRef Id="1042844212"/>
+								</Custom>
+							</PluginRefs>
+						</SwitchContainer>
+					</SwitchContainers>
+				</Event>
+				<Event Id="1750343382" Name="GameTheme">
+					<MediaRefs>
+						<MediaRef Id="537116116"/>
+					</MediaRefs>
+					<SwitchContainers>
+						<SwitchContainer>
+							<SwitchValue GroupType="State" GroupId="1750343382" Id="1160234136"/>
+							<MediaRefs>
+								<MediaRef Id="970040310"/>
+							</MediaRefs>
+						</SwitchContainer>
+						<SwitchContainer>
+							<SwitchValue GroupType="State" GroupId="1750343382" Id="3625060726"/>
+							<MediaRefs>
+								<MediaRef Id="357953543"/>
+							</MediaRefs>
+						</SwitchContainer>
+					</SwitchContainers>
+				</Event>
+				<Event Id="2179486487" Name="Heartbeat">
+					<MediaRefs>
+						<MediaRef Id="508935826"/>
+					</MediaRefs>
+				</Event>
+				<Event Id="3731681489" Name="IceSkill">
+					<MediaRefs>
+						<MediaRef Id="1018198658"/>
+						<MediaRef Id="1047019580"/>
+					</MediaRefs>
+					<PluginRefs>
+						<Custom>
+							<PluginRef Id="547688741"/>
+						</Custom>
+					</PluginRefs>
+				</Event>
+				<Event Id="4114431033" Name="Meditation">
+					<MediaRefs>
+						<MediaRef Id="675718906"/>
+					</MediaRefs>
+				</Event>
+				<Event Id="38624190" Name="TestSound">
+					<MediaRefs>
+						<MediaRef Id="1018198658"/>
+					</MediaRefs>
+					<PluginRefs>
+						<Custom>
+							<PluginRef Id="547688741"/>
+						</Custom>
+					</PluginRefs>
+				</Event>
+			</Events>
+			<GameParameters>
+				<GameParameter Id="1351491183" Name="IceSkillCastTime"/>
+				<GameParameter Id="3677180323" Name="Health"/>
+			</GameParameters>
+			<StateGroups>
+				<StateGroup Id="1750343382" Name="GameTheme">
+					<States>
+						<State Id="748895195" Name="None"/>
+						<State Id="1160234136" Name="Normal"/>
+						<State Id="3625060726" Name="Success"/>
+					</States>
+				</StateGroup>
+			</StateGroups>
+			<SwitchGroups>
+				<SwitchGroup Id="2385628198" Name="Footsteps">
+					<Switches>
+						<Switch Id="2144363834" Name="Rock"/>
+						<Switch Id="4248645337" Name="Grass"/>
+					</Switches>
+				</SwitchGroup>
+			</SwitchGroups>
+			<Triggers>
+				<Trigger Id="78360149" Name="Stinger"/>
+			</Triggers>
+		</SoundBank>
+	</SoundBanks>
+	<FileHash>{042892FF-40E8-309B-0C4A-34810E044D15}</FileHash>
+</SoundBanksInfo>

@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <array>
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, bool Ordered>
     class FeatureKey

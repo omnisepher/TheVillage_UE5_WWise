@@ -17,7 +17,7 @@
 // unique). The mParameters value is (P,N) = (origin,normal).  The error for
 // S = (x0,y0,z0) is (S-P)^T*(I - N*N^T)*(S-P).
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class ApprOrthogonalPlane3 : public ApprQuery<Real, Vector3<Real>>

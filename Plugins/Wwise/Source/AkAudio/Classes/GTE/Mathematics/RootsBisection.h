@@ -22,7 +22,7 @@
 //   2..maxIterations:  the number of bisections plus one
 //   maxIterations+1:  the loop executed without a break (no convergence)
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class RootsBisection

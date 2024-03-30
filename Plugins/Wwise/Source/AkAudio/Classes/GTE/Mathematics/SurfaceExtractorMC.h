@@ -12,7 +12,7 @@
 #include <Mathematics/UniqueVerticesTriangles.h>
 #include <Mathematics/Vector3.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class SurfaceExtractorMC : public MarchingCubes

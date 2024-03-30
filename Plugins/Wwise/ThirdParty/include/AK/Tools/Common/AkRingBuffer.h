@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #pragma once
@@ -147,6 +146,14 @@ public:
         return &m_data[m_readIndex];
     }
 
+    // Peek at any item between the read and write pointer without advancing the read pointer.
+    const T* Peek(AkUInt32 uOffset) const
+    {
+        AKASSERT((AkUInt32)m_nbReadableItems > uOffset);
+        AkUInt32 uReadIndex = (m_readIndex + uOffset) % m_nbItems;
+        return &m_data[uReadIndex];
+    }
+
     void IncrementReadIndex(AkUInt32 nbItems)
     {
         AKASSERT((AkUInt32)m_nbReadableItems >= nbItems);
@@ -163,12 +170,51 @@ public:
 
     AkUInt32 GetNbWritableItems() const
     {
-        return m_nbItems - m_nbReadableItems;
+        return m_nbItems - (AkUInt32)m_nbReadableItems;
     }
 
     AkUInt32 Size() const
     {
         return m_nbItems;
+    }
+
+    // Warning: requires external locking to prevent concurrent Grow+Read in a multi-threaded scenario. 
+    // Like the rest of the class, assumes a single writing thread.
+    bool Grow(AkUInt32 in_uGrowBy)
+    {
+        AkUInt32 uTargetItems = m_nbItems + in_uGrowBy;
+        if (T* pNewData = reinterpret_cast<T*>(TAlloc::Alloc(uTargetItems * sizeof(T))))
+        {
+            if (m_nbReadableItems)
+            {
+                if (m_readIndex >= m_writeIndex)
+                {
+                    // insert new free space in the middle of the buffer.
+
+                    if (m_writeIndex)
+                        memcpy(pNewData, m_data, sizeof(T) * m_writeIndex);
+
+                    memcpy(pNewData + m_readIndex + in_uGrowBy, m_data + m_readIndex, sizeof(T) * (m_nbItems - m_readIndex));
+                    m_readIndex += in_uGrowBy;
+                }
+                else
+                {
+                    // insert new free space at the end of the buffer.
+
+                    memcpy(pNewData + m_readIndex, m_data + m_readIndex, sizeof(T) * (AkUInt32)m_nbReadableItems);
+                }
+            }
+
+            TAlloc::Free(reinterpret_cast<void*>(m_data));
+            m_data = pNewData;
+            m_nbItems = uTargetItems;
+
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
 private:

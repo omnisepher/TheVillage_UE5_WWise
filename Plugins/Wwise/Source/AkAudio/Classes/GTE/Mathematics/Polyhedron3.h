@@ -32,7 +32,7 @@
 // leading to the same polyhedron abstractly but the data structures do not
 // match.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class Polyhedron3

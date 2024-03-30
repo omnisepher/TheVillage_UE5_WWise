@@ -11,7 +11,7 @@
 #include <Mathematics/IntrIntervals.h>
 #include <Mathematics/IntrLine2Line2.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, Segment2<Real>, Segment2<Real>>

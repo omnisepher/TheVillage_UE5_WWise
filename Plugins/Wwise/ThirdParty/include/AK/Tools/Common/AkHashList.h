@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #ifndef _AKHASHLIST_H
@@ -603,6 +602,16 @@ public:
 		return (HashSize() > 0);
 	}
 
+	void Transfer(AkHashList< T_KEY, T_ITEM, T_ALLOC >& in_source)
+	{
+		Term();
+
+		m_table.Transfer(in_source.m_table);
+		m_uiSize = in_source.m_uiSize;
+
+		in_source.m_uiSize = 0;
+	}
+
 protected:
 	T_ITEM * ExistsInList( T_KEY in_Key, AkUIntPtr in_uiTable )
 	{
@@ -646,26 +655,37 @@ protected:
 // only requirement is that T_MAPSTRUCT must have members pNextItem and key.
 // client is responsible for allocation/deallocation of T_MAPSTRUCTS.
 template <class T_KEY, class T_MAPSTRUCT>
-struct AkDefaultHashListBarePolicy
+struct AkHashListBareMemberPolicy
 {
 	static const T_KEY& Key(const T_MAPSTRUCT* in_pItem) {return in_pItem->key;}
+	static T_MAPSTRUCT*& Next(T_MAPSTRUCT* in_pItem) { return (*in_pItem).pNextItem; }
 };
 
-template < class T_KEY, class T_MAPSTRUCT, typename T_ALLOC = ArrayPoolDefault, class KEY_POLICY = AkDefaultHashListBarePolicy<T_KEY, T_MAPSTRUCT> > 
+template <class T_KEY, class T_MAPSTRUCT>
+struct AkHashListBareFuncPolicy
+{
+	static const T_KEY& Key(const T_MAPSTRUCT* in_pItem) { return in_pItem->Key(); }
+	static T_MAPSTRUCT*& Next(T_MAPSTRUCT* in_pItem) { return (*in_pItem).pNextItem; }
+};
+
+template <class T_KEY, class T_MAPSTRUCT>
+using AkDefaultHashListBarePolicy = AkHashListBareMemberPolicy<T_KEY, T_MAPSTRUCT>;
+
+template <class T_KEY, class T_MAPSTRUCT, typename T_ALLOC = ArrayPoolDefault, class KEY_POLICY = AkDefaultHashListBarePolicy<T_KEY, T_MAPSTRUCT>, class LIST_POLICY = AkDefaultHashListBarePolicy<T_KEY, T_MAPSTRUCT>>
 class AkHashListBare
 {
 	typedef AkArray<T_MAPSTRUCT*, T_MAPSTRUCT*, T_ALLOC, AkGrowByPolicy_NoGrow > HashTableArray;
 public:
 	struct Iterator
 	{
-		typename AkHashListBare<T_KEY,T_MAPSTRUCT,T_ALLOC,KEY_POLICY>::HashTableArray* pTable;
+		typename AkHashListBare<T_KEY,T_MAPSTRUCT,T_ALLOC,KEY_POLICY,LIST_POLICY>::HashTableArray* pTable;
 		AkHashType uiTable;
 		T_MAPSTRUCT* pItem;
 
 		inline Iterator& operator++()
 		{
 			AKASSERT( pItem );
-			pItem = pItem->pNextItem;
+			pItem = LIST_POLICY::Next(pItem);
 			
 			while ((pItem == NULL) && (++uiTable < pTable->Length()))
 				pItem = (*pTable)[ uiTable ];
@@ -679,10 +699,61 @@ public:
 			return pItem;
 		}
 
+		inline T_MAPSTRUCT* operator->()
+		{
+			AKASSERT(pItem);
+			return pItem;
+		}
+
 		bool operator !=( const Iterator& in_rOp ) const
 		{
 			return ( pItem != in_rOp.pItem );
 		}		
+
+		bool operator ==(const Iterator& in_rOp) const
+		{
+			return (pItem == in_rOp.pItem);
+		}
+	};
+
+	struct ConstIterator
+	{
+		const typename AkHashListBare<T_KEY, T_MAPSTRUCT, T_ALLOC, KEY_POLICY>::HashTableArray* pTable;
+		AkHashType uiTable;
+		T_MAPSTRUCT* pItem;
+
+		inline ConstIterator& operator++()
+		{
+			AKASSERT(pItem);
+			pItem = pItem->pNextItem;
+
+			while ((pItem == NULL) && (++uiTable < pTable->Length()))
+				pItem = (*pTable)[uiTable];
+
+			return *this;
+		}
+
+		inline const T_MAPSTRUCT* operator*()
+		{
+			AKASSERT(pItem);
+			return pItem;
+		}
+
+		inline const T_MAPSTRUCT* operator->() const
+		{
+			AKASSERT(pItem);
+			return pItem;
+		}
+
+		bool operator !=(const ConstIterator& in_rOp) const
+		{
+			return (pItem != in_rOp.pItem);
+		}
+
+		bool operator ==(const ConstIterator& in_rOp) const
+		{
+			return (pItem == in_rOp.pItem);
+		}
 	};
 
 	// The IteratorEx iterator is intended for usage when a possible erase may occurs
@@ -693,10 +764,31 @@ public:
 
 		IteratorEx& operator++()
 		{
+			AKASSERT(this->pItem);
+
+			pPrevItem = this->pItem;
+			this->pItem = this->pItem->pNextItem;
+
+			while ((this->pItem == NULL) && (++this->uiTable < this->pTable->Length()))
+			{
+				pPrevItem = NULL;
+				this->pItem = (*this->pTable)[this->uiTable];
+			}
+
+			return *this;
+		}
+	};
+
+	struct ConstIteratorEx : public ConstIterator
+	{
+		T_MAPSTRUCT* pPrevItem;
+
+		ConstIteratorEx& operator++()
+		{
 			AKASSERT( this->pItem );
 			
 			pPrevItem = this->pItem;
-			this->pItem = this->pItem->pNextItem;
+			this->pItem = LIST_POLICY::Next(this->pItem);
 			
 			while ( ( this->pItem == NULL ) && ( ++this->uiTable < this->pTable->Length() ) )
 			{
@@ -711,6 +803,29 @@ public:
 	Iterator Begin()
 	{
 		Iterator returnedIt;
+
+		if (HashSize() > 0)
+		{
+			returnedIt.pTable = &m_table;
+			returnedIt.uiTable = 0;
+			returnedIt.pItem = m_table[0];
+
+			while ((returnedIt.pItem == NULL) && (++returnedIt.uiTable < HashSize()))
+				returnedIt.pItem = m_table[returnedIt.uiTable];
+		}
+		else
+		{
+			returnedIt.pTable = NULL;
+			returnedIt.uiTable = 0;
+			returnedIt.pItem = NULL;
+		}
+
+		return returnedIt;
+	}
+
+	ConstIterator Begin() const
+	{
+		ConstIterator returnedIt;
 
 		if (HashSize() > 0)
 		{
@@ -750,6 +865,32 @@ public:
 			returnedIt.pTable = NULL;
 			returnedIt.uiTable = 0;
 			returnedIt.pItem = NULL;
+			returnedIt.pPrevItem = NULL;
+		}
+
+		return returnedIt;
+	}
+
+	ConstIteratorEx BeginEx() const
+	{
+		ConstIteratorEx returnedIt;
+
+		if (HashSize() > 0)
+		{
+			returnedIt.pTable = &m_table;
+			returnedIt.uiTable = 0;
+			returnedIt.pItem = m_table[0];
+			returnedIt.pPrevItem = NULL;
+
+			while ((returnedIt.pItem == NULL) && (++returnedIt.uiTable < HashSize()))
+				returnedIt.pItem = m_table[returnedIt.uiTable];
+		}
+		else
+		{
+			returnedIt.pTable = NULL;
+			returnedIt.uiTable = 0;
+			returnedIt.pItem = NULL;
+			returnedIt.pPrevItem = NULL;
 		}
 
 		return returnedIt;
@@ -762,9 +903,47 @@ public:
 		return returnedIt;
 	}
 
+	inline ConstIterator End() const
+	{
+		ConstIterator returnedIt;
+		returnedIt.pItem = NULL;
+		return returnedIt;
+	}
+
 	IteratorEx FindEx( T_KEY in_Key )
 	{
 		IteratorEx returnedIt;
+
+		if (HashSize() > 0)
+		{
+			returnedIt.pTable = &m_table;
+			returnedIt.uiTable = AkHash(in_Key) % HashSize();
+			returnedIt.pItem = m_table[returnedIt.uiTable];
+			returnedIt.pPrevItem = NULL;
+
+			while (returnedIt.pItem != NULL)
+			{
+				if (KEY_POLICY::Key(returnedIt.pItem) == in_Key)
+					break;
+
+				returnedIt.pPrevItem = returnedIt.pItem;
+				returnedIt.pItem = LIST_POLICY::Next(returnedIt.pItem);
+			}
+		}
+		else
+		{
+			returnedIt.pTable = NULL;
+			returnedIt.uiTable = 0;
+			returnedIt.pItem = NULL;
+			returnedIt.pPrevItem = NULL;
+		}
+
+		return returnedIt;
+	}
+
+	ConstIteratorEx FindEx(T_KEY in_Key) const
+	{
+		ConstIteratorEx returnedIt;
 
 		if (HashSize() > 0)
 		{
@@ -830,7 +1009,7 @@ public:
 			T_MAPSTRUCT * pItem = m_table[ i ];
 			while ( pItem != NULL )
 			{
-				T_MAPSTRUCT * pNextItem = pItem->pNextItem;
+				T_MAPSTRUCT * pNextItem = LIST_POLICY::Next(pItem);
 				pItem->~T_MAPSTRUCT();
 				T_ALLOD::Free( pItem );
 				pItem = pNextItem;
@@ -853,25 +1032,47 @@ public:
 	}
 
 	// Set using an externally preallocated T_MAPSTRUCT -- Hash list takes ownership of the T_MAPSTRUCT.
-	bool Set( T_MAPSTRUCT * in_pItem )
+	bool Set( T_MAPSTRUCT * in_pItem, bool& out_exists )
 	{
+		out_exists = false;
 		if (CheckSize())
 		{
 			AkHashType uiTable = AkHash(KEY_POLICY::Key(in_pItem)) % HashSize();
-			AKASSERT(!ExistsInList(KEY_POLICY::Key(in_pItem), uiTable)); // T_MAPSTRUCT must not exist in list !
+			if (ExistsInList(KEY_POLICY::Key(in_pItem), uiTable))
+			{
+				out_exists = true;
+				return false;
+			}
 
-			// Add new entry
-
-			in_pItem->pNextItem = m_table[uiTable];
-			m_table[uiTable] = in_pItem;
-
-			++m_uiSize;
+			_Set(in_pItem, uiTable);
 			return true;
 		}
 		//This can only happen if the initial size of the map was 0.
 		return false;
 	}
 
+	bool Set( T_MAPSTRUCT * in_pItem )
+	{
+		if (CheckSize())
+		{
+			AkHashType uiTable = AkHash(KEY_POLICY::Key(in_pItem)) % HashSize();
+			AKASSERT(!ExistsInList(KEY_POLICY::Key(in_pItem), uiTable)); // T_MAPSTRUCT must not exist in list !
+			_Set(in_pItem, uiTable);
+			return true;
+		}
+		//This can only happen if the initial size of the map was 0.
+		return false;
+	}
+
+private:
+	void _Set( T_MAPSTRUCT * in_pItem, AkHashType in_uiTable )
+	{
+		LIST_POLICY::Next(in_pItem) = m_table[in_uiTable];
+		m_table[in_uiTable] = in_pItem;
+		++m_uiSize;
+	}
+
+public:
 	T_MAPSTRUCT * Unset( const T_KEY &in_Key )
 	{
 		T_MAPSTRUCT * pItem = NULL;
@@ -887,7 +1088,7 @@ public:
 					break;
 
 				pPrevItem = pItem;
-				pItem = pItem->pNextItem;
+				pItem = LIST_POLICY::Next(pItem);
 			}
 
 			if (pItem)
@@ -902,7 +1103,7 @@ public:
 		IteratorEx returnedIt;
 		returnedIt.pTable = in_rIter.pTable;
 		returnedIt.uiTable = in_rIter.uiTable;
-		returnedIt.pItem = in_rIter.pItem->pNextItem;
+		returnedIt.pItem = LIST_POLICY::Next(in_rIter.pItem);
 		returnedIt.pPrevItem = in_rIter.pPrevItem;
 		
 		while ((returnedIt.pItem == NULL) && (++returnedIt.uiTable < returnedIt.pTable->Length()))
@@ -958,10 +1159,10 @@ public:
 					T_MAPSTRUCT* pItem = oldArray[i];
 					while (pItem != NULL)
 					{
-						T_MAPSTRUCT* pNextItem = pItem->pNextItem;
+						T_MAPSTRUCT* pNextItem = LIST_POLICY::Next(pItem);
 						{
 							AkHashType uiTable = AkHash(KEY_POLICY::Key(pItem)) % uNewSize;
-							pItem->pNextItem = m_table[uiTable];
+							LIST_POLICY::Next(pItem) = m_table[uiTable];
 							m_table[uiTable] = pItem;
 						}
 						pItem = pNextItem;
@@ -1000,9 +1201,9 @@ protected:
 	void RemoveItem( AkHashType in_uiTable, T_MAPSTRUCT* in_pItem, T_MAPSTRUCT* in_pPrevItem )
 	{
 		if( in_pPrevItem ) 
-			in_pPrevItem->pNextItem = in_pItem->pNextItem;
+			LIST_POLICY::Next(in_pPrevItem) = LIST_POLICY::Next(in_pItem);
 		else
-			m_table[ in_uiTable ] = in_pItem->pNextItem;
+			m_table[ in_uiTable ] = LIST_POLICY::Next(in_pItem);
 
 		--m_uiSize;
 	}
@@ -1015,7 +1216,7 @@ protected:
 			if (KEY_POLICY::Key(pItem) == in_Key)
 				return pItem; // found
 			
-			pItem = pItem->pNextItem;
+			pItem = LIST_POLICY::Next(pItem);
 		}
 
 		return NULL; // not found

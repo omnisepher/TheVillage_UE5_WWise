@@ -33,7 +33,7 @@
 // overlaps the cone, we then need to test whether the disk overlaps the
 // disk of the sector.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, Circle2<Real>, Sector2<Real>>

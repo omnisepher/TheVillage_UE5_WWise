@@ -16,7 +16,7 @@
 // Problem), Section 7.5 (The Practical QR Algorithm).  The algorithm is
 // specialized for the companion matrix associated with a quartic polynomial.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class QuarticRootsQR

@@ -18,14 +18,14 @@ void AJukebox::BeginPlay()
 	FOnAkPostEventCallback nullCallback;
 	TArray<FAkExternalSourceInfo> nullSources;
 
-	UAkGameplayStatics::PostEvent(nullptr, this, int32(0), nullCallback, nullSources, false, (FString)("Heartbeat"));
+	UAkGameplayStatics::PostEvent(m_HeartBeat, this, int32(0), nullCallback, false);
 
 	MainCharacter = Cast<AWizardChar>(UGameplayStatics::GetPlayerCharacter(GetWorld(),0));
 
 	if (MainCharacter != nullptr) {
 		UAkGameplayStatics::SetOcclusionRefreshInterval(0.f, this);
 
-		UAkGameplayStatics::PostEvent(nullptr, this, int32(0), nullCallback, nullSources, false, (FString)("GameTheme"));
+		UAkGameplayStatics::PostEvent(m_GameTheme, this, int32(0), nullCallback, false);
 	}
 	
 }
@@ -38,6 +38,7 @@ void AJukebox::Tick(float DeltaTime)
 	if (MainCharacter != nullptr) {
 		if (MainCharacter->ExtinguishedFlameCount >=2) {
 			UAkGameplayStatics::SetState(nullptr, "GameTheme", "Success");
+			UAkGameplayStatics::PostTrigger(nullptr, this, "Stinger"); // every 5 seconds after success, it will send
 		}
 		else {
 			UAkGameplayStatics::SetState(nullptr, "GameTheme", "Normal");

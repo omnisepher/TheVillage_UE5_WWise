@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #ifndef _AK_ALLPLUGINSFACTORIES_H_
@@ -50,11 +49,7 @@ the specific language governing permissions and limitations under the License.
 #include <AK/Plugin/AkTremoloFXFactory.h>						// Tremolo
 #include <AK/Plugin/AkHarmonizerFXFactory.h>					// Harmonizer
 #include <AK/Plugin/AkRecorderFXFactory.h>						// Recorder
-
-// Platform specific
-#ifdef AK_SONY
-	#include <AK/Plugin/SceAudio3dEngineFactory.h>				// SCE Audio3d
-#endif
+#include <AK/Plugin/Ak3DAudioBedMixerFXFactory.h>     // 3D Audio Bed Mixer
 
 // Sources plug-ins
 #include <AK/Plugin/AkSilenceSourceFactory.h>					// Silence generator
@@ -68,9 +63,6 @@ the specific language governing permissions and limitations under the License.
 // Required by codecs plug-ins
 #include <AK/Plugin/AkVorbisDecoderFactory.h>
 #include <AK/Plugin/AkOpusDecoderFactory.h>
-#ifdef AK_APPLE
-	#include <AK/Plugin/AkAACFactory.h>			// Note: Useable only on Apple devices. Ok to include it on other platforms as long as it is not referenced.
-#endif
 #ifdef AK_NX
 	#include <AK/Plugin/AkOpusNXFactory.h>		// Note: Useable only on NX. Ok to include it on other platforms as long as it is not referenced.
 #endif	

@@ -14,7 +14,7 @@
 // vertex array for an indexed triangle mesh.  For now, the source must be
 // either uint16_t or uint32_t.
 
-namespace gte
+namespace WwiseGTE
 {
     struct IndexAttribute
     {

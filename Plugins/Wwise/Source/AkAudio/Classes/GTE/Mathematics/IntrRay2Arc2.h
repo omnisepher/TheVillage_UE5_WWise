@@ -12,7 +12,7 @@
 
 // The queries consider the arc to be a 1-dimensional object.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, Ray2<Real>, Arc2<Real>>

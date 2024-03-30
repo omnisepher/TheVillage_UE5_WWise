@@ -68,7 +68,7 @@
 //    double     | BSNumber     |  298037
 //    double     | BSRational   | 2254442
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename InputType, typename ComputeType>
     class Delaunay3

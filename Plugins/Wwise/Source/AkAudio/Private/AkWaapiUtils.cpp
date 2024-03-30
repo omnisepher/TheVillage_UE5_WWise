@@ -1,18 +1,19 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
-
 
 /*------------------------------------------------------------------------------------
  includes.
@@ -25,8 +26,6 @@ Copyright (c) 2021 Audiokinetic Inc.
 Defines
 ------------------------------------------------------------------------------------*/
 #define LOCTEXT_NAMESPACE "AkAudio"
-
-DEFINE_LOG_CATEGORY(LogAkWaapiUtils);
 
 /*------------------------------------------------------------------------------------
 Statics and Globals
@@ -51,7 +50,8 @@ const FString WwiseWaapiHelper::DRAG_DROP_ITEMS              = TEXT("Drag Drop I
 const FString WwiseWaapiHelper::EVENT                        = TEXT("event");
 const FString WwiseWaapiHelper::EVENTS                       = TEXT("events");
 const FString WwiseWaapiHelper::FILEPATH                     = TEXT("filePath");
-const FString WwiseWaapiHelper::FIND_IN_PROJECT_EXPLORER     = TEXT("FindInProjectExplorerSyncGroup1");
+const FString WwiseWaapiHelper::FILTER	                     = TEXT("filter");
+const FString WwiseWaapiHelper::FIND_IN_PROJECT_EXPLORER     = TEXT("FindInProjectExplorerSelectionChannel1");
 const FString WwiseWaapiHelper::FOLDER                       = TEXT("Folder");
 const FString WwiseWaapiHelper::FROM                         = TEXT("from");
 const FString WwiseWaapiHelper::ID                           = TEXT("id");
@@ -73,6 +73,8 @@ const FString WwiseWaapiHelper::OBJECT                       = TEXT("object");
 const FString WwiseWaapiHelper::OBJECTS                      = TEXT("objects");
 const FString WwiseWaapiHelper::OF_TYPE                      = TEXT("ofType");
 const FString WwiseWaapiHelper::OLD_NAME                     = TEXT("oldName");
+const FString WwiseWaapiHelper::ON_NAME_CONFLICT             = TEXT("onNameConflict");
+const FString WwiseWaapiHelper::OPERATION					 = TEXT("operation");
 const FString WwiseWaapiHelper::PARENT                       = TEXT("parent");
 const FString WwiseWaapiHelper::PATH                         = TEXT("path");
 const FString WwiseWaapiHelper::PHYSICAL_FOLDER              = TEXT("PhysicalFolder");
@@ -90,13 +92,15 @@ const FString WwiseWaapiHelper::RANGE                        = TEXT("range");
 const FString WwiseWaapiHelper::REBUILD                      = TEXT("rebuild");
 const FString WwiseWaapiHelper::REBUILD_INIT_BANK            = TEXT("rebuildInitBank");
 const FString WwiseWaapiHelper::REDO                         = TEXT("Redo");
+const FString WwiseWaapiHelper::RENAME                       = TEXT("rename");
 const FString WwiseWaapiHelper::RESTRICTION                  = TEXT("restriction");
 const FString WwiseWaapiHelper::RETURN                       = TEXT("return");
 const FString WwiseWaapiHelper::SEARCH                       = TEXT("search");
 const FString WwiseWaapiHelper::SELECT                       = TEXT("select");
 const FString WwiseWaapiHelper::SIZE                         = TEXT("size");
 const FString WwiseWaapiHelper::SKIP_LANGUAGES               = TEXT("skipLanguages");
-const FString WwiseWaapiHelper::SOUNDBANK                    = TEXT("soundbank");
+const FString WwiseWaapiHelper::SOUNDBANK_TYPE               = TEXT("SoundBank");
+const FString WwiseWaapiHelper::SOUNDBANK_FIELD              = TEXT("soundbank");
 const FString WwiseWaapiHelper::SOUNDBANKS                   = TEXT("soundbanks");
 const FString WwiseWaapiHelper::STATE                        = TEXT("state");
 const FString WwiseWaapiHelper::STOP                         = TEXT("stop");
@@ -111,6 +115,8 @@ const FString WwiseWaapiHelper::VALUE                        = TEXT("value");
 const FString WwiseWaapiHelper::VOLUME                       = TEXT("Volume");
 const FString WwiseWaapiHelper::WHERE                        = TEXT("where");
 const FString WwiseWaapiHelper::WORKUNIT_TYPE                = TEXT("workunit:type");
+const FString WwiseWaapiHelper::WRITE_TO_DISK				 = TEXT("writeToDisk");
+
 
 /*------------------------------------------------------------------------------------
  Methods
@@ -132,11 +138,13 @@ bool CallWappiGetPropertySate(const FString& ItemID, const FString& ItemProperty
 	TSharedRef<FJsonObject> options = MakeShareable(new FJsonObject());
 	options->SetArrayField(WwiseWaapiHelper::RETURN, TArray<TSharedPtr<FJsonValue>> { MakeShareable(new FJsonValueString(WwiseWaapiHelper::AT + ItemProperty)) });
 
+#if AK_SUPPORT_WAAPI
 	TSharedPtr<FJsonObject> outJsonResult;
 	if (!waapiClient->Call(ak::wwise::core::object::get, args, options, outJsonResult))
 		return false;
 
 	ItemInfoResult = outJsonResult->GetArrayField(WwiseWaapiHelper::RETURN)[0]->AsObject();
+#endif
 	return true;
 }
 
@@ -146,11 +154,14 @@ bool SubscribeToPropertyStateChange(const FString& ItemID, const FString& ItemPr
 	if (!waapiClient)
 		return false;
 
+#if AK_SUPPORT_WAAPI
 	TSharedRef<FJsonObject> options = MakeShareable(new FJsonObject());
 	options->SetStringField(WwiseWaapiHelper::OBJECT, ItemID);
 	options->SetStringField(WwiseWaapiHelper::PROPERTY, ItemProperty);
 
 	return waapiClient->Subscribe(ak::wwise::core::object::propertyChanged, options, CallBack, SubscriptionId, outJsonResult);
+#endif
+	return false;
 }
 
 #undef LOCTEXT_NAMESPACE

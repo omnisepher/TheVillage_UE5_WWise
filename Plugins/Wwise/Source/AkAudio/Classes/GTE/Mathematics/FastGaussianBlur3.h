@@ -45,7 +45,7 @@
 // difference method used to approximate the partial differential equation.
 // The method assumes a pixel size of h = 1.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename T>
     class FastGaussianBlur3

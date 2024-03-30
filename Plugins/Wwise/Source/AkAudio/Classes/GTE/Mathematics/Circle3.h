@@ -13,7 +13,7 @@
 // plane Dot(N,X-C) = 0, where C is the circle center, r is the radius,
 // and N is a unit-length plane normal.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class Circle3

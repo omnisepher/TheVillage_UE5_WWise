@@ -13,7 +13,7 @@
 #include <array>
 #include <cstring>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     struct UniqueKnot

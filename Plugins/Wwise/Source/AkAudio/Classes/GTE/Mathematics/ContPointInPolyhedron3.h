@@ -30,7 +30,7 @@
 // rayQuantity is 2*N+1.  The input array Direction must have rayQuantity
 // elements.  If you are feeling lucky, choose rayQuantity to be 1.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class PointInPolyhedron3

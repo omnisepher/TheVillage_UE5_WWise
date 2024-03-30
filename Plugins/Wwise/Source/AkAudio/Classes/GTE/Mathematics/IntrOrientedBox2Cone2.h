@@ -29,7 +29,7 @@
 // when there is a box corner P for which
 //   F(P) > 0 and (Dot(D,P-V))^2 > |P-V|^2*(cone.cosAngle)^2
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, OrientedBox<2, Real>, Cone<2, Real>>

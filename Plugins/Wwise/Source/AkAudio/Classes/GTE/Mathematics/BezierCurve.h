@@ -11,7 +11,7 @@
 #include <Mathematics/Array2.h>
 #include <Mathematics/ParametricCurve.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class BezierCurve : public ParametricCurve<N, Real>

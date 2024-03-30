@@ -19,7 +19,7 @@
 // implemented by class NISymmetricEigensolver3x3.  The code does not use
 // GTEngine objects.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class SortEigenstuff

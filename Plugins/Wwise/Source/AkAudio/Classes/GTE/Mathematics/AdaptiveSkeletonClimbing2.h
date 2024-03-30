@@ -23,7 +23,7 @@
 //   pages 137-147
 // https://onlinelibrary.wiley.com/doi/abs/10.1111/1467-8659.00261
 
-namespace gte
+namespace WwiseGTE
 {
     // The image type T must be one of the integer types:  int8_t, int16_t,
     // int32_t, uint8_t, uint16_t or uint32_t.  Internal integer computations

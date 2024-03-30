@@ -43,7 +43,7 @@
 // In the class Torus3, the members are 'center' C, 'direction0' D0,
 // 'direction1' D1, 'normal' N, 'radius0' r0 and 'radius1' r1.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class Torus3

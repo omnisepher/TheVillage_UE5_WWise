@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WwiseDocument Type="WorkUnit" ID="{356907E4-944A-4278-8FD1-D59BFD4F4E7D}" SchemaVersion="103">
+	<Events>
+		<WorkUnit Name="Default Work Unit" ID="{356907E4-944A-4278-8FD1-D59BFD4F4E7D}" PersistMode="Standalone">
+			<ChildrenList>
+				<Event Name="IceSkill" ID="{FD61AE50-E26A-4998-946F-5E1F4FF33916}">
+					<ChildrenList>
+						<Action Name="" ID="{28FD6425-3F0B-4D13-A3BA-17095719A127}" ShortID="994380374">
+							<PropertyList>
+								<Property Name="FadeInCurve" Type="int16" Value="5"/>
+								<Property Name="FadeTime" Type="Real64" Value="1"/>
+							</PropertyList>
+							<ReferenceList>
+								<Reference Name="Target">
+									<ObjectRef Name="Blizzard" ID="{9D1C332A-F562-451C-B1A7-93DC39B4CEB8}" WorkUnitID="{1DEC10FC-2733-4CA4-8FE4-C98B0139CC79}"/>
+								</Reference>
+							</ReferenceList>
+						</Action>
+						<Action Name="" ID="{93FA5F41-1C42-4120-82C5-F54608CBD5FA}" ShortID="573375624">
+							<ReferenceList>
+								<Reference Name="Target">
+									<ObjectRef Name="Icycle" ID="{9D2C918F-059A-45E8-AC5F-10AD497E98D9}" WorkUnitID="{1DEC10FC-2733-4CA4-8FE4-C98B0139CC79}"/>
+								</Reference>
+							</ReferenceList>
+						</Action>
+					</ChildrenList>
+				</Event>
+				<Event Name="Meditation" ID="{AADFD8F1-33ED-4B6F-8457-D30E615D9BE5}">
+					<ChildrenList>
+						<Action Name="" ID="{938EDADE-F0E2-45B2-B79C-AACC251B5A99}" ShortID="352322631">
+							<ReferenceList>
+								<Reference Name="Target">
+									<ObjectRef Name="Meditation" ID="{17FB979A-CAD1-4CE3-9751-6859D5155485}" WorkUnitID="{1DEC10FC-2733-4CA4-8FE4-C98B0139CC79}"/>
+								</Reference>
+							</ReferenceList>
+						</Action>
+					</ChildrenList>
+				</Event>
+				<Event Name="FireBase" ID="{F67B1B74-ED1F-4EAB-A96A-32F9DD10E6E2}">
+					<ChildrenList>
+						<Action Name="" ID="{098C5E41-4A7E-4B07-8E5C-7254CC56ACDF}" ShortID="159283557">
+							<ReferenceList>
+								<Reference Name="Target">
+									<ObjectRef Name="FireBase" ID="{421DF22A-1D0B-4A91-BA46-D68B5E2C22AF}" WorkUnitID="{1DEC10FC-2733-4CA4-8FE4-C98B0139CC79}"/>
+								</Reference>
+							</ReferenceList>
+						</Action>
+					</ChildrenList>
+				</Event>
+				<Event Name="Footsteps" ID="{4BAB6B63-5D60-4FAC-8F6D-CDB9B4875450}">
+					<ChildrenList>
+						<Action Name="" ID="{070FD4C8-673A-4D71-8118-C7B3B410E645}" ShortID="562819577">
+							<ReferenceList>
+								<Reference Name="Target">
+									<ObjectRef Name="Footsteps" ID="{426CE128-8A96-432B-BEB9-F97C1CA35C5A}" WorkUnitID="{1DEC10FC-2733-4CA4-8FE4-C98B0139CC79}"/>
+								</Reference>
+							</ReferenceList>
+						</Action>
+					</ChildrenList>
+				</Event>
+				<Event Name="GameTheme" ID="{E5DEFE67-BD9D-48EB-8A47-BF49D1DC7ADB}">
+					<ChildrenList>
+						<Action Name="" ID="{23BECFFB-04BB-4822-BB5F-43CFFC4FB784}" ShortID="974062087">
+							<ReferenceList>
+								<Reference Name="Target">
+									<ObjectRef Name="Theme" ID="{71F3488E-C46E-4941-8B3E-9E539F599EB9}" WorkUnitID="{1A407F1A-0020-4C01-9690-169712B42CFB}"/>
+								</Reference>
+							</ReferenceList>
+						</Action>
+					</ChildrenList>
+				</Event>
+				<Event Name="Heartbeat" ID="{3FF918C6-8C48-461D-86E2-5A3135CF12D4}">
+					<ChildrenList>
+						<Action Name="" ID="{C023FBCC-5599-4F17-914A-C257ADC6A410}" ShortID="650937389">
+							<ReferenceList>
+								<Reference Name="Target">
+									<ObjectRef Name="Heartbeat" ID="{A65F488D-9C5A-4ED0-ACA8-12F73EE625FA}" WorkUnitID="{1DEC10FC-2733-4CA4-8FE4-C98B0139CC79}"/>
+								</Reference>
+							</ReferenceList>
+						</Action>
+					</ChildrenList>
+				</Event>
+				<Event Name="TestSound" ID="{158E83B7-EE45-4C36-805A-5797E7D87BD6}">
+					<ChildrenList>
+						<Action Name="" ID="{BB0779EF-85F5-48F4-85D4-5CA232599DB5}" ShortID="1039363487">
+							<ReferenceList>
+								<Reference Name="Target">
+									<ObjectRef Name="Blizzard" ID="{9D1C332A-F562-451C-B1A7-93DC39B4CEB8}" WorkUnitID="{1DEC10FC-2733-4CA4-8FE4-C98B0139CC79}"/>
+								</Reference>
+							</ReferenceList>
+						</Action>
+					</ChildrenList>
+				</Event>
+			</ChildrenList>
+		</WorkUnit>
+	</Events>
+</WwiseDocument>

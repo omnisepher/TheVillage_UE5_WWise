@@ -1,16 +1,18 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #pragma once
@@ -36,7 +38,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPropertyDropDetected, FString, Pr
 USTRUCT(BlueprintType)
 struct AKAUDIO_API FAkWwiseObjectDetails
 {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 
 	/**
 	* The name of the item to control
@@ -63,7 +65,7 @@ struct AKAUDIO_API FAkWwiseObjectDetails
 USTRUCT(BlueprintType)
 struct AKAUDIO_API FAkWwiseItemToControl //: public UObject
 {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 
 	/**
 	* The item to control
@@ -87,12 +89,14 @@ UAkSlider
 UCLASS(config = Editor, defaultconfig)
 class AKAUDIO_API UAkSlider : public UWidget
 {
-	GENERATED_UCLASS_BODY()
+	GENERATED_BODY()
 
 public:
+	UAkSlider(const FObjectInitializer& ObjectInitializer);
+
 	/** The volume value to display. */
 	UPROPERTY(EditAnywhere, Category=Appearance, meta=(ClampMin = "0", ClampMax = "1", UIMin = "0", UIMax = "1"))
-	float Value;
+	float Value = .0f;
 
 	/** A bindable delegate to allow logic to drive the value of the widget */
 	UPROPERTY()
@@ -106,31 +110,31 @@ public:
 
 	/** The slider's orientation. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Appearance)
-	TEnumAsByte<EOrientation> Orientation;
+	TEnumAsByte<EOrientation> Orientation = EOrientation::Orient_Horizontal;
 
 	/** The color to draw the slider bar in. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Appearance)
-	FLinearColor SliderBarColor;
+	FLinearColor SliderBarColor = FLinearColor(EForceInit::ForceInitToZero);
 
 	/** The color to draw the slider handle in. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Appearance)
-	FLinearColor SliderHandleColor;
+	FLinearColor SliderHandleColor = FLinearColor(EForceInit::ForceInitToZero);
 
 	/** Whether the slidable area should be indented to fit the handle. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Appearance, AdvancedDisplay)
-	bool IndentHandle;
+	bool IndentHandle = false;
 
 	/** Whether the handle is interactive or fixed. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Appearance, AdvancedDisplay)
-	bool Locked;
+	bool Locked = false;
 
 	/** The amount to adjust the value by, when using a controller or keyboard */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Appearance, meta=( ClampMin="0", ClampMax="1", UIMin="0", UIMax="1"))
-	float StepSize;
+	float StepSize = .0f;
 
 	/** Should the slider be focusable? */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Interaction")
-	bool IsFocusable;
+	bool IsFocusable = false;
 
 	UPROPERTY(VisibleAnywhere, Category = "Audiokinetic|WAAPI|Slider", meta = (DisplayName = "Property to control"))
 	FAkPropertyToControl ThePropertyToControl;

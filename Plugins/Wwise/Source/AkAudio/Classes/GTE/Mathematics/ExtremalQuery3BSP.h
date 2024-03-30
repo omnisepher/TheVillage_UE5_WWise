@@ -13,7 +13,7 @@
 #include <stack>
 #include <queue>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class ExtremalQuery3BSP : public ExtremalQuery3<Real>
@@ -64,7 +64,7 @@ namespace gte
             while (current >= 0)
             {
                 SphericalArc& node = mNodes[current];
-                int sign = gte::isign(Dot(direction, node.normal));
+                int sign = WwiseGTE::isign(Dot(direction, node.normal));
                 if (sign >= 0)
                 {
                     current = node.posChild;
@@ -92,7 +92,7 @@ namespace gte
             while (current >= 0)
             {
                 SphericalArc& node = mNodes[current];
-                int sign = gte::isign(Dot(direction, node.normal));
+                int sign = WwiseGTE::isign(Dot(direction, node.normal));
                 if (sign <= 0)
                 {
                     current = node.posChild;
@@ -287,7 +287,7 @@ namespace gte
             // The tree has at least a root.
             mTreeDepth = 1;
 
-            for (auto const& arc : gte::reverse(arcs))
+            for (auto const& arc : WwiseGTE::reverse(arcs))
             {
                 InsertArc(arc);
             }
@@ -321,7 +321,7 @@ namespace gte
                     else
                     {
                         Real dot = Dot(this->mFaceNormals[arc.nIndex[0]], node->normal);
-                        sign0 = gte::isign(dot);
+                        sign0 = WwiseGTE::isign(dot);
                     }
 
                     int sign1;
@@ -332,7 +332,7 @@ namespace gte
                     else
                     {
                         Real dot = Dot(this->mFaceNormals[arc.nIndex[1]], node->normal);
-                        sign1 = gte::isign(dot);
+                        sign1 = WwiseGTE::isign(dot);
                     }
 
                     int doTest = 0;

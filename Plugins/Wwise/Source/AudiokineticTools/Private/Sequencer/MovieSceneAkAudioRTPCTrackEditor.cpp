@@ -1,18 +1,19 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
-
 
 #include "MovieSceneAkAudioRTPCTrackEditor.h"
 #include "AkAudioDevice.h"
@@ -41,7 +42,6 @@ Copyright (c) 2021 Audiokinetic Inc.
 #include "Widgets/Input/SEditableTextBox.h"
 #include "Widgets/Input/SButton.h"
 
-#include "EditorStyleSet.h"
 #include "Editor.h"
 
 #define LOCTEXT_NAMESPACE "MovieSceneAkAudioRTPCTrackEditor"
@@ -113,7 +113,6 @@ struct FRTPCSectionCreateDialogOptions
 
 	bool Validate()
 	{
-		// TODO: Verify that this RTPCName is a valid RTPC name!
 		return OkClicked && (RTPC != nullptr || RTPCName.Len() > 0);
 	}
 };
@@ -137,7 +136,11 @@ public:
 		FAssetPickerConfig AssetPickerConfig;
 		AssetPickerConfig.InitialAssetViewType = EAssetViewType::List;
 		AssetPickerConfig.bAllowNullSelection = false;
+#if UE_5_1_OR_LATER
+		AssetPickerConfig.Filter.ClassPaths.Add(UAkRtpc::StaticClass()->GetClassPathName());
+#else
 		AssetPickerConfig.Filter.ClassNames.Add(UAkRtpc::StaticClass()->GetFName());
+#endif
 		AssetPickerConfig.OnAssetSelected = FOnAssetSelected::CreateLambda([&InOptions](const FAssetData& InRTPCAssetData) {
 			if (InRTPCAssetData.IsValid())
 			{
@@ -149,7 +152,7 @@ public:
 		[
 			SNew(SBorder)
 			.Visibility(EVisibility::Visible)
-			.BorderImage(FEditorStyle::GetBrush("Menu.Background"))
+			.BorderImage(FAkAppStyle::Get().GetBrush("Menu.Background"))
 			[
 				SNew(SVerticalBox)
 				+ SVerticalBox::Slot()
@@ -158,7 +161,7 @@ public:
 				.Padding(4)
 				[
 					SNew(SBorder)
-					.BorderImage(FEditorStyle::GetBrush("ToolPanel.GroupBorder"))
+					.BorderImage(FAkAppStyle::Get().GetBrush("ToolPanel.GroupBorder"))
 					.Padding(4.0f)
 					.Content()
 					[
@@ -196,7 +199,7 @@ public:
 					.BodyContent()
 					[
 						SNew(SBorder)
-						.BorderImage(FEditorStyle::GetBrush("ToolPanel.GroupBorder"))
+						.BorderImage(FAkAppStyle::Get().GetBrush("ToolPanel.GroupBorder"))
 						.Padding(4.0f)
 						.Content()
 						[
@@ -216,8 +219,8 @@ public:
 							[
 								SNew(SEditableTextBox)
 								.HintText(LOCTEXT("AkAudioRTPCNameHint", "Name of the AkAudioRTPC"))
-								.OnTextCommitted(this, &SCreateAkAudioRTPCSectionDialog::OnEventNameCommited)
-								.OnTextChanged(this, &SCreateAkAudioRTPCSectionDialog::OnEventNameCommited, ETextCommit::Default)
+								.OnTextCommitted(this, &SCreateAkAudioRTPCSectionDialog::OnEventNameCommitted)
+								.OnTextChanged(this, &SCreateAkAudioRTPCSectionDialog::OnEventNameCommitted, ETextCommit::Default)
 								.MinDesiredWidth(200)
 								.RevertTextOnEscape(true)
 							]
@@ -232,15 +235,15 @@ public:
 				.Padding(8)
 				[
 					SNew(SUniformGridPanel)
-					.SlotPadding(FEditorStyle::GetMargin("StandardDialog.SlotPadding"))
-					.MinDesiredSlotWidth(FEditorStyle::GetFloat("StandardDialog.MinDesiredSlotWidth"))
-					.MinDesiredSlotHeight(FEditorStyle::GetFloat("StandardDialog.MinDesiredSlotHeight"))
+					.SlotPadding(FAkAppStyle::Get().GetMargin("StandardDialog.SlotPadding"))
+					.MinDesiredSlotWidth(FAkAppStyle::Get().GetFloat("StandardDialog.MinDesiredSlotWidth"))
+					.MinDesiredSlotHeight(FAkAppStyle::Get().GetFloat("StandardDialog.MinDesiredSlotHeight"))
 
 					+ SUniformGridPanel::Slot(0, 0)
 					[
 						SNew(SButton)
 						.HAlign(HAlign_Center)
-						.ContentPadding(FEditorStyle::GetMargin("StandardDialog.ContentPadding"))
+						.ContentPadding(FAkAppStyle::Get().GetMargin("StandardDialog.ContentPadding"))
 						.OnClicked_Lambda([this]() -> FReply { CloseDialog(true); return FReply::Handled(); })
 						.Text(LOCTEXT("OkButtonLabel", "OK"))
 					]
@@ -249,7 +252,7 @@ public:
 					[
 						SNew(SButton)
 						.HAlign(HAlign_Center)
-						.ContentPadding(FEditorStyle::GetMargin("StandardDialog.ContentPadding"))
+						.ContentPadding(FAkAppStyle::Get().GetMargin("StandardDialog.ContentPadding"))
 						.OnClicked_Lambda([this]() -> FReply { CloseDialog(false); return FReply::Handled(); })
 						.Text(LOCTEXT("CancelButtonLabel", "Cancel"))
 					]
@@ -272,7 +275,7 @@ protected:
 
 private:
 
-	void OnEventNameCommited(const FText& InText, ETextCommit::Type InCommitType)
+	void OnEventNameCommitted(const FText& InText, ETextCommit::Type InCommitType)
 	{
 		Options->RTPCName = InText.ToString();
 
@@ -347,7 +350,11 @@ void FMovieSceneAkAudioRTPCTrackEditor::BuildAddTrackMenu(FMenuBuilder& MenuBuil
 {
 	auto CreateAkAudioRTPCTrack = [=](UMovieScene* MovieScene)
 	{
+#if UE_5_2_OR_LATER
+		auto NewTrack = MovieScene->AddTrack<UMovieSceneAkAudioRTPCTrack>();
+#else
 		auto NewTrack = MovieScene->AddMasterTrack<UMovieSceneAkAudioRTPCTrack>();
+#endif
 		if (NewTrack != nullptr)
 		{
 			NewTrack->SetIsAMasterTrack(true);
@@ -359,7 +366,7 @@ void FMovieSceneAkAudioRTPCTrackEditor::BuildAddTrackMenu(FMenuBuilder& MenuBuil
 		LOCTEXT("AddAkAudioRTPCTrack", "AkAudioRTPC"),
 		LOCTEXT("AddAkAudioRTPCMasterTrackTooltip", "Adds a master AkAudioRTPC track."),
 		FSlateIcon(FAkAudioStyle::GetStyleSetName(), "AudiokineticTools.RTPCIcon"),
-		FUIAction(FExecuteAction::CreateLambda([=]
+		FUIAction(FExecuteAction::CreateLambda([this, CreateAkAudioRTPCTrack = MoveTemp(CreateAkAudioRTPCTrack)]
 		{
 			TryAddAkAudioRTPCTrack(FCreateAkAudioRTPCTrack::CreateLambda(CreateAkAudioRTPCTrack));
 		}))
@@ -368,19 +375,18 @@ void FMovieSceneAkAudioRTPCTrackEditor::BuildAddTrackMenu(FMenuBuilder& MenuBuil
 
 bool FMovieSceneAkAudioRTPCTrackEditor::SupportsSequence(UMovieSceneSequence* InSequence) const
 {
+#if UE_5_1_OR_LATER
+	static UClass* LevelSequenceClass = UClass::TryFindTypeSlow<UClass>(TEXT("/Script/LevelSequence.LevelSequence"), EFindFirstObjectOptions::ExactClass);
+#else
 	static UClass* LevelSequenceClass = FindObject<UClass>(ANY_PACKAGE, TEXT("LevelSequence"), true);
+#endif
 	return InSequence != nullptr && LevelSequenceClass != nullptr && InSequence->GetClass()->IsChildOf(LevelSequenceClass);
 }
 
 
-#if UE_4_23_OR_LATER
 void FMovieSceneAkAudioRTPCTrackEditor::BuildObjectBindingTrackMenu(FMenuBuilder& MenuBuilder, const TArray<FGuid>& ObjectBindings, const UClass* ObjectClass)
 {
 	auto ObjectBinding = ObjectBindings[0];
-#else
-void FMovieSceneAkAudioRTPCTrackEditor::BuildObjectBindingTrackMenu(FMenuBuilder& MenuBuilder, const FGuid& ObjectBinding, const UClass* ObjectClass)
-{
-#endif
 	if (!ObjectClass->IsChildOf(AActor::StaticClass()) && !ObjectClass->IsChildOf(USceneComponent::StaticClass()))
 	{
 		return;
@@ -392,7 +398,7 @@ void FMovieSceneAkAudioRTPCTrackEditor::BuildObjectBindingTrackMenu(FMenuBuilder
 		LOCTEXT("AddAkAudioRTPCTrack", "AkAudioRTPC"),
 		LOCTEXT("AddAkAudioRTPCTrackTooltip", "Adds an AkAudioRTPC track."),
 		FSlateIcon(FAkAudioStyle::GetStyleSetName(), "AudiokineticTools.RTPCIcon"),
-		FUIAction(FExecuteAction::CreateLambda([=]
+		FUIAction(FExecuteAction::CreateLambda([this, CreateAkAudioRTPCTrack = MoveTemp(CreateAkAudioRTPCTrack)]
 		{
 			TryAddAkAudioRTPCTrack(FCreateAkAudioRTPCTrack::CreateLambda(CreateAkAudioRTPCTrack));
 		}))

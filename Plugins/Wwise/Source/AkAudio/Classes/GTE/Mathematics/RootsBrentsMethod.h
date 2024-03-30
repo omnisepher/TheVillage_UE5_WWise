@@ -38,7 +38,7 @@
 //       |tsub1 - tsub0| <= tolerance.  This parameter is that tolerance
 //       and should be nonnegative.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class RootsBrentsMethod

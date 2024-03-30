@@ -37,7 +37,7 @@
 // See GeometricTools/GTEngine/Samples/Geometrics/MinimumVolumeBox3 for an
 // example of how to use the code.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename InputType, typename ComputeType>
     class MinimumVolumeBox3

@@ -10,7 +10,7 @@
 #include <Mathematics/BasisFunction.h>
 #include <Mathematics/ParametricCurve.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class NURBSCurve : public ParametricCurve<N, Real>

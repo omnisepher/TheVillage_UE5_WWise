@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 /// \file
@@ -35,7 +34,7 @@ the specific language governing permissions and limitations under the License.
 #include <AK/SoundEngine/Common/AkTypes.h>
 
 #include "ISourceControlDialogBase.h"
-#include "ISourceControlOperationProgress.h"
+#include "ISourceControlProgress.h"
 
 // Audiokinetic namespace
 namespace AK
@@ -49,16 +48,16 @@ namespace AK
 		class ISourceControlUtilities
 		{
 		public:
-			/// Get a pointer to an AK::Wwise::ISourceControlOperationProgress interface, so you can display a simple progress dialog for the operation.
+			/// Get a pointer to an AK::Wwise::ISourceControlProgress interface, so you can display a simple progress dialog for the operation.
 			/// \warning This function is not thread-safe.
 			/// \return A pointer to an AK::Wwise::ISourceControlOperationProgress interface.
-			virtual ISourceControlOperationProgress* GetProgressDialog() = 0;
+			virtual ISourceControlProgress* GetProgress() = 0;
 
 			/// This function does the same thing as the standard \c MessageBox function, except that this one will
 			/// be displayed with the Wwise UI look and feel.
 			/// \warning This function is not thread-safe.
 			/// \return The window results of the dialog
-			virtual int MessageBox( 
+			virtual int MessageBox(
 				HWND in_hWnd,					///< The window handle of the dialog
 				LPCWSTR in_pszText,				///< The text to be displayed in the message box
 				LPCWSTR in_pszCaption,			///< The caption of the message box
@@ -68,7 +67,7 @@ namespace AK
 			/// This function show a dialog with a edit field and allow the user enter input string
 			/// \warning This function is not thread-safe.
 			/// \return The window results of the dialog: IDOK or IDCANCEL
-			virtual int PromptMessage( 
+			virtual int PromptMessage(
 				HWND in_hWnd,					///< The window handle of the dialog
 				LPCWSTR in_pszText,				///< The text to be displayed in the message box
 				LPCWSTR in_pszCaption,			///< The caption of the message box
@@ -76,8 +75,8 @@ namespace AK
 				UINT in_uiInputSize,			///< The size of the buffer to receive input
 				bool in_bIsPassword				///< True to hide text; used for passwords
 				) = 0;
-	
-			/// Show a browse for folder dialog.  
+
+			/// Show a browse for folder dialog.
 			/// \warning This function is not thread-safe.
 			/// \return The resulting path is set in out_pszChoosenPath
 			/// \return True if user clicked OK, false if user clicked Cancel
@@ -125,11 +124,11 @@ namespace AK
 				DWORD in_dwSize					///< Size of out_pszValue buffer.
 				) = 0;
 
-			/// Get the root path for a move operation.  
+			/// Get the root path for a move operation.
 			/// The input file can either be a work unit or a source file
 			/// \warning This function is not thread-safe.
 			/// \return Nothing as return value.  The out_pszRootPath will contain the path.
-			virtual void GetMoveRootPath( 
+			virtual void GetMoveRootPath(
 				LPCWSTR in_pszFullPath,			///< The full path of an audio source or work unit file
 				LPWSTR out_pszRootPath,			///< A pointer to the array that receives the root path
 				UINT in_uiRootPathSize			///< The size of the array that receives the root path
@@ -143,13 +142,21 @@ namespace AK
 			/// pass the control ID of it.
 			/// \note DestroyFileStatusListControl must be called when handling WM_DESTROY in WindowProc
 			/// \warning This function is not thread-safe.
-			virtual void CreateFileStatusListControl( 
+			virtual void CreateFileStatusListControl(
 				HWND in_hWndParent,					///< The parent dialog to create the list control
 				UINT in_idStatic,					///< The ID of the placeholder static control, which will also be the ID of the list control after the creation
 				const WCHAR** in_ppFilenameList,	///< The list of files to show in the list
 				unsigned int in_uiFilenameListCount	///< the number of files in the in_ppFilenameList array
 				) = 0;
-		};							  
+
+			/// Retrieve if the current operation was marked as to be cancelled.
+			/// \return True if the user requested to cancel the current operation.
+			virtual bool IsCancelRequested() const = 0;
+
+			/// Log a message into the Source Control channel
+			/// \note This message will be visible to users in the Log view
+			virtual void LogMessage(LPCWSTR in_pszMessage) = 0;
+		};
 	}
 }
 

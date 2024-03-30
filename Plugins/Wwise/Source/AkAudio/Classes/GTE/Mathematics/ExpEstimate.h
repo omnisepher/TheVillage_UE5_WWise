@@ -15,7 +15,7 @@
 // computed using exp(x) = 2^{x/log(2)}, where log(2) is the natural
 // logarithm of 2.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class ExpEstimate

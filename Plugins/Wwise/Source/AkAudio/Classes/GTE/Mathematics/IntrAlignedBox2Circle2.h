@@ -16,7 +16,7 @@
 // The find-intersection query is based on the document
 // https://www.geometrictools.com/Documentation/IntersectionMovingCircleRectangle.pdf
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, AlignedBox2<Real>, Circle2<Real>>

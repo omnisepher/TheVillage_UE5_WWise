@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 // AkSimd.h
@@ -30,60 +29,22 @@ the specific language governing permissions and limitations under the License.
 /// \file 
 /// AKSIMD - arm_neon implementation
 
-#ifndef _AKSIMD_ARM_NEON_H_
-#define _AKSIMD_ARM_NEON_H_
+#pragma once
 
 #if defined _MSC_VER && defined _M_ARM64
 	#include <arm64_neon.h>
 #else
 	#include <arm_neon.h>
 #endif
-#include <AK/SoundEngine/Common/AkTypes.h>
 
-// Platform specific defines for prefetching
-#define AKSIMD_ARCHMAXPREFETCHSIZE	(512) 				///< Use this to control how much prefetching maximum is desirable (assuming 8-way cache)		
-#define AKSIMD_ARCHCACHELINESIZE	(64)				///< Assumed cache line width for architectures on this platform
-#if defined __clang__ || defined __GNUC__
-#define AKSIMD_PREFETCHMEMORY( __offset__, __add__ ) __builtin_prefetch(((char *)(__add__))+(__offset__)) 
-#else
-#define AKSIMD_PREFETCHMEMORY( __offset__, __add__ )
-#endif
+#include <AK/SoundEngine/Common/AkSimdTypes.h>
+#include <AK/SoundEngine/Common/AkTypes.h>
 
 ////////////////////////////////////////////////////////////////////////
 /// @name Platform specific memory size alignment for allocation purposes
 //@{
 
 #define AKSIMD_ALIGNSIZE( __Size__ ) (((__Size__) + 15) & ~15)
-
-//@}
-////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////
-/// @name AKSIMD types
-//@{
-
-typedef int32x4_t		AKSIMD_V4I32;		///< Vector of 4 32-bit signed integers
-typedef int16x8_t		AKSIMD_V8I16;		///< Vector of 8 16-bit signed integers
-typedef int16x4_t		AKSIMD_V4I16;		///< Vector of 4 16-bit signed integers
-typedef uint32x4_t		AKSIMD_V4UI32;		///< Vector of 4 32-bit unsigned signed integers
-typedef uint32x2_t		AKSIMD_V2UI32;		///< Vector of 2 32-bit unsigned signed integers
-typedef int32x2_t		AKSIMD_V2I32;		///< Vector of 2 32-bit signed integers
-typedef float32_t		AKSIMD_F32;			///< 32-bit float
-typedef float32x2_t		AKSIMD_V2F32;		///< Vector of 2 32-bit floats
-typedef float32x4_t		AKSIMD_V4F32;		///< Vector of 4 32-bit floats
-
-typedef uint32x4_t		AKSIMD_V4COND;		///< Vector of 4 comparison results
-typedef uint32x4_t		AKSIMD_V4ICOND;		///< Vector of 4 comparison results
-typedef uint32x4_t		AKSIMD_V4FCOND;		///< Vector of 4 comparison results
-
-#if defined(AK_CPU_ARM_NEON)
-typedef float32x2x2_t	AKSIMD_V2F32X2;
-typedef float32x4x2_t	AKSIMD_V4F32X2;
-typedef float32x4x4_t	AKSIMD_V4F32X4;
-
-typedef int32x4x2_t		AKSIMD_V4I32X2;
-typedef int32x4x4_t		AKSIMD_V4I32X4;
-#endif
 
 //@}
 ////////////////////////////////////////////////////////////////////////
@@ -178,7 +139,7 @@ static AkForceInline float32x4_t AKSIMD_SETV_V2F64(AkReal64 b, AkReal64 a)
 /// Loads a single-precision, floating-point value into the low word
 /// and clears the upper three words.
 /// r0 := *p; r1 := 0.0 ; r2 := 0.0 ; r3 := 0.0 (see _mm_load_ss)
-#define AKSIMD_LOAD_SS_V4F32( __addr__ ) vld1q_lane_f32( (float32_t*)(__addr__), AKSIMD_SETZERO_V4F32(), 0 );
+#define AKSIMD_LOAD_SS_V4F32( __addr__ ) vld1q_lane_f32( (float32_t*)(__addr__), AKSIMD_SETZERO_V4F32(), 0 )
 
 /// Loads four 32-bit signed integer values (aligned)
 #define AKSIMD_LOAD_V4I32( __addr__ ) vld1q_s32( (const int32_t*)(__addr__) )
@@ -196,7 +157,7 @@ static AkForceInline float32x4_t AKSIMD_SETV_V2F64(AkReal64 b, AkReal64 a)
 
 /// Loads two single-precision, floating-point values
 #define AKSIMD_LOAD_V2F32( __addr__ ) vld1_f32( (float32_t*)(__addr__) )
-#define AKSIMD_LOAD_V2F32_LANE( __addr__, __vec__, __lane__ ) vld1_lane_f32( (float32_t*)(__addr__), (__vec__), (__lane__) );
+#define AKSIMD_LOAD_V2F32_LANE( __addr__, __vec__, __lane__ ) vld1_lane_f32( (float32_t*)(__addr__), (__vec__), (__lane__) )
 
 /// Sets the two single-precision, floating-point values to __scalar__
 #define AKSIMD_SET_V2F32( __scalar__ ) vdup_n_f32( __scalar__ )
@@ -209,8 +170,8 @@ static AkForceInline float32x4_t AKSIMD_SETV_V2F64(AkReal64 b, AkReal64 a)
 #define AKSIMD_LOAD_V2F32X2( __addr__ ) vld2_f32( (float32_t*)(__addr__) )
 
 /// Loads data from memory and de-interleaves; only selected lane
-#define AKSIMD_LOAD_V2F32X2_LANE( __addr__, __vec__, __lane__ ) vld2_lane_f32( (float32_t*)(__addr__), (__vec__), (__lane__) );
-#define AKSIMD_LOAD_V4F32X4_LANE( __addr__, __vec__, __lane__ ) vld4q_lane_f32( (float32_t*)(__addr__), (__vec__), (__lane__) );
+#define AKSIMD_LOAD_V2F32X2_LANE( __addr__, __vec__, __lane__ ) vld2_lane_f32( (float32_t*)(__addr__), (__vec__), (__lane__) )
+#define AKSIMD_LOAD_V4F32X4_LANE( __addr__, __vec__, __lane__ ) vld4q_lane_f32( (float32_t*)(__addr__), (__vec__), (__lane__) )
 
 //@}
 ////////////////////////////////////////////////////////////////////////
@@ -247,6 +208,10 @@ static AkForceInline float32x4_t AKSIMD_SETV_V2F64(AkReal64 b, AkReal64 a)
 /// Stores data by interleaving into memory
 #define AKSIMD_STORE_V4F32X2( __addr__, __vName__ ) vst2q_f32( (float32_t*)(__addr__), (__vName__) )
 #define AKSIMD_STORE_V2F32X2( __addr__, __vName__ ) vst2_f32( (float32_t*)(__addr__), (__vName__) )
+
+/// Stores the lower double-precision, floating-point value.
+/// *p := a0 (see _mm_store_sd)
+#define AKSIMD_STORE1_V2F64( __addr__, __vec__ ) vst1q_lane_f64( (float64_t*)(__addr__), vreinterpretq_f64_f32(__vec__), 0 )
 
 //@}
 ////////////////////////////////////////////////////////////////////////
@@ -434,6 +399,13 @@ static AkForceInline AKSIMD_V4I32 AKSIMD_CONVERT_V4F32_TO_V4F16(AKSIMD_V4F32 vec
 #define AKSIMD_CAST_V4COND_TO_V4F32( __vec__ ) vreinterpretq_f32_u32(__vec__)
 
 #define AKSIMD_CAST_V4F32_TO_V4COND( __vec__ ) vreinterpretq_u32_f32(__vec__)
+
+/// Cast vector of type AKSIMD_V4COND to AKSIMD_V4I32.
+#define AKSIMD_CAST_V4COND_TO_V4I32( __vec__ ) (AKSIMD_V4COND)(__vec__)
+
+/// Cast vector of type AKSIMD_V4I32 to AKSIMD_V4COND.
+#define AKSIMD_CAST_V4I32_TO_V4COND( __vec__ ) (AKSIMD_V4COND)(__vec__)
+
 //@}
 ////////////////////////////////////////////////////////////////////////
 
@@ -542,10 +514,14 @@ static AkForceInline AKSIMD_V4F32 AKSIMD_NOT_V4F32( const AKSIMD_V4F32& in_vec )
 // If you get a link error, it's probably because the required
 // _AKSIMD_LOCAL::SHUFFLE_V4F32< zyxw > is not implemented in
 // <AK/SoundEngine/Platforms/arm_neon/AkSimdShuffle.h>.
-#if defined(__clang__) && defined(__has_builtin) && __has_builtin(__builtin_shufflevector)
-#define AKSIMD_SHUFFLE_V4F32( a, b, zyxw ) \
-	__builtin_shufflevector(a, b, (zyxw >> 0) & 0x3, (zyxw >> 2) & 0x3, ((zyxw >> 4) & 0x3) + 4, ((zyxw >> 6) & 0x3) + 4 )
-#else
+#if defined(__clang__)
+	#if defined(__has_builtin) && __has_builtin(__builtin_shufflevector)
+	#define AKSIMD_SHUFFLE_V4F32( a, b, zyxw ) \
+		__builtin_shufflevector(a, b, (zyxw >> 0) & 0x3, (zyxw >> 2) & 0x3, ((zyxw >> 4) & 0x3) + 4, ((zyxw >> 6) & 0x3) + 4 )
+	#endif
+#endif
+
+#ifndef AKSIMD_SHUFFLE_V4F32
 #define AKSIMD_SHUFFLE_V4F32( a, b, zyxw ) \
 	_AKSIMD_LOCAL::SHUFFLE_V4F32< zyxw >( a, b )
 
@@ -605,7 +581,7 @@ static AkForceInline AKSIMD_V4F32 AKSIMD_NOT_V4F32( const AKSIMD_V4F32& in_vec )
 /// The upper three single-precision, floating-point values are passed through from a.
 /// r0 := a0 - b0 ; r1 := a1 ; r2 := a2 ; r3 := a3 (see _mm_sub_ss)
 #define AKSIMD_SUB_SS_V4F32( __a__, __b__ ) \
-	vsubq_f32( (__a__), vsetq_lane_f32( AKSIMD_GETELEMENT_V4F32( (__b__), 0 ), AKSIMD_SETZERO_V4F32(), 0 ) );
+	vsubq_f32( (__a__), vsetq_lane_f32( AKSIMD_GETELEMENT_V4F32( (__b__), 0 ), AKSIMD_SETZERO_V4F32(), 0 ) )
 
 /// Adds the four single-precision, floating-point values of
 /// a and b (see _mm_add_ps)
@@ -1003,6 +979,4 @@ static AkForceInline AKSIMD_V4COND AKSIMD_SETMASK_V4COND( AkUInt32 x )
 
 //@}
 ////////////////////////////////////////////////////////////////////////
-
-#endif //_AKSIMD_ARM_NEON_H_
 

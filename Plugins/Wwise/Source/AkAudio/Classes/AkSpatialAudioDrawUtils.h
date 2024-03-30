@@ -1,16 +1,18 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 /*=============================================================================
@@ -27,7 +29,7 @@ namespace AkDrawConstants
 {
 	const float CullDepth = 100.0f;
 	const float PortalOutlineThickness = 5.0f;
-	const float PortalRoomConnectionThickness = 1.0f;
+	const float PortalRoomConnectionThickness = 3.0f;
 	const float RoomIconThickness = 2.0f;
 	const float RoomIconRadius = 10.0f;
 	const int	RoomIconSides = 16;
@@ -39,7 +41,7 @@ namespace AkDrawConstants
 	const float DiffractionEdgeThickness = 2.5f;
 }
 
-/** A utility struct to transfom the points on a local axis-aligned bounding box to world space using the given transform.
+/** A utility struct to transform the points on a local axis-aligned bounding box to world space using the given transform.
 	Used for drawing rotated bounding boxes around portals.
 */
 struct AKAUDIO_API AkDrawBounds
@@ -51,18 +53,18 @@ private:
 	const FVector& BoxExtent;
 
 public:
-	/** FrontRightUp */		FVector FRU();
-	/** BackLeftDown */		FVector BLD();
-	/** FrontLeftDown */	FVector FLD();
-	/** BackRightUp */		FVector BRU();
-	/** FrontLeftDown */	FVector FLU();
-	/** BackLeftUp */		FVector BLU();
-	/** FrontRightDown */	FVector FRD();
-	/** BackRightDown */	FVector BRD();
-	/** RightUp */			FVector RU();
-	/** LeftUp */			FVector LU();
-	/** RightDown */		FVector RD();
-	/** LeftDown */			FVector LD();
+	/** FrontRightUp */		FVector FRU() const;
+	/** BackLeftDown */		FVector BLD() const;
+	/** FrontLeftDown */	FVector FLD() const;
+	/** BackRightUp */		FVector BRU() const;
+	/** FrontLeftDown */	FVector FLU() const;
+	/** BackLeftUp */		FVector BLU() const;
+	/** FrontRightDown */	FVector FRD() const;
+	/** BackRightDown */	FVector BRD() const;
+	/** RightUp */			FVector RU() const;
+	/** LeftUp */			FVector LU() const;
+	/** RightDown */		FVector RD() const;
+	/** LeftDown */			FVector LD() const;
 };
 
 class UAkPortalComponent;

@@ -19,7 +19,7 @@
 // https://www.geometrictools.com/Documentation/ConvexQuadraticProgramming.pdf
 
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class DCPQuery<Real, AlignedBox3<Real>, OrientedBox3<Real>>

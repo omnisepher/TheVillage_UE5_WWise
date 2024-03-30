@@ -11,7 +11,7 @@
 #include <mutex>
 #include <vector>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Key, typename Value>
     class ThreadSafeMap

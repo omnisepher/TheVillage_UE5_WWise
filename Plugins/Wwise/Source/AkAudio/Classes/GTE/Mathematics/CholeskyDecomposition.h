@@ -10,7 +10,7 @@
 #include <Mathematics/Matrix.h>
 #include <Mathematics/GMatrix.h>
 
-namespace gte
+namespace WwiseGTE
 {
     // Implementation for size known at compile time.
     template <typename Real, int N = 0>

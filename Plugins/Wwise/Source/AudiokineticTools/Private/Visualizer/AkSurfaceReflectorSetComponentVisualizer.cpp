@@ -1,18 +1,19 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
-
 
 /*=============================================================================
 AkWwiseAcousticsComponentVisualizer.cpp:
@@ -21,6 +22,7 @@ AkWwiseAcousticsComponentVisualizer.cpp:
 #include "AkAudioDevice.h"
 #include "AkSurfaceReflectorSetComponent.h"
 #include "AkSpatialAudioVolume.h"
+#include "WwiseUEFeatures.h"
 #include "Editor.h"
 #include "EditorModeManager.h"
 #include "EditorModes.h"
@@ -38,6 +40,8 @@ AkWwiseAcousticsComponentVisualizer.cpp:
 #include "Engine/Canvas.h"
 
 #include <cmath>
+
+#include "SceneView.h"
 
 #define AK_VISUALIZE_HIT_MATERIALS 0
 
@@ -60,7 +64,7 @@ void FAkSurfaceReflectorSetComponentVisualizer::DrawVisualization(const UActorCo
 		!SpatialAudioVolume->IsHiddenEd())
 	{
 		// Build a mesh by basically drawing the triangles of each 
-		for (int32 NodeIdx = 0; 
+		for (int32 NodeIdx = 0;
 			NodeIdx < ModelBrush->Nodes.Num() && NodeIdx < SurfaceReflectorSet->TextVisualizers.Num();
 			++NodeIdx)
 		{
@@ -100,11 +104,7 @@ void FAkSurfaceReflectorSetComponentVisualizer::DrawVisualization(const UActorCo
 					}
 
 					FLinearColor SurfaceColor = AkSpatialAudioColors::GetSurfaceReflectorColor(SurfaceReflectorSet, NodeIdx, SpatialAudioVolume->IsDragging);
-#if UE_4_22_OR_LATER
 					auto* renderProxy = GEngine->GeomMaterial->GetRenderProxy();
-#else
-					auto* renderProxy = GEngine->GeomMaterial->GetRenderProxy(false);
-#endif
 					// Limit the color's value (in HSV space) so that it doesn't obscure the text.
 					// In the new color, R = H, G = S, B = V, A = A (From Color.cpp line ~271)
 					FLinearColor hsv = SurfaceColor.LinearRGBToHSV();
@@ -118,7 +118,7 @@ void FAkSurfaceReflectorSetComponentVisualizer::DrawVisualization(const UActorCo
 		}
 
 		SurfaceReflectorSet->UpdateTextPositions();
-
+		
 		if (!GLevelEditorModeTools().IsModeActive(FEditorModeID(TEXT("EM_Geometry"))))
 		{
 			for (auto& KV : SurfaceReflectorSet->EdgeMap)
@@ -136,7 +136,10 @@ void FAkSurfaceReflectorSetComponentVisualizer::DrawVisualization(const UActorCo
 						EdgeColor = EdgeInfo.IsBoundary ? AkSpatialAudioColors::GetBoundaryDiffractionEdgeColor() : AkSpatialAudioColors::GetDiffractionEdgeColor();
 						Thickness = AkDrawConstants::DiffractionEdgeThickness;
 					}
-					PDI->DrawLine(EdgeInfo.V0(), EdgeInfo.V1(), EdgeColor, SDPG_World, Thickness);
+					PDI->DrawLine(
+						SpatialAudioVolume->GetActorTransform().TransformPosition(EdgeInfo.V0()),
+						SpatialAudioVolume->GetActorTransform().TransformPosition(EdgeInfo.V1()),
+						EdgeColor, SDPG_World, Thickness);
 				}
 			}
 		}

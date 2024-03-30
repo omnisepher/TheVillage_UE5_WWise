@@ -23,7 +23,7 @@
 #include <Mathematics/MinimizeN.h>
 #include <Mathematics/Rotation.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class ApprEllipsoid3

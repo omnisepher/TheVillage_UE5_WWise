@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-Version: v2021.1.9  Build: 7847
-Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 /// \file 
@@ -92,11 +91,13 @@ namespace ReverbEstimation
 			out_average.fAbsorptionHigh += texture.fAbsorptionHigh * surfaceArea;
 			totalSurfaceArea += surfaceArea;
 		}
-		AKASSERT(totalSurfaceArea > 0.0f);
-		out_average.fAbsorptionLow = out_average.fAbsorptionLow / totalSurfaceArea;
-		out_average.fAbsorptionMidLow = out_average.fAbsorptionMidLow / totalSurfaceArea;
-		out_average.fAbsorptionMidHigh = out_average.fAbsorptionMidHigh / totalSurfaceArea;
-		out_average.fAbsorptionHigh = out_average.fAbsorptionHigh / totalSurfaceArea;
+		if (totalSurfaceArea > 0.0f)
+		{
+			out_average.fAbsorptionLow = out_average.fAbsorptionLow / totalSurfaceArea;
+			out_average.fAbsorptionMidLow = out_average.fAbsorptionMidLow / totalSurfaceArea;
+			out_average.fAbsorptionMidHigh = out_average.fAbsorptionMidHigh / totalSurfaceArea;
+			out_average.fAbsorptionHigh = out_average.fAbsorptionHigh / totalSurfaceArea;
+		}
 	}
 
 	/// Estimate the time taken (in seconds) for the sound reverberation in a physical environment to decay by 60 dB.
@@ -147,30 +148,28 @@ namespace ReverbEstimation
 			return AKRESULT::AK_Fail;
 		}
 		const float minDimension = AkMin(AkMin(in_environmentExtentMeters.X, in_environmentExtentMeters.Y), in_environmentExtentMeters.Z);
-		out_timeToFirstReflectionMs = minDimension / in_speedOfSound;
+		out_timeToFirstReflectionMs = (minDimension / in_speedOfSound) * 1000.0f;
 		return AKRESULT::AK_Success;
 	}
 
 	/// Estimate the high frequency damping from a collection of AkAcousticTextures and corresponding surface areas. 
-	/// The high frequency damping is a measure of how much high frequencies are dampened compared to low frequencies. > 0 indicates more high frequency damping than low frequency damping. < 0 indicates more low frequency damping than high frequency damping. 0 indicates uniform damping.
+	/// The high frequency damping is a measure of how much high frequencies are dampened compared to low frequencies. 
+	/// The value is comprised between -1 and 1. A value > 0 indicates more high frequency damping than low frequency damping. < 0 indicates more low frequency damping than high frequency damping. 0 indicates uniform damping.
 	/// The average absorption values are calculated using each of the textures in the collection, weighted by their corresponding surface area.
 	/// The HFDamping is then calculated as the line-of-best-fit through the average absorption values.
-	AK_EXTERNAPIFUNC(AKRESULT, EstimateHFDamping)(
+	AK_EXTERNAPIFUNC(AkReal32, EstimateHFDamping)(
 		AkAcousticTexture* in_textures,	///< A collection of AkAcousticTexture structs from which to calculate the average high frequency damping.
 		float* in_surfaceAreas,			///< Surface area values for each of the textures in in_textures.
-		int in_numTextures,				///< The number of textures in in_textures (and the number of surface area values in in_surfaceAreas).
-		AkReal32& out_hfDamping			///< Returns the high frequency damping value. > 0 indicates more high frequency damping than low frequency damping. < 0 indicates more low frequency damping than high frequency damping. 0 indicates uniform damping.
+		int in_numTextures				///< The number of textures in in_textures (and the number of surface area values in in_surfaceAreas).
 		)
 	{
 		if (in_textures == nullptr || in_surfaceAreas == nullptr || in_numTextures == 0)
 		{
-			out_hfDamping = 0.0f;
-			return AK_Success;
+			return 0.0f;
 		}
 		AkAcousticTexture averageAbsorptionValues;
 		GetAverageAbsorptionValues(in_textures, in_surfaceAreas, in_numTextures, averageAbsorptionValues);
-		out_hfDamping = CalculateSlope(averageAbsorptionValues);
-		return AK_Success;
+		return CalculateSlope(averageAbsorptionValues) * 2.f; // Multiply by 2 so that the Hf Damping value is between -1 and 1.
 	}
 
 	//@}

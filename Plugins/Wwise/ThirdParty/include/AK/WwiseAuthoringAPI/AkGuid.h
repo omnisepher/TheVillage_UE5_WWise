@@ -21,16 +21,13 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #pragma once
 
 #include <stdint.h>
 #include <string>
-#include <locale>
-#include <codecvt>
 
 namespace AK
 {
@@ -64,13 +61,24 @@ namespace AK
 			{
 				return *reinterpret_cast<const GUID*>(this);
 			}
+
+			inline bool operator==(const GUID& other) const
+			{
+				return AkGuidIsEqual(this, &other);
+			}
+
+			inline bool operator!=(const GUID& other) const
+			{
+				return !AkGuidIsEqual(this, &other);
+			}
 		#endif
+
 			inline bool operator==(const AkGuid& other) const
 			{
 				return AkGuidIsEqual(this, &other);
 			}
 
-			inline bool operator!=(const AkGuid& other)
+			inline bool operator!=(const AkGuid& other) const
 			{
 				return !AkGuidIsEqual(this, &other);
 			}

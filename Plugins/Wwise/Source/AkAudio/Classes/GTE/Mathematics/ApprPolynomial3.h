@@ -37,7 +37,7 @@
 //   w = rng * sum_{i=0}^{d0} sum_{j=0}^{d1} c'[i][j] *
 //       ((x-xcen)/rng)^i * ((y-ycen)/rng)^j
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class ApprPolynomial3 : public ApprQuery<Real, std::array<Real, 3>>

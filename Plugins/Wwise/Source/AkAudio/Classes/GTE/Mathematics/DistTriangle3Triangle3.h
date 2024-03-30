@@ -9,7 +9,7 @@
 
 #include <Mathematics/DistSegment3Triangle3.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class DCPQuery<Real, Triangle3<Real>, Triangle3<Real>>

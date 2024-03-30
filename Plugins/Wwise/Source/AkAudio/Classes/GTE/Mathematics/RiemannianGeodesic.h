@@ -17,7 +17,7 @@
 // of the algorithm is in the document
 // https://www.geometrictools.com/Documentation/RiemannianGeodesics.pdf
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class RiemannianGeodesic

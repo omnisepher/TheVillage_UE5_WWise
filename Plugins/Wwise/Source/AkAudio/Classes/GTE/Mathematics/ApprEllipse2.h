@@ -22,7 +22,7 @@
 #include <Mathematics/Matrix2x2.h>
 #include <Mathematics/MinimizeN.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class ApprEllipse2

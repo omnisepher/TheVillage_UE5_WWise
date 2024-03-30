@@ -15,7 +15,7 @@
 // maximum{|tan(x) - p(x)| : x in [-pi/4,pi/4]} over all polynomials of
 // degree D subject to the constraints mentioned.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TanEstimate

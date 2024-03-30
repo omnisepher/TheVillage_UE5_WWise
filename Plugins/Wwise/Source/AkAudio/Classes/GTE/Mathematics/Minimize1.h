@@ -25,7 +25,7 @@
 // {f0,f1,f2} brackets a maximum.  The minimum search continues recursively
 // as before on [a,(a+b)/2] and [(a+b)/2,b].
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class Minimize1

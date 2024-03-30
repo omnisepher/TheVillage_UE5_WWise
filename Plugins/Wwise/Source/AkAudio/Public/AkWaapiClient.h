@@ -1,18 +1,19 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
-
 
 /*=============================================================================
 	AkWaapiClient.h: Audiokinetic WAAPI interface object.
@@ -25,16 +26,9 @@ Copyright (c) 2021 Audiokinetic Inc.
 ------------------------------------------------------------------------------------*/
 
 #include "AkInclude.h"
-#include "Engine/EngineBaseTypes.h"
-#include "Engine/EngineTypes.h"
 #include "HAL/Runnable.h"
-#include "Serialization/JsonWriter.h"
-#include "Serialization/JsonSerializer.h"
 #include "Dom/JsonObject.h"
 #include "HAL/ThreadSafeBool.h"
-#include "AK/WwiseAuthoringAPI/waapi.h"
-
-DECLARE_LOG_CATEGORY_EXTERN(LogAkWaapiClient, Log, All);
 
 /*------------------------------------------------------------------------------------
 Dependencies, helpers & forward declarations.
@@ -56,6 +50,12 @@ DECLARE_EVENT(FAkWaapiClient, BeginDestroyClient);
 ------------------------------------------------------------------------------------*/
 
 class FAkWaapiClient;
+
+struct KeyValueArgs
+{
+    const FString KeyArg;
+    const FString ValueArg;
+};
 
 class FAkWaapiClientConnectionHandler : public FRunnable
 {
@@ -145,7 +145,7 @@ public:
     * @param in_options		 Optional flag to get more information about the event happened.
     * @param in_callback		 A delegate to be executed during the subscription event.
     * @param out_subscriptionId Gets the id of this subscription.
-    * @param out_result		 A JSON object that contains useful informations about the subscription process to a specific event, gets an error infos in case the subscription failed.
+    * @param out_result		 A JSON object that contains useful information about the subscription process to a specific event, gets an error infos in case the subscription failed.
     * @return					 A boolean to ensure that the subscription was successfully done.
     */
     bool Subscribe(const char* in_uri, const FString& in_options, WampEventCallback in_callback,
@@ -157,7 +157,7 @@ public:
     * Unsubscribe to notifications
     *
     * @param in_subscriptionId	Gets the id of the current subscription to the event from which we want to be unsubscribed.
-    * @param out_result		A JSON object that contains useful informations about the unsubscription process from a specific event, gets an error infos in case the unsubscription failed.
+    * @param out_result		A JSON object that contains useful information about the unsubscription process from a specific event, gets an error infos in case the unsubscription failed.
     * @return					A boolean to ensure that the unsubscription was successfully done.
     */
     bool Unsubscribe(const uint64_t& in_subscriptionId, FString& out_result, int in_iTimeoutMs = 500, bool in_bSilenceLog = false);
@@ -176,17 +176,26 @@ public:
     * @param in_uri		The	Function that will be called when an event that we would be aware of happens.
     * @param in_args		The arguments referenced to the in_uri function.
     * @param in_options	Optional flag to get more information about the event happened.
-    * @param out_result	A JSON object that contains useful informations about the Call process to a specific event, gets an error infos in case the Call fails.
+    * @param out_result	A JSON object that contains useful information about the Call process to a specific event, gets an error infos in case the Call fails.
     * @return				A boolean to ensure that the call was successfully passed.
     */
     bool Call(const char* in_uri, const FString& in_args, const FString& in_options, FString& out_result, int in_iTimeoutMs = 500, bool silenceLog = false);
     bool Call(const char* in_uri, const TSharedRef<FJsonObject>& in_args, const TSharedRef<FJsonObject>& in_options,
         TSharedPtr<FJsonObject>& out_result, int in_iTimeoutMs = 500, bool silenceLog = false);
 
+    /**
+    * Call WAAPI to change the object name form the path or the id of the object (inFromIdOrPath).
+    *
+    * @param inUri		The Unique Resource Identifier used to indicate a specific action to WAAPI; i.e. ak::wwise::core::object::setName
+    * @param Values		An array that contains the pair of field and field value; e.i. when asking WAAPI to rename an item, the arguments are like this : {{object,id},{value,newname}}
+    * @return			A boolean to ensure that the call was successfully done.
+    */
+    bool Call(const char* inUri, const TArray<KeyValueArgs>& Values, TSharedPtr<FJsonObject>& outJsonResult);
+
     /** Sets in_outParentGUID to the object ID of a parent of object in_objectGUID of type in_strType. */
     static void GetParentOfType(FGuid in_objectGUID, FGuid& in_outParentGUID, FString in_strType);
     /** Gets the path of the currently loaded project in Wwise Authoring. */
-    static bool GetProjectPath(TSharedPtr<FJsonObject>& inOutJsonReslut, FString& ProjectPath);
+    static bool GetProjectPath(TSharedPtr<FJsonObject>& inOutJsonResult, FString& ProjectPath);
 
     WwiseProjectLoaded OnProjectLoaded;
     WAAPIConnectionLost OnConnectionLost;
@@ -313,7 +322,7 @@ public:
         static const FString CHILDREN_COUNT;
         static const FString ANCESTORS;
         static const FString DESCENDANTS;
-        static const FString WOKUNIT_TYPE;
+        static const FString WORKUNIT_TYPE;
         static const FString FOLDER;
         static const FString PHYSICAL_FOLDER;
         static const FString SEARCH;
@@ -402,6 +411,8 @@ public:
         static const FString TRIM_END;
     };
 
+    bool bIsWrongProjectLoaded = false;
+
 private:
     /**
     * Since it's a singleton WaapiClient, we  want to make sure this method (default constructor).
@@ -410,8 +421,8 @@ private:
     FAkWaapiClient();
 
     /** Checks if the currently loaded Wwise project matches the project path set in AkSettings (Wwise plugin settings).
-    *  NTOE: This function will block while Wwise has a modal window open. It should not be called on the Game thread.
-    */
+	*  NOTE: This function will block while Wwise has a modal window open. It should not be called on the Game thread.
+	*/
     static bool CheckProjectLoaded();
 
     struct FAkWaapiClientImpl* m_Impl;

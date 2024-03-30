@@ -23,7 +23,7 @@
 // int32_t inputs are negative.
 #define GTE_THROW_ON_BITHACKS_ERROR
 
-namespace gte
+namespace WwiseGTE
 {
     class BitHacks
     {
@@ -36,7 +36,7 @@ namespace gte
         static bool IsPowerOfTwo(int32_t value)
         {
 #if defined(GTE_THROW_ON_BITHACKS_ERROR)
-            LogAssert(value >= 0, "Invalid input.");
+            GTE_LogAssert(value >= 0, "Invalid input.");
 #endif
             return IsPowerOfTwo(static_cast<int32_t>(value));
         }
@@ -54,7 +54,7 @@ namespace gte
         static int32_t Log2OfPowerOfTwo(int32_t powerOfTwo)
         {
 #if defined(GTE_THROW_ON_BITHACKS_ERROR)
-            LogAssert(powerOfTwo >= 0, "Invalid input.");
+            GTE_LogAssert(powerOfTwo >= 0, "Invalid input.");
 #endif
             return static_cast<int32_t>(Log2OfPowerOfTwo(static_cast<uint32_t>(powerOfTwo)));
         }
@@ -88,7 +88,7 @@ namespace gte
         static int32_t GetLeadingBit(int32_t value)
         {
 #if defined(GTE_THROW_ON_BITHACKS_ERROR)
-            LogAssert(value != 0, "Invalid input.");
+            GTE_LogAssert(value != 0, "Invalid input.");
 #endif
             return GetLeadingBit(static_cast<uint32_t>(value));
         }
@@ -108,7 +108,7 @@ namespace gte
         static int32_t GetLeadingBit(int64_t value)
         {
 #if defined(GTE_THROW_ON_BITHACKS_ERROR)
-            LogAssert(value != 0, "Invalid input.");
+            GTE_LogAssert(value != 0, "Invalid input.");
 #endif
             return GetLeadingBit(static_cast<uint64_t>(value));
         }
@@ -124,7 +124,7 @@ namespace gte
             };
 
 #if defined(GTE_THROW_ON_BITHACKS_ERROR)
-            LogAssert(value != 0, "Invalid input.");
+            GTE_LogAssert(value != 0, "Invalid input.");
 #endif
 
             uint32_t key = (static_cast<uint32_t>((value & -value) * 0x077CB531u)) >> 27;
@@ -160,7 +160,7 @@ namespace gte
         static int32_t GetTrailingBit(int64_t value)
         {
 #if defined(GTE_THROW_ON_BITHACKS_ERROR)
-            LogAssert(value != 0, "Invalid input.");
+            GTE_LogAssert(value != 0, "Invalid input.");
 #endif
             return GetTrailingBit(static_cast<uint64_t>(value));
         }

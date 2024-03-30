@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-namespace gte
+namespace WwiseGTE
 {
     inline std::wstring ConvertNarrowToWide(std::string const& input)
     {

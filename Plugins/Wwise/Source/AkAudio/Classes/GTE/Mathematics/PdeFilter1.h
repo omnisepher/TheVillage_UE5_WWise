@@ -12,7 +12,7 @@
 #include <limits>
 #include <vector>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class PdeFilter1 : public PdeFilter<Real>

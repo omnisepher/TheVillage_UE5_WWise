@@ -20,7 +20,7 @@
 // ComputeType must be rational-based, say, BSRational.  If you process only
 // triangles that are simple, you may use BSNumber for the ComputeType.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename InputType, typename ComputeType>
     class TriangulateEC

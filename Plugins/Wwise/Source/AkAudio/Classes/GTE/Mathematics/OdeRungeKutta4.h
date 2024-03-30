@@ -15,7 +15,7 @@
 // have 'int GetSize() const' that allow OdeSolver-derived classes to query
 // for the dimension.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real, typename TVector>
     class OdeRungeKutta4 : public OdeSolver<Real, TVector>

@@ -11,7 +11,7 @@
 #include <Mathematics/GaussianElimination.h>
 #include <algorithm>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class GMatrix

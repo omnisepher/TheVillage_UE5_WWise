@@ -1,18 +1,19 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
-
 
 /*------------------------------------------------------------------------------------
 	SGenerateSoundBanks.cpp
@@ -23,12 +24,11 @@ Copyright (c) 2021 Audiokinetic Inc.
 #include "AkAudioBankGenerationHelpers.h"
 #include "AkAudioDevice.h"
 #include "AkSettingsPerUser.h"
-#include "AssetManagement/AkSoundDataBuilder.h"
-#include "AssetManagement/CookAkSoundDataTask.h"
-#include "AssetRegistryModule.h"
+#include "WwiseUEFeatures.h"
+#include "AssetManagement/AkGenerateSoundBanksTask.h"
+#include "AssetRegistry/AssetRegistryModule.h"
 #include "Dialogs/Dialogs.h"
 #include "Dom/JsonObject.h"
-#include "EditorStyleSet.h"
 #include "Framework/Application/SlateApplication.h"
 #include "GenericPlatform/GenericPlatformFile.h"
 #if UE_5_0_OR_LATER
@@ -46,7 +46,7 @@ Copyright (c) 2021 Audiokinetic Inc.
 #include "Serialization/JsonSerializer.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Input/SCheckBox.h"
-#include "WwiseProject/WwiseProjectInfo.h"
+#include "AssetManagement/WwiseProjectInfo.h"
 
 #define LOCTEXT_NAMESPACE "AkAudio"
 
@@ -85,7 +85,7 @@ void SGenerateSoundBanks::Construct(const FArguments& InArgs)
 			.AutoWidth()
 			[
 				SNew(SBorder)
-				.BorderImage( FEditorStyle::GetBrush("ToolPanel.GroupBorder") )
+				.BorderImage( FAkAppStyle::Get().GetBrush("ToolPanel.GroupBorder") )
 				[
 					SAssignNew(PlatformList, SListView<TSharedPtr<FString>>)
 					.ListItemsSource(&PlatformNames)
@@ -112,7 +112,7 @@ void SGenerateSoundBanks::Construct(const FArguments& InArgs)
 			.AutoWidth()
 			[
 				SNew(SBorder)
-				.BorderImage(FEditorStyle::GetBrush("ToolPanel.GroupBorder"))
+				.BorderImage(FAkAppStyle::Get().GetBrush("ToolPanel.GroupBorder"))
 				[
 					SAssignNew(LanguageList, SListView<TSharedPtr<FString>>)
 					.ListItemsSource(&LanguagesNames)
@@ -174,27 +174,12 @@ void SGenerateSoundBanks::Construct(const FArguments& InArgs)
 
 void SGenerateSoundBanks::PopulateList(void)
 {
+	// Get platforms in Wwise project
 	wwiseProjectInfo.Parse();
-
-	// Get available platforms
 	PlatformNames.Empty();
-	auto AvailablePlatformNames = AkUnrealPlatformHelper::GetAllSupportedWwisePlatforms(true);
-	TArray<FString> AvailablePlatformsInWwiseProject;
-	for (auto SupportedPlatform : wwiseProjectInfo.GetSupportedPlatforms())
+	for (const auto& WwisePlatform :  wwiseProjectInfo.GetSupportedPlatforms())
 	{
-		AvailablePlatformsInWwiseProject.Add(SupportedPlatform.Name);
-	}
-
-	for (const auto& Platform : AvailablePlatformNames)
-	{
-		auto* PlatformInfo = UAkPlatformInfo::GetAkPlatformInfo(*Platform);
-		if (!PlatformInfo)
-		{
-			continue;
-		}
-
-		FString WwisePlatformName = PlatformInfo->GetWwiseBankPlatformName(AvailablePlatformsInWwiseProject);
-
+		const FString WwisePlatformName = WwisePlatform.Name;
 		if (!WwisePlatformName.IsEmpty() && 
 			!PlatformNames.ContainsByPredicate([WwisePlatformName](TSharedPtr<FString> Platform) { return WwisePlatformName == *Platform; }))
 		{
@@ -234,11 +219,11 @@ FReply SGenerateSoundBanks::OnGenerateButtonClicked()
 		return FReply::Handled();
 	}
 
-	AkSoundDataBuilder::InitParameters initParameters;
+	AkSoundBankGenerationManager::FInitParameters InitParameters;
 
 	for (auto& platform : PlatformsToGenerate)
 	{
-		initParameters.Platforms.Add(*platform.Get());
+		InitParameters.Platforms.Add(*platform.Get());
 	}
 
 	TArray<TSharedPtr<FString>> languagesToGenerate = LanguageList->GetSelectedItems();
@@ -249,21 +234,26 @@ FReply SGenerateSoundBanks::OnGenerateButtonClicked()
 		{
 			if (*selectedLanguage == entry.Name)
 			{
-				initParameters.Languages.Add(entry);
+				InitParameters.Languages.Add(entry.Name);
 				break;
 			}
 		}
 	}
 
-	initParameters.SkipLanguages = SkipLanguagesCheckBox->IsChecked();
+	InitParameters.SkipLanguages = SkipLanguagesCheckBox->IsChecked();
 
 	if (auto* akSettingsPerUser = GetMutableDefault<UAkSettingsPerUser>())
 	{
-		akSettingsPerUser->SoundDataGenerationSkipLanguage = initParameters.SkipLanguages;
+		akSettingsPerUser->SoundDataGenerationSkipLanguage = InitParameters.SkipLanguages;
 		akSettingsPerUser->SaveConfig();
 	}
 
-	CookAkSoundDataTask::ExecuteTask(initParameters);
+	if (FAkWaapiClient::IsProjectLoaded())
+	{
+		InitParameters.GenerationMode = AkSoundBankGenerationManager::ESoundBankGenerationMode::WAAPI;
+	}
+	
+	AkGenerateSoundBanksTask::CreateAndExecuteTask(InitParameters);
 
 	TSharedPtr<SWindow> ParentWindow = FSlateApplication::Get().FindWidgetWindow(AsShared());
 	ParentWindow->RequestDestroyWindow();

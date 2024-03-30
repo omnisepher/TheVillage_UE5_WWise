@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 // AkAtomic.h
@@ -33,14 +32,13 @@ the specific language governing permissions and limitations under the License.
 	#include <AK/SoundEngine/Platforms/Windows/AkAtomic.h>
 #elif defined( __EMSCRIPTEN__ )
 	#include <AK/SoundEngine/Platforms/Emscripten/AkAtomic.h>
-#elif defined( __ggp__ )
-	#include <AK/SoundEngine/Platforms/GGP/AkAtomic.h>
 #elif defined(NN_NINTENDO_SDK)
 	#include <AK/SoundEngine/Platforms/NX/AkAtomic.h>
+#elif defined(AK_PS4)
+	#include <AK/SoundEngine/Platforms/PS4/AkAtomic.h>
+#elif defined(AK_PS5)
+	#include <AK/SoundEngine/Platforms/PS5/AkAtomic.h>
 #else
 	#include <AK/SoundEngine/Platforms/Linux/AkAtomic.h>
 #endif
 
-#ifndef AkThreadYield
-#define AkThreadYield()
-#endif

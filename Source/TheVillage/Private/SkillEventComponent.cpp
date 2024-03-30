@@ -37,15 +37,18 @@ void USkillEventComponent::PlaySkill() {
 
 	skillEventID = UAkGameplayStatics::PostEvent(SkillEvent, GetOwner(), int32(0), nullCallback);*/
 
-	FOnAkPostEventCallback nullCallback;
+	/*FOnAkPostEventCallback nullCallback;
 	TArray<FAkExternalSourceInfo> nullSources;
 
-	skillEventID =  UAkGameplayStatics::PostEvent(nullptr, GetOwner(), int32(0), nullCallback, nullSources, false, (FString)("IceSkill"));
+	skillEventID =  UAkGameplayStatics::PostEvent(m_SkillEvent, GetOwner(), int32(0), nullCallback, false);*/
 }
 
 void USkillEventComponent::StopSkill() {
 
-	UAkGameplayStatics::ExecuteActionOnPlayingID(AkActionOnEventType::Stop, skillEventID, int32(200));
+	/*if (auto* SoundEngine = IWwiseSoundEngineAPI::Get())
+	{
+		SoundEngine->ExecuteActionOnPlayingID(AK::SoundEngine::AkActionOnEventType::AkActionOnEventType_Stop, skillEventID, int32(200));
+	}*/
 
 }
 

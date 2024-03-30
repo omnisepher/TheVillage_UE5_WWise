@@ -27,7 +27,7 @@
 // An unordered tetrahedron stores a permutation of (v0, v1, v2, v3) so
 // that V[0] < V[1] < V[2] < V[3].
 
-namespace gte
+namespace WwiseGTE
 {
     template <bool Ordered>
     class TetrahedronKey : public FeatureKey<4, Ordered>

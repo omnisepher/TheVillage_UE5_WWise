@@ -10,7 +10,7 @@
 #include <Mathematics/Hyperellipsoid.h>
 #include <Mathematics/Line.h>
 
-namespace gte
+namespace WwiseGTE
 {
     // Project an ellipse onto a line.  The projection interval is
     // [smin,smax] and corresponds to the line segment P+s*D, where

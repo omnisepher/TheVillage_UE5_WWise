@@ -106,7 +106,7 @@
 // matrices of the decomposigion, and comperr is the computation E =
 // U^T*A*V - S.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class SingularValueDecomposition
@@ -521,7 +521,7 @@ namespace gte
                 }
 
                 // Apply the Givens rotations.
-                for (auto const& givens : gte::reverse(mLGivens))
+                for (auto const& givens : WwiseGTE::reverse(mLGivens))
                 {
                     Real& xr0 = x[givens.index0];
                     Real& xr1 = x[givens.index1];
@@ -592,7 +592,7 @@ namespace gte
                 }
 
                 // Apply the Givens rotations.
-                for (auto const& givens : gte::reverse(mRGivens))
+                for (auto const& givens : WwiseGTE::reverse(mRGivens))
                 {
                     Real& xr0 = x[givens.index0];
                     Real& xr1 = x[givens.index1];

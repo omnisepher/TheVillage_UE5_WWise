@@ -21,7 +21,7 @@
 //   A[0]*D[0] + A[1]*D[1] + A[2]*D[2] <= 1
 // where A[0] >= 0, A[1] >= 0, and A[2] >= 0.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class ContEllipsoid3MinCR

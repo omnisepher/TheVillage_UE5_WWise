@@ -11,7 +11,7 @@
 #include <Mathematics/Matrix3x3.h>
 #include <Mathematics/Rotation.h>
 
-namespace gte
+namespace WwiseGTE
 {
     // Compute an oriented bounding box of the points.  The box center is the
     // average of the points.  The box axes are the eigenvectors of the

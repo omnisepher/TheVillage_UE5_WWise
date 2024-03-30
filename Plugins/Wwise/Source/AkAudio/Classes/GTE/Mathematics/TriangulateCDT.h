@@ -29,7 +29,7 @@
 // with the additional triangles, the walk can navigate through holes in
 // the polygon to find the containing triangle of the specified point.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename InputType, typename ComputeType>
     class TriangulateCDT

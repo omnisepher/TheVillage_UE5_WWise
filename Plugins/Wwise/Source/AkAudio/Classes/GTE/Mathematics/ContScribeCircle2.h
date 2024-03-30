@@ -10,7 +10,7 @@
 #include <Mathematics/Hypersphere.h>
 #include <Mathematics/LinearSystem.h>
 
-namespace gte
+namespace WwiseGTE
 {
     // All functions return 'true' if the circle has been constructed, 'false'
     // otherwise (input points are linearly dependent).

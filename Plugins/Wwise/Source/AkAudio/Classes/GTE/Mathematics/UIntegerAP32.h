@@ -36,13 +36,13 @@
 
 #if defined(GTE_COLLECT_UINTEGERAP32_STATISTICS)
 #include <Mathematics/AtomicMinMax.h>
-namespace gte
+namespace WwiseGTE
 {
     extern std::atomic<size_t> gsUIntegerAP32MaxSize;
 }
 #endif
 
-namespace gte
+namespace WwiseGTE
 {
     class UIntegerAP32 : public UIntegerALU32<UIntegerAP32>
     {
@@ -141,7 +141,7 @@ namespace gte
             }
             else
             {
-                LogError("The number of bits must be nonnegative.");
+                GTE_LogError("The number of bits must be nonnegative.");
             }
 
 #if defined(GTE_COLLECT_UINTEGERAP32_STATISTICS)

@@ -49,7 +49,7 @@
 // that attribute by overriding one of the Initialize*() functions whose
 // stubs are defined in this class.
 
-namespace gte
+namespace WwiseGTE
 {
     enum class MeshTopology
     {

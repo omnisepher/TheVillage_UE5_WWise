@@ -10,7 +10,7 @@
 #include <Mathematics/RiemannianGeodesic.h>
 #include <Mathematics/BSplineSurface.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class BSplineGeodesic : public RiemannianGeodesic<Real>

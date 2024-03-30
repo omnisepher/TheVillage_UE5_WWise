@@ -22,7 +22,7 @@
 // N-by-N matrix.  Entry DF(r,c) is the derivative of F[r] with
 // respect to x[c].
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real, typename TVector, typename TMatrix>
     class OdeImplicitEuler : public OdeSolver<Real, TVector>

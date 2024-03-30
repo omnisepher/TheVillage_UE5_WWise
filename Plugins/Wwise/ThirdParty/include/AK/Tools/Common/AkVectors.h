@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 // AkVectors.h
@@ -70,11 +69,9 @@ public:
 		v[3] = 1;
 	}
 
-	~Ak4DVector(){}
-
 	//-----------------------------------------------------------
 	// Basic vector operators
-	Ak4DVector operator=(const Ak4DVector& b)
+	Ak4DVector& operator=(const Ak4DVector& b)
 	{
 		v[0] = b.v[0];
 		v[1] = b.v[1];
@@ -84,7 +81,7 @@ public:
 		return *this;
 	}
 
-	Ak4DVector operator/=(const AkReal32 f)
+	Ak4DVector& operator/=(const AkReal32 f)
 	{
 		v[0] = v[0] / f;
 		v[1] = v[1] / f;
@@ -106,138 +103,269 @@ public:
 		return p;
 	}
 
-	AkReal32	v[4];
+	AkReal32 v[4];
 };
 
 struct Ak3DIntVector
 {
 public:
-	Ak3DIntVector(){}
-	Ak3DIntVector(AkInt32 x, AkInt32 y, AkInt32 z)
+	Ak3DIntVector() = default;
+
+	Ak3DIntVector(AkInt32 x, AkInt32 y, AkInt32 z) :
+		X(x),
+		Y(y),
+		Z(z)
 	{
-		X = x;
-		Y = y;
-		Z = z;
 	}
 
-	~Ak3DIntVector(){}
-
-	AkInt32		X;	///< X Position
-	AkInt32		Y;	///< Y Position
-	AkInt32		Z;	///< Z Position
+	AkInt32 X;	///< X Position
+	AkInt32 Y;	///< Y Position
+	AkInt32 Z;	///< Z Position
 };
 
-class Ak3DVector
+///
+/// Specialization must provide these methods. Could enforce that through static_assert...
+/// static TDataType Cos(TDataType in_value) const;
+/// static TDataType Sin(TDataType in_value) const;
+/// static TDataType Sqrt(TDataType in_value) const;
+/// static constexpr TDataType POSITIVE_EPSILON;
+/// static constexpr TDataType VECTOR_EPSILON;
+///
+template<typename TDataType> class RealPrecision;
+
+template<>
+class RealPrecision<AkReal32>
 {
 public:
+	static AkReal32 Cos(AkReal32 in_value) { return cosf(in_value); }
+	static AkReal32 Sin(AkReal32 in_value) { return sinf(in_value); }
+	static AkReal32 Sqrt(AkReal32 in_value) { return sqrtf(in_value); }
+	static AkReal32 ACos(AkReal32 in_value) { return acosf(in_value); }
+	static bool IsFinite(AkReal32 in_val) 
+	{ 
+		// Purposely not using std::isnan() or isfinite because fastmath on clang & gcc may optimize them to be false always.
+		return !(((*(AkUInt32*)&in_val) & 0x7fffffff) >= 0x7f800000);
+	}
+
+	static constexpr AkReal32 POSITIVE_EPSILON = 0.00001f;
+	static constexpr AkReal32 VECTOR_EPSILON = AKVECTORS_EPSILON;
+
+	static constexpr AkReal32 MAX_VALUE = FLT_MAX;
+};
+
+template<>
+class RealPrecision<AkReal64>
+{
+public:
+	static AkReal64 Cos(AkReal64 in_value) { return cos(in_value); }
+	static AkReal64 Sin(AkReal64 in_value) { return sin(in_value); }
+	static AkReal64 Sqrt(AkReal64 in_value) { return sqrt(in_value); }
+	static AkReal64 ACos(AkReal64 in_value) { return acos(in_value); }
+	static bool IsFinite(AkReal64 in_val)
+	{
+		// Purposely not using std::isnan() or isfinite because fastmath on clang & gcc may optimize them to be false always.
+		return !(((*(AkUInt64*)&in_val) & 0x7fffffffffffffff) >= 0x7ff0000000000000);
+	}
+
+	static constexpr AkReal64 POSITIVE_EPSILON = 0.000000000001f;
+	static constexpr AkReal64 VECTOR_EPSILON = AKVECTORS_EPSILON;
+
+	static constexpr AkReal64 MAX_VALUE = DBL_MAX;
+};
+
+// AkImplicitConversion
+// Permits automatic conversion from any real type to any other real type.
+// May result in loss of precision.
+class AkImplicitConversion
+{
+public:
+	template<typename TFromReal, typename TToReal>
+	AkForceInline void Convert(TToReal& out_to, TFromReal in_from)
+	{
+		out_to = static_cast<TToReal>(in_from);
+	}
+};
+
+// AkSafeConversion
+// Permits automatic conversion only from 32-bit to 64-bit types.
+// Conversion from 64-bit to 32-bit is not permitted and will generate and error.
+class AkSafeConversion
+{
+public:
+	AkForceInline void Convert(AkReal64& out_to, AkReal32 in_from)
+	{
+		out_to = in_from;
+	}
+	template<typename TReal>
+	AkForceInline void Convert(TReal& out_to, TReal in_from)
+	{
+		out_to = in_from;
+	}
+};
+
+// T3DVector<>
+// Template 3D vector class, to support both 32 and 64-bit vector types.
+// Ak3DVector32 and Ak3DVector64 typedefs are provided below for convenience.
+template<typename TDataType>
+class T3DVector
+{
+public:
+	/// Expose the data type
+	///
+	typedef TDataType data_type;
+
+	// Conversion policy for conversions between 32 and 64 bit types.
+	typedef AkSafeConversion TTypeConverter;
+
+public:
+
 	//-----------------------------------------------------------
 	// Constructor/Destructor functions
-	Ak3DVector() :
-		X(0.f),
-		Y(0.f),
-		Z(0.f)
+
+	T3DVector() :
+		X(static_cast<TDataType>(0.0)),
+		Y(static_cast<TDataType>(0.0)),
+		Z(static_cast<TDataType>(0.0))
 	{}
 
-	Ak3DVector(
-		AkReal32					x,
-		AkReal32					y,
-		AkReal32					z)
+	T3DVector(TDataType in_x, TDataType in_y, TDataType in_z) :
+		X(in_x),
+		Y(in_y),
+		Z(in_z)
+	{}
+
+	// Construct from another T3DVector<> type. 
+	// Conversion is (only) permitted in accordance to the conversion policy.
+	template<typename TFromDataType>
+	T3DVector(const T3DVector<TFromDataType>& in_vector)
 	{
-		X = x;
-		Y = y;
-		Z = z;
+		TTypeConverter converter;
+		converter.Convert(X, in_vector.X);
+		converter.Convert(Y, in_vector.Y);
+		converter.Convert(Z, in_vector.Z);
 	}
-	Ak3DVector(const AkVector& b)
+
+	// Construct from an AkVector type. 
+	// Conversion is (only) permitted in accordance to the conversion policy.
+	T3DVector(const AkVector& in_vector)
 	{
-		X = b.X;
-		Y = b.Y;
-		Z = b.Z;
+		TTypeConverter converter;
+		converter.Convert(X, in_vector.X);
+		converter.Convert(Y, in_vector.Y);
+		converter.Convert(Z, in_vector.Z);
 	}
-	explicit Ak3DVector(const AKSIMD_V4F32& in_v4f32)
+
+	// Construct from an AkVector64 type. 
+	// Conversion is (only) permitted in accordance to the conversion policy.
+	T3DVector(const AkVector64& in_vector)
 	{
-		X = AKSIMD_GETELEMENT_V4F32(in_v4f32, 0);
-		Y = AKSIMD_GETELEMENT_V4F32(in_v4f32, 1);
-		Z = AKSIMD_GETELEMENT_V4F32(in_v4f32, 2);
+		TTypeConverter converter;
+		converter.Convert(X, in_vector.X);
+		converter.Convert(Y, in_vector.Y);
+		converter.Convert(Z, in_vector.Z);
 	}
+
+	// Implicit conversion to AkVector type, it the conversion policy permits it.
+	operator AkVector() const
+	{
+		AkVector v;
+		TTypeConverter converter;
+		converter.Convert(v.X, X);
+		converter.Convert(v.Y, Y);
+		converter.Convert(v.Z, Z);
+		return v;
+	}
+
+	// Implicit conversion to AkVector64 type, it the conversion policy permits it.
+	operator AkVector64() const
+	{
+		AkVector64 v;
+		TTypeConverter converter;
+		converter.Convert(v.X, X);
+		converter.Convert(v.Y, Y);
+		converter.Convert(v.Z, Z);
+		return v;
+	}
+
+	// Casting method for explicit conversion to another vector type.s
+	template<typename TVectorType>
+	TVectorType Cast() const;
+
+	// Construct a vector from a scalar.
+	explicit T3DVector(TDataType in_scalar)
+		: X(in_scalar)
+		, Y(in_scalar)
+		, Z(in_scalar)
+	{}
+
+	// Convert from a vector from a AKSIMD_V4F32. 
+	explicit T3DVector(const AKSIMD_V4F32& in_v4f32)
+	{
+		X = static_cast<TDataType>(AKSIMD_GETELEMENT_V4F32(in_v4f32, 0));
+		Y = static_cast<TDataType>(AKSIMD_GETELEMENT_V4F32(in_v4f32, 1));
+		Z = static_cast<TDataType>(AKSIMD_GETELEMENT_V4F32(in_v4f32, 2));
+	}
+
 	AkForceInline AKSIMD_V4F32 PointV4F32() const
 	{
 		AKSIMD_V4F32 v4f32;
-		AKSIMD_GETELEMENT_V4F32(v4f32, 0) = X;
-		AKSIMD_GETELEMENT_V4F32(v4f32, 1) = Y;
-		AKSIMD_GETELEMENT_V4F32(v4f32, 2) = Z;
+		AKSIMD_GETELEMENT_V4F32(v4f32, 0) = static_cast<AkReal32>(X);
+		AKSIMD_GETELEMENT_V4F32(v4f32, 1) = static_cast<AkReal32>(Y);
+		AKSIMD_GETELEMENT_V4F32(v4f32, 2) = static_cast<AkReal32>(Z);
 		AKSIMD_GETELEMENT_V4F32(v4f32, 3) = 1.f;
 		return v4f32;
 	}
+
 	AkForceInline AKSIMD_V4F32 VectorV4F32() const
 	{
 		AKSIMD_V4F32 v4f32;
-		AKSIMD_GETELEMENT_V4F32(v4f32, 0) = X;
-		AKSIMD_GETELEMENT_V4F32(v4f32, 1) = Y;
-		AKSIMD_GETELEMENT_V4F32(v4f32, 2) = Z;
-		AKSIMD_GETELEMENT_V4F32(v4f32, 3) = 0.f;
+		AKSIMD_GETELEMENT_V4F32(v4f32, 0) = static_cast<TDataType>(X);
+		AKSIMD_GETELEMENT_V4F32(v4f32, 1) = static_cast<TDataType>(Y);
+		AKSIMD_GETELEMENT_V4F32(v4f32, 2) = static_cast<TDataType>(Z);
+		AKSIMD_GETELEMENT_V4F32(v4f32, 3) = static_cast<TDataType>(0.0);
 		return v4f32;
 	}
-	~Ak3DVector() {}
 
 	void Zero()
 	{
-		X = 0.f;
-		Y = 0.f;
-		Z = 0.f;
+		X = static_cast<TDataType>(0.0);
+		Y = static_cast<TDataType>(0.0);
+		Z = static_cast<TDataType>(0.0);
 	}
-
 
 	//-----------------------------------------------------------
 	// Basic vector operators
-	AkForceInline bool operator==(const Ak3DVector& b) const
+	AkForceInline bool operator==(const T3DVector& b) const
 	{
 		return X == b.X && Y == b.Y && Z == b.Z;
 	}
 
-	AkForceInline bool operator!=(const Ak3DVector& b) const
+	AkForceInline bool operator!=(const T3DVector& b) const
 	{
 		return X != b.X || Y != b.Y || Z != b.Z;
 	}
 
-	AkForceInline Ak3DVector operator=(const Ak3DVector& b)
-	{
-		X = b.X;
-		Y = b.Y;
-		Z = b.Z;
-
-		return *this;
-	}
-
-	AkForceInline Ak3DVector operator=(const AkVector& b)
-	{
-		X = b.X;
-		Y = b.Y;
-		Z = b.Z;
-
-		return *this;
-	}
-
-	AkForceInline bool operator<(const Ak3DVector& b) const
+	AkForceInline bool operator<(const T3DVector& b) const
 	{
 		return X < b.X && Y < b.Y && Z < b.Z;
 	}
 
-	AkForceInline bool operator<=(const Ak3DVector& b) const
+	AkForceInline bool operator<=(const T3DVector& b) const
 	{
 		return X <= b.X && Y <= b.Y && Z <= b.Z;
 	}
 
-	AkForceInline bool operator>(const Ak3DVector b) const
+	AkForceInline bool operator>(const T3DVector b) const
 	{
 		return X > b.X && Y > b.Y && Z > b.Z;
 	}
 
-	AkForceInline bool operator>=(const Ak3DVector& b) const
+	AkForceInline bool operator>=(const T3DVector& b) const
 	{
 		return X >= b.X && Y >= b.Y && Z >= b.Z;
 	}
 
-	AkForceInline Ak3DVector operator*=(const AkReal32 f)
+	AkForceInline T3DVector& operator*=(const TDataType f)
 	{
 		X = X * f;
 		Y = Y * f;
@@ -246,9 +374,9 @@ public:
 		return *this;
 	}
 
-	AkForceInline Ak3DVector operator/=(const AkReal32 f)
+	AkForceInline T3DVector& operator/=(const TDataType f)
 	{
-		AkReal32 oneoverf = 1.f / f;
+		TDataType oneoverf = static_cast<TDataType>(1.0) / f;
 		X = X * oneoverf;
 		Y = Y * oneoverf;
 		Z = Z * oneoverf;
@@ -256,9 +384,9 @@ public:
 		return *this;
 	}
 
-	AkForceInline Ak3DVector operator*(const Ak3DVector v2) const
+	AkForceInline T3DVector operator*(const T3DVector v2) const
 	{
-		Ak3DVector v;
+		T3DVector v;
 
 		v.X = X * v2.X;
 		v.Y = Y * v2.Y;
@@ -267,9 +395,9 @@ public:
 		return v;
 	}
 
-	AkForceInline Ak3DVector operator*(const AkReal32 f) const
+	AkForceInline T3DVector operator*(const TDataType f) const
 	{
-		Ak3DVector v;
+		T3DVector v;
 
 		v.X = X * f;
 		v.Y = Y * f;
@@ -278,10 +406,22 @@ public:
 		return v;
 	}
 
-	AkForceInline Ak3DVector operator/(const AkReal32 f) const
+	AkForceInline T3DVector operator/(const T3DVector in_rhs) const
 	{
-		Ak3DVector v;
-		AkReal32 oneoverf = 1.f / f;
+		T3DVector v;
+
+		v.X = X / in_rhs.X;
+		v.Y = Y / in_rhs.Y;
+		v.Z = Z / in_rhs.Z;
+
+		return v;
+	}
+
+	AkForceInline T3DVector operator/(const TDataType f) const
+	{
+		T3DVector v;
+
+		TDataType oneoverf = static_cast<TDataType>(1.0) / f;
 
 		v.X = X * oneoverf;
 		v.Y = Y * oneoverf;
@@ -290,9 +430,9 @@ public:
 		return v;
 	}
 
-	AkForceInline Ak3DVector operator+(const AkReal32 f) const
+	AkForceInline T3DVector operator+(const TDataType f) const
 	{
-		Ak3DVector v;
+		T3DVector v;
 
 		v.X = X + f;
 		v.Y = Y + f;
@@ -301,9 +441,9 @@ public:
 		return v;
 	}
 
-	AkForceInline Ak3DVector operator-(const AkReal32 f) const
+	AkForceInline T3DVector operator-(const TDataType f) const
 	{
-		Ak3DVector v;
+		T3DVector v;
 
 		v.X = X - f;
 		v.Y = Y - f;
@@ -312,9 +452,9 @@ public:
 		return v;
 	}
 
-	AkForceInline Ak3DVector operator+(const Ak3DVector& b) const
+	AkForceInline T3DVector operator+(const T3DVector& b) const
 	{
-		Ak3DVector v;
+		T3DVector v;
 
 		v.X = X + b.X;
 		v.Y = Y + b.Y;
@@ -323,9 +463,9 @@ public:
 		return v;
 	}
 
-	AkForceInline Ak3DVector operator-(const Ak3DVector& b) const
+	AkForceInline T3DVector operator-(const T3DVector& b) const
 	{
-		Ak3DVector v;
+		T3DVector v;
 
 		v.X = X - b.X;
 		v.Y = Y - b.Y;
@@ -334,18 +474,19 @@ public:
 		return v;
 	}
 
-	AkForceInline operator AkVector()
+	AkForceInline TDataType HorizontalMin() const
 	{
-		AkVector v;
-		v.X = X; v.Y = Y; v.Z = Z;
-
-		return v;
+		return AkMin(X, AkMin(Y, Z));
 	}
 
-
-	AkForceInline static Ak3DVector Min(const Ak3DVector& A, const Ak3DVector& B)
+	AkForceInline TDataType HorizontalMax() const
 	{
-		Ak3DVector min;
+		return AkMax(X, AkMax(Y, Z));
+	}
+
+	AkForceInline static T3DVector Min(const T3DVector& A, const T3DVector& B)
+	{
+		T3DVector min;
 
 		min.X = AkMin(A.X, B.X);
 		min.Y = AkMin(A.Y, B.Y);
@@ -354,9 +495,9 @@ public:
 		return min;
 	}
 
-	AkForceInline static Ak3DVector Max(const Ak3DVector& A, const Ak3DVector& B)
+	AkForceInline static T3DVector Max(const T3DVector& A, const T3DVector& B)
 	{
-		Ak3DVector max;
+		T3DVector max;
 
 		max.X = AkMax(A.X, B.X);
 		max.Y = AkMax(A.Y, B.Y);
@@ -365,11 +506,16 @@ public:
 		return max;
 	}
 
+	AkForceInline bool Equals(const T3DVector& b, const TDataType tolerance = static_cast<TDataType>(0.0)) const
+	{
+		return fabs(X - b.X) <= tolerance && fabs(Y - b.Y) <= tolerance && fabs(Z - b.Z) <= tolerance;
+	}
+
 	//-----------------------------------------------------------
 	// Conversion functions
-	AkForceInline Ak3DVector Rotate180X_90Y() const
+	AkForceInline T3DVector Rotate180X_90Y() const
 	{
-		Ak3DVector v;
+		T3DVector v;
 
 		v.X = -X;
 		v.Y = Z;
@@ -378,50 +524,50 @@ public:
 		return v;
 	}
 
-	AkForceInline Ak3DVector SphericalToCartesian(
-		const AkReal32				azimuth,
-		const AkReal32				elevation)
+	AkForceInline T3DVector SphericalToCartesian(
+		const TDataType azimuth,
+		const TDataType elevation)
 	{
-		AkReal32 cosElevation = cosf(elevation);
-		X = cosf(azimuth) *	cosElevation;
-		Y = sinf(azimuth) *	cosElevation;
-		Z = sinf(elevation);
+		TDataType cosElevation = RealPrecision<TDataType>::Cos(elevation);
+		X = RealPrecision<TDataType>::Cos(azimuth) *	cosElevation;
+		Y = RealPrecision<TDataType>::Sin(azimuth) *	cosElevation;
+		Z = RealPrecision<TDataType>::Sin(elevation);
 		
 		return *this;
 	}
 
 	// Determinant of 3 column vectors.
-	static AkForceInline AkReal32 Determinant(
-		const Ak3DVector &			a,
-		const Ak3DVector &			b,
-		const Ak3DVector &			c)
+	static AkForceInline TDataType Determinant(
+		const T3DVector& a,
+		const T3DVector& b,
+		const T3DVector& c)
 	{
 		return	(a.X*b.Y*c.Z + a.Y*b.Z*c.X + a.Z*b.X*c.Y) -
 			(a.Z*b.Y*c.X + a.Y*b.X*c.Z + a.X*b.Z*c.Y);
 	}
 
 	// Convert a vector to a different base
-	AkForceInline Ak3DVector LinearCombination(
-		const Ak3DVector&			A,
-		const Ak3DVector&			B,
-		const Ak3DVector&			C) const
+	AkForceInline T3DVector LinearCombination(
+		const T3DVector& A,
+		const T3DVector& B,
+		const T3DVector& C) const
 	{
-		Ak3DVector v;
+		T3DVector v;
 
-		AkReal32 d = Determinant(A, B, C);
+		TDataType d = Determinant(A, B, C);
 
-		if (d < AKVECTORS_EPSILON && d > -AKVECTORS_EPSILON)
+		if (d < RealPrecision<TDataType>::VECTOR_EPSILON && d > -RealPrecision<TDataType>::VECTOR_EPSILON)
 		{
-			v.X = 0.0f; v.Y = 0.0f; v.Z = 0.0f;
+			v.X = static_cast<TDataType>(0.0); v.Y = static_cast<TDataType>(0.0); v.Z = static_cast<TDataType>(0.0);
 			return v;
 		}
 
 		// http://mathworld.wolfram.com/MatrixInverse.html
-		Ak3DVector invA = Ak3DVector(B.Y*C.Z - B.Z*C.Y, A.Z*C.Y - A.Y*C.Z, A.Y*B.Z - A.Z*B.Y);
-		Ak3DVector invB = Ak3DVector(B.Z*C.X - B.X*C.Z, A.X*C.Z - A.Z*C.X, A.Z*B.X - A.X*B.Z);
-		Ak3DVector invC = Ak3DVector(B.X*C.Y - B.Y*C.X, A.Y*C.X - A.X*C.Y, A.X*B.Y - A.Y*B.X);
+		T3DVector invA = T3DVector(B.Y*C.Z - B.Z*C.Y, A.Z*C.Y - A.Y*C.Z, A.Y*B.Z - A.Z*B.Y);
+		T3DVector invB = T3DVector(B.Z*C.X - B.X*C.Z, A.X*C.Z - A.Z*C.X, A.Z*B.X - A.X*B.Z);
+		T3DVector invC = T3DVector(B.X*C.Y - B.Y*C.X, A.Y*C.X - A.X*C.Y, A.X*B.Y - A.Y*B.X);
 
-		AkReal32 oneover_d = 1.f / d;
+		TDataType oneover_d = static_cast<TDataType>(1.0) / d;
 		invA *= oneover_d;
 		invB *= oneover_d;
 		invC *= oneover_d;
@@ -436,10 +582,10 @@ public:
 		return v;
 	}
 
-	AkForceInline const Ak3DVector& Normalize()
+	AkForceInline T3DVector& Normalize()
 	{
-		AkReal32 l = Length();
-		if (l != 0.f)
+		TDataType l = Length();
+		if (l != static_cast<TDataType>(0.0))
 		{
 			X /= l;
 			Y /= l;
@@ -447,32 +593,33 @@ public:
 		}
 		else
 		{
-			X = 0.f;
-			Y = 0.f;
-			Z = 0.f;
+			X = static_cast<TDataType>(0.0);
+			Y = static_cast<TDataType>(0.0);
+			Z = static_cast<TDataType>(0.0);
 		}
 		return *this;
 	}
 
-	AkForceInline AkReal32 L2_Norm() const
+	AkForceInline TDataType L2_Norm() const
 	{
-		return sqrtf(X*X + Y*Y + Z*Z);
+		return RealPrecision<TDataType>::Sqrt(X*X + Y*Y + Z*Z);
 	}
 
-	AkForceInline AkReal32 DotProduct(const Ak3DVector& v2) const
+	AkForceInline TDataType DotProduct(const T3DVector& v2) const
 	{
 		return X*v2.X + Y*v2.Y + Z*v2.Z;
 	}
 
-	AkForceInline AkReal32 Dot(const Ak3DVector& v2) const
+	AkForceInline TDataType Dot(const T3DVector& v2) const
 	{
 		return DotProduct(v2);
 	}
 
-	AkForceInline Ak3DVector Cross(const Ak3DVector& v) const
+	AkForceInline T3DVector Cross(const T3DVector& v) const
 	{
-		Ak3DVector uxv;
-		const Ak3DVector& u = *this;
+		T3DVector uxv;
+
+		const T3DVector& u = *this;
 
 		uxv.X = u.Y*v.Z - u.Z*v.Y;
 		uxv.Y = u.Z*v.X - u.X*v.Z;
@@ -480,13 +627,13 @@ public:
 
 		return uxv;
 	}
-	//
-	AkForceInline AkReal32 Length() const
+	
+	AkForceInline TDataType Length() const
 	{
-		return sqrtf(X*X + Y*Y + Z*Z);
+		return RealPrecision<TDataType>::Sqrt(X*X + Y*Y + Z*Z);
 	}
 
-	AkForceInline AkReal32 LengthSquared() const
+	AkForceInline TDataType LengthSquared() const
 	{
 		return X*X + Y*Y + Z*Z;
 	}
@@ -494,40 +641,85 @@ public:
 	// Usefull in VBAP algorithm, only points that are a positive linear composition matters.
 	AkForceInline bool IsAllPositive() const
 	{
-		const AkReal32 POSITIVE_TEST_EPSILON = 0.00001f;
-		return X >= -POSITIVE_TEST_EPSILON &&
-			Y >= -POSITIVE_TEST_EPSILON &&
-			Z >= -POSITIVE_TEST_EPSILON;
+		return X >= -RealPrecision<TDataType>::POSITIVE_EPSILON &&
+			Y >= -RealPrecision<TDataType>::POSITIVE_EPSILON &&
+			Z >= -RealPrecision<TDataType>::POSITIVE_EPSILON;
 	}
 
-	AkForceInline Ak3DVector Abs() const
+	AkForceInline T3DVector Abs() const
 	{
-		Ak3DVector abs = *this;
-		abs.X = (AkReal32)fabs(abs.X);
-		abs.Y = (AkReal32)fabs(abs.Y);
-		abs.Z = (AkReal32)fabs(abs.Z);
+		T3DVector abs = *this;
+		abs.X = (TDataType)fabs(abs.X);
+		abs.Y = (TDataType)fabs(abs.Y);
+		abs.Z = (TDataType)fabs(abs.Z);
 		return abs;
 	}
 
-	AkReal32						X;
-    AkReal32						Y;
-    AkReal32						Z;
+	AkForceInline bool IsFinite() const
+	{
+		return
+			RealPrecision<TDataType>::IsFinite(X) &&
+			RealPrecision<TDataType>::IsFinite(Y) &&
+			RealPrecision<TDataType>::IsFinite(Z);
+	}
+
+	TDataType						X;
+	TDataType						Y;
+	TDataType						Z;
 };
+
+template<typename TDataType>
+AkForceInline T3DVector<TDataType> operator*(const TDataType f, const T3DVector<TDataType>& v)
+{
+	return v * f;
+}
+
+template<typename TDataType>
+AkForceInline T3DVector<TDataType> operator/(const TDataType f, const T3DVector<TDataType>& v)
+{
+	T3DVector<TDataType> res;
+	res.X = f / v.X;
+	res.Y = f / v.Y;
+	res.Z = f / v.Z;
+	return res;
+}
+
+
+// Ak3DVector typedefs
+
+// Ak3DVector32 - Can be implicitly converted to 64 but not the other way around.
+typedef T3DVector<AkReal32> Ak3DVector;
+typedef T3DVector<AkReal32> Ak3DVector32;
+
+// Ak3DVector64 - It is necessary to call vec.Cast<Ak3DVector64>() to convert to 32 bit vector type.
+typedef T3DVector<AkReal64> Ak3DVector64;
+
+// Casting methods.
+
+// Generic cast between two T3DVector<> types.
+template<typename TDataType>
+template<typename TVectorType>
+TVectorType T3DVector<TDataType>::Cast() const
+{
+	TVectorType v;
+	v.X = static_cast<typename TVectorType::data_type>(X);
+	v.Y = static_cast<typename TVectorType::data_type>(Y);
+	v.Z = static_cast<typename TVectorType::data_type>(Z);
+	return v;
+}
+
 
 class Ak2DVector
 {
 public:
 	//-----------------------------------------------------------
 	// Constructor/Destructor functions
-	Ak2DVector(){}
-	~Ak2DVector(){}
+	Ak2DVector() = default;
 
-	Ak2DVector(
-		AkReal32					x,
-		AkReal32					y)
+	Ak2DVector(AkReal32	x, AkReal32 y) :
+		X(x),
+		Y(y)
 	{
-		X = x;
-		Y = y;
 	}
 
 	//-----------------------------------------------------------
@@ -558,7 +750,7 @@ public:
 		return v;
 	}
 
-	Ak2DVector operator*=(const AkReal32 f)
+	Ak2DVector& operator*=(const AkReal32 f)
 	{
 		X = X * f;
 		Y = Y * f;
@@ -566,7 +758,7 @@ public:
 		return *this;
 	}
 
-	Ak2DVector operator/=(const AkReal32 f)
+	Ak2DVector& operator/=(const AkReal32 f)
 	{
 		AkReal32 oneoverf = 1.f / f;
 		X = X * oneoverf;
@@ -592,7 +784,7 @@ public:
 
 	//-----------------------------------------------------------
 	// Conversion functions
-	AkForceInline Ak2DVector CartesianToSpherical( const Ak3DVector& in_Cartesian )
+	AkForceInline Ak2DVector& CartesianToSpherical(const Ak3DVector& in_Cartesian)
 	{
 		// (radial, azimuth, elevation)
 		AkReal32 r = sqrtf( in_Cartesian.X*in_Cartesian.X + in_Cartesian.Y*in_Cartesian.Y + in_Cartesian.Z*in_Cartesian.Z);
@@ -607,8 +799,8 @@ public:
 	}
 
 	AkForceInline Ak2DVector LinearCombination(
-		const Ak2DVector&			A,
-		const Ak2DVector&			B) const
+		const Ak2DVector& A,
+		const Ak2DVector& B) const
 	{
 		Ak2DVector v;
 
@@ -691,8 +883,8 @@ public:
 			Y >= -POSITIVE_TEST_EPSILON;
 	}
 
-    AkReal32						X;
-    AkReal32						Y;
+    AkReal32 X;
+    AkReal32 Y;
 };
 
 
@@ -704,12 +896,11 @@ class AkMatrix4x4
 public:
 	//-----------------------------------------------------------
 	// Constructor/Destructor functions
-	AkMatrix4x4() {}
-	~AkMatrix4x4() {}
+	AkMatrix4x4() = default;
 
 	//-----------------------------------------------------------
 	// Basic vector operators
-	AkMatrix4x4 operator/=(const AkReal32 f)
+	AkMatrix4x4& operator/=(const AkReal32 f)
 	{
 		for (int i = 0; i < MAX_SIZE; i++)
 			m_Data[i] /= f;
@@ -717,7 +908,7 @@ public:
 		return *this;
 	}
 
-	AkMatrix4x4 operator=(AkReal32 * in_Data)
+	AkMatrix4x4& operator=(AkReal32 * in_Data)
 	{
 		for (int i = 0; i < MAX_SIZE; i++)
 		{
@@ -736,12 +927,30 @@ class AkMatrix3x3
 public:
 	//-----------------------------------------------------------
 	// Constructor/Destructor functions
-	AkMatrix3x3() {}
-	~AkMatrix3x3() {}
+	AkMatrix3x3() = default;
+
+	static AkMatrix3x3 FromColumnVectors(const Ak3DVector& in_col0, const Ak3DVector& in_col1, const Ak3DVector& in_col2)
+	{
+		AkMatrix3x3 m;
+
+		m(0, 0) = in_col0.X;
+		m(1, 0) = in_col0.Y;
+		m(2, 0) = in_col0.Z;
+
+		m(0, 1) = in_col1.X;
+		m(1, 1) = in_col1.Y;
+		m(2, 1) = in_col1.Z;
+
+		m(0, 2) = in_col2.X;
+		m(1, 2) = in_col2.Y;
+		m(2, 2) = in_col2.Z;
+
+		return m;
+	}
 
 	//-----------------------------------------------------------
 	// Basic vector operators
-	AkMatrix3x3 operator/=(const AkReal32 f)
+	AkMatrix3x3& operator/=(const AkReal32 f)
 	{
 		for (int i = 0; i < 3; i++)
 		{
@@ -763,7 +972,7 @@ public:
 		return m_Data[column][row];
 	}
 
-	AkForceInline Ak3DVector operator*(const Ak3DVector& in_rhs)
+	AkForceInline Ak3DVector operator*(const Ak3DVector& in_rhs) const
 	{
 		Ak3DVector res;
 		res.X = in_rhs.X * m_Data[0][0] + in_rhs.Y * m_Data[1][0] + in_rhs.Z * m_Data[2][0];
@@ -847,25 +1056,102 @@ public:
 	AkQuaternion(): W(1.f), X(0.f), Y(0.f), Z(0.f) {}
 
 	AkQuaternion(AkReal32 in_W, AkReal32 in_X, AkReal32 in_Y, AkReal32 in_Z) : 
-			W(in_W), 
-			X(in_X), 
-			Y(in_Y), 
-			Z(in_Z) 
+		W(in_W), 
+		X(in_X), 
+		Y(in_Y), 
+		Z(in_Z) 
 	{}
 
-	AkQuaternion(const Ak3DVector& in_fromVector): 
-		W(0.f), 
-		X(in_fromVector.X), 
-		Y(in_fromVector.Y), 
-		Z(in_fromVector.Z) 
-	{}
+	// Create a quaternion from a 3x3 rotation matrix
+	static AkQuaternion FromRotationMatrix(const AkMatrix3x3& in_mat)
+	{
+		AkQuaternion q;
+		
+		AkReal32 trace = in_mat(0,0) + in_mat(1, 1) + in_mat(2, 2);
+		if (trace > 0.0f)
+		{
+			AkReal32 srt = sqrtf(trace + 1.f);
+			AkReal32 s = 0.5f / srt;
+			
+			q.W = 0.5f * srt;
+ 			q.X = (in_mat(2, 1) - in_mat(1, 2)) * s;
+ 			q.Y = (in_mat(0, 2) - in_mat(2, 0)) * s;
+ 			q.Z = (in_mat(1, 0) - in_mat(0, 1)) * s;
 
-	AkForceInline AkReal32 Length()
+		}
+		else
+		{
+			// diagonal is negative
+			AkUInt32 i = 0;
+			if (in_mat(1, 1) > in_mat(0, 0))
+				i = 1;
+			if (in_mat(2, 2) > in_mat(i, i))
+				i = 2;
+
+			AkUInt32 j = (i + 1) % 3;
+			AkUInt32 k = (i + 2) % 3;
+
+			AkReal32 s = sqrtf( in_mat(i, i) - in_mat(j, j) - in_mat(k, k) + 1.0f );
+			AkReal32 t = (s == 0.f) ? 0.f : (0.5f / s);
+
+			AkReal32 qt[4];
+
+			qt[i] = 0.5f * s;
+			qt[j] = (in_mat(j, i) + in_mat(i, j)) * t;
+			qt[k] = (in_mat(k, i) + in_mat(i, k)) * t;
+			qt[3] = (in_mat(k, j) - in_mat(j, k)) * t;
+
+			q.X = qt[0];
+			q.Y = qt[1];
+			q.Z = qt[2];
+			q.W = qt[3];
+		}
+
+		return q;
+	}
+
+	// Create a rotation quaternion from euler angles. 
+	static AkQuaternion FromEulers( 
+		AkReal32 in_x,	// Rotation around the X axis, in radians.
+		AkReal32 in_y,	// Rotation around the Y axis, in radians.
+		AkReal32 in_z	// Rotation around the Z axis, in radians.
+	)
+	{
+		AkReal32 sy = sinf(in_z / 2.f);
+		AkReal32 cy = cosf(in_z / 2.f);
+		AkReal32 sp = sinf(in_y / 2.f);
+		AkReal32 cp = cosf(in_y / 2.f);
+		AkReal32 sr = sinf(in_x / 2.f);
+		AkReal32 cr = cosf(in_x / 2.f);
+
+		AkQuaternion q;
+		q.W = cr * cp * cy + sr * sp * sy;
+		q.X = sr * cp * cy - cr * sp * sy;
+		q.Y = cr * sp * cy + sr * cp * sy;
+		q.Z = cr * cp * sy - sr * sp * cy;
+
+		return q;
+	}
+
+	static AkQuaternion FromAngleAndAxis(AkReal32 in_angle, const Ak3DVector& in_axis)
+	{
+		AkQuaternion q;
+
+		AkReal32 sa = sinf(in_angle / 2.f);
+		q.W = cosf(in_angle / 2.f);
+		q.X = in_axis.X * sa;
+		q.Y = in_axis.Y * sa;
+		q.Z = in_axis.Z * sa;
+		
+		return q;
+	}
+
+	AkForceInline AkReal32 Length() const
 	{
 		return sqrtf( W*W + X*X + Y*Y + Z*Z );
 	}
 
-	AkForceInline const AkQuaternion& Normalize()
+	AkForceInline AkQuaternion& Normalize()
 	{
 		AkReal32 f = 1.0f / Length();
 		W *= f;
@@ -946,7 +1232,12 @@ public:
             W*Q.Z + X*Q.Y - Y*Q.X + Z*Q.W);
 	}
 	
-	AkForceInline Ak3DVector operator* (const Ak3DVector& in_v) const
+	AkForceInline Ak3DVector32 operator*(const Ak3DVector32& in_v) const
+	{
+		return RotateVector(in_v);
+	}
+
+	AkForceInline Ak3DVector RotateVector(const Ak3DVector32& in_v) const
 	{
 		/*
 		// impl 1
@@ -960,12 +1251,20 @@ public:
 		*/
 
 		// impl 2
-		Ak3DVector u(X, Y, Z);
-		Ak3DVector res = 
+		Ak3DVector32 u(X, Y, Z);
+		Ak3DVector32 res =
 			u * u.Dot(in_v) * 2.f
-			+ in_v * (W*W - u.Dot(u))
+			+ in_v * (W * W - u.Dot(u))
 			+ u.Cross(in_v) * W * 2.0f;
 
+		return res;
+	}
+
+	AkForceInline Ak3DVector UnrotateVector(const Ak3DVector32& in_v) const
+	{
+		Ak3DVector32 u(-X, -Y, -Z);
+		Ak3DVector32 t = 2.f * u.Cross(in_v);
+		Ak3DVector32 res = in_v + (W * t) + u.Cross(t);
 		return res;
 	}
 
@@ -984,21 +1283,18 @@ struct AkIntersectionPoints
 class AkLine
 {
 public:
-	AkLine()
+	AkLine() :
+		mint(1.175494351e-38F),
+		maxt(3.402823466e+38F)
 	{
-		mint = 1.175494351e-38F;
-		maxt = 3.402823466e+38F;
 	}
 
-	AkLine(
-		Ak3DVector					in_L,
-		Ak3DVector					in_P
-		)
+	AkLine(Ak3DVector in_L, Ak3DVector in_P) :
+		L(in_L),
+		P(in_P),
+		mint(1.175494351e-38F),
+		maxt(3.402823466e+38F)
 	{
-		L = in_L;
-		P = in_P;
-		mint = 1.175494351e-38F;
-		maxt = 3.402823466e+38F;
 	}
 
 	Ak3DVector PointAt(AkReal32 t) const
@@ -1006,9 +1302,7 @@ public:
 		return P + L*t;
 	}
 
-	bool Intersect(
-		Ak3DVector A,
-		Ak3DVector B)
+	bool Intersect(Ak3DVector A, Ak3DVector B)
 	{
 		/*
 		a (V1 X V2) = (P2 - P1) X V2
@@ -1085,15 +1379,12 @@ public:
 class AkPlane
 {
 public:
-	AkPlane()
-	{
-	}
+	AkPlane() = default;
 
 	AkPlane(
-		Ak3DVector					in_p1,
-		Ak3DVector					in_p2,
-		Ak3DVector					in_p4
-		)
+		Ak3DVector in_p1,
+		Ak3DVector in_p2,
+		Ak3DVector in_p4)
 	{
 		SetPlane(
 			in_p1,
@@ -1101,15 +1392,10 @@ public:
 			in_p4);
 	}
 
-	~AkPlane()
-	{
-	}
-
 	void SetPlane(
-		Ak3DVector					in_p1,
-		Ak3DVector					in_p2,
-		Ak3DVector					in_p4
-		)
+		Ak3DVector in_p1,
+		Ak3DVector in_p2,
+		Ak3DVector in_p4)
 	{
 		// Reorder A-B-C to clockwwise if necessary
 		AKASSERT(in_p1.X < 100000 && in_p1.X > -100000);
@@ -1137,9 +1423,9 @@ public:
 
 #define EPSILON 0.01f
 	bool DoesRayIntersect(
-		const Ak3DVector&			in_Origin,
-		const Ak3DVector&			in_Destination,
-		Ak3DVector&					out_Intersection
+		const Ak3DVector& in_Origin,
+		const Ak3DVector& in_Destination,
+		Ak3DVector& out_Intersection
 		) const
 	{
 		AkReal32 A = N.X;
@@ -1234,8 +1520,8 @@ public:
 	}
 
 	AkReal32 DistPoint_to_Plane(
-		Ak3DVector			in_P,
-		Ak3DVector&			out_B) const
+		Ak3DVector in_P,
+		Ak3DVector& out_B) const
 	{
 		AkReal32 distance = (AkReal32)(AkReal32)fabs(N.X * in_P.X + N.Y * in_P.Y + N.Z * in_P.Z + D);
 
@@ -1464,23 +1750,29 @@ private:
 	p1__ v2>___p4
 	*/
 
-	Ak3DVector						p1;		// Bottom left
-	Ak3DVector						p2;		// Top left
-	Ak3DVector						p4;		// Tottom right
-	Ak3DVector						N;		// Normal vector
-	AkReal32						D;		// Plane equation: Ax + By + Cz = D => N.Xx + N.Yy + N.Zz = D
+	Ak3DVector p1; // Bottom left
+	Ak3DVector p2; // Top left
+	Ak3DVector p4; // Tottom right
+	Ak3DVector N;  // Normal vector
+	AkReal32   D;  // Plane equation: Ax + By + Cz = D => N.Xx + N.Yy + N.Zz = D
 };
 
-struct AkBoundingBox
+template<typename TReal>
+struct TBoundingBox
 {
-	AkBoundingBox() :
-		m_Min(Ak3DVector(FLT_MAX, FLT_MAX, FLT_MAX)),
-		m_Max(Ak3DVector(-FLT_MAX, -FLT_MAX, -FLT_MAX))
+	using TVectorType = T3DVector<TReal>;
+
+	TBoundingBox(const TVectorType& in_min, const TVectorType& in_max) :
+		m_Min(in_min),
+		m_Max(in_max)
 	{}
 
-	void Update(
-		const Ak3DVector &		in_point
-		)
+	TBoundingBox() :
+		m_Min(TVectorType(RealPrecision<TReal>::MAX_VALUE, RealPrecision<TReal>::MAX_VALUE, RealPrecision<TReal>::MAX_VALUE)),
+		m_Max(TVectorType(-RealPrecision<TReal>::MAX_VALUE, -RealPrecision<TReal>::MAX_VALUE, -RealPrecision<TReal>::MAX_VALUE))
+	{}
+
+	void Update(const TVectorType& in_point)
 	{
 		if (m_Min.X > in_point.X)
 			m_Min.X = in_point.X;
@@ -1501,27 +1793,21 @@ struct AkBoundingBox
 			m_Max.Z = in_point.Z;
 	}
 
-	AkForceInline bool IsWithin(
-		const Ak3DVector &		in_Point
-		) const
+	AkForceInline bool IsWithin(const TVectorType& in_Point) const
 	{
 		return in_Point >= m_Min && in_Point <= m_Max;
 	}
 
-	AkForceInline bool IsWithin(
-		const AkBoundingBox &	in_BB
-		) const
+	AkForceInline bool IsWithin(const TBoundingBox& in_BB) const
 	{
 		return (m_Min.X <= in_BB.m_Max.X && m_Max.X >= in_BB.m_Min.X) &&
 			(m_Min.Y <= in_BB.m_Max.Y && m_Max.Y >= in_BB.m_Min.Y) &&
 			(m_Min.Z <= in_BB.m_Max.Z && m_Max.Z >= in_BB.m_Min.Z);
 	}
 
-	AkBoundingBox Intersect(
-		const AkBoundingBox &	in_BB
-	) const
+	TBoundingBox Intersect(const TBoundingBox& in_BB) const
 	{
-		AkBoundingBox result;
+		TBoundingBox result;
 		
 		result.m_Max.X = AkMin(m_Max.X, in_BB.m_Max.X);
 		result.m_Max.Y = AkMin(m_Max.Y, in_BB.m_Max.Y);
@@ -1534,40 +1820,33 @@ struct AkBoundingBox
 		return result;
 	}
 
-	// returns acos(in_fAngle)
-	AkForceInline AkReal32 ACos(
-		AkReal32			in_fAngle
-		) const
-	{
-		AKASSERT((in_fAngle <= 1.0f) && (in_fAngle >= -1.0f));
-		return acosf(in_fAngle);
-	}
-
 	AkForceInline bool IsEmpty() const
 	{
 		return (m_Min.X >= m_Max.X) || (m_Min.Y >= m_Max.Y) || (m_Min.Z >= m_Max.Z);
 	}
 
-	Ak3DVector						m_Min;
-	Ak3DVector						m_Max;
+	AkForceInline bool IsValid() const
+	{
+		return (m_Min.X <= m_Max.X) && (m_Min.Y <= m_Max.Y) && (m_Min.Z <= m_Max.Z);
+	}
+
+	TVectorType m_Min;
+	TVectorType m_Max;
 };
+
+typedef TBoundingBox<AkReal32> AkBoundingBox;
+typedef TBoundingBox<AkReal64> AkBoundingBox64;
 
 class AkBox
 {
 public:
-	AkBox()
-	{
-	}
-
-	~AkBox()
-	{
-	}
+	AkBox() = default;
 
 	void Init(
-		const Ak3DVector &		in_center,
-		const Ak3DVector &		in_extent,
-		const Ak3DVector &		in_Front,
-		const Ak3DVector &		in_Up)
+		const Ak3DVector& in_center,
+		const Ak3DVector& in_extent,
+		const Ak3DVector& in_Front,
+		const Ak3DVector& in_Up)
 	{
 		AKASSERT(fabs(in_Front.Length() - 1.f) < 0.001 && fabs(in_Up.Length() - 1.f) < 0.001);//Must be unit vectors.
 		AKASSERT(fabs(in_Front.Dot(in_Up) - 0.f) < 0.001); //Must be orthogonal.
@@ -1580,9 +1859,7 @@ public:
 		m_X = m_Z.Cross(m_Y);
 	}
 
-	bool IsPointInBox(
-		const Ak3DVector &		in_Point
-		) const
+	bool IsPointInBox(const Ak3DVector& in_Point) const
 	{
 		Ak3DVector pt = in_Point - m_Center;
 		return	fabs(pt.Dot(m_X)) <= m_Extent.X && fabs(pt.Dot(m_Y)) <= m_Extent.Y && fabs(pt.Dot(m_Z)) <= m_Extent.Z;
@@ -1606,9 +1883,8 @@ public:
 	}
 
 	bool SeparatingAxisExists(
-		const Ak3DVector&		L,
-		const AkBox&			B
-		) const
+		const Ak3DVector& L,
+		const AkBox& B) const
 	{
 		// Separating Axis Theorem for Oriented Bounding Boxes by Johnny Huynh
 		const AkBox& A = *this;
@@ -1660,14 +1936,13 @@ public:
 		out_aabb.Update(m_Center - Z);
 	}
 
-
 private:
 
-	Ak3DVector						m_Center;
-	Ak3DVector						m_Extent;
+	Ak3DVector m_Center;
+	Ak3DVector m_Extent;
 
 	//Orthonormal Axes
-	Ak3DVector						m_X;
-	Ak3DVector						m_Y;
-	Ak3DVector						m_Z;
+	Ak3DVector m_X;
+	Ak3DVector m_Y;
+	Ak3DVector m_Z;
 };

@@ -11,7 +11,7 @@
 #include <Mathematics/ParametricCurve.h>
 #include <memory>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class RevolutionMesh : public Mesh<Real>

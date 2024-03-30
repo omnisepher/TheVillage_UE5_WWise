@@ -20,7 +20,7 @@
 // corresponding to x, r is the index corresponding to y, and s is the index
 // corresponding to z.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class IntpAkimaUniform3

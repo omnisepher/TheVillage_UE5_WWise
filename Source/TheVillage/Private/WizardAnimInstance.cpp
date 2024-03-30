@@ -43,7 +43,11 @@ void UWizardAnimInstance::PlayFootsteps(AActor* StepActor)
 		FOnAkPostEventCallback nullCallback;
 		TArray<FAkExternalSourceInfo> nullSources;
 
-		UAkGameplayStatics::PostEvent(nullptr, GetOwningActor(), int32(0), nullCallback, nullSources,false,(FString)("Footsteps"));
+		if (auto* SoundEngine = IWwiseSoundEngineAPI::Get())
+		{
+			UAkGameplayStatics::PostEvent(m_FootstepsEvent, GetOwningActor(), int32(0), nullCallback, false);
+		}
+		
 	}
 
 }

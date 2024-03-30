@@ -14,7 +14,7 @@
 // over all polynomials of degree D.  The natural logarithm is computed
 // using log(x) = log2(x)/log2(e) = log2(x)*log(2).
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class LogEstimate

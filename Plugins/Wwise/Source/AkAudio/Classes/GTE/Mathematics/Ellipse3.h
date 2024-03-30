@@ -17,7 +17,7 @@
 // is the major axis, A1 is the minor axis, and e0 and e1 are the extents
 // along those axes.  The angle t is in [-pi,pi) and e0 >= e1 > 0.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class Ellipse3

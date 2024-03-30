@@ -1,18 +1,19 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
-
 
 /*=============================================================================
 AkSubmixInputComponent.cpp:
@@ -21,6 +22,8 @@ AkSubmixInputComponent.cpp:
 #include "AkSubmixInputComponent.h"
 #include "AkAudioDevice.h"
 #include "AudioMixerDevice.h"
+
+#include <inttypes.h>
 
 UAkSubmixInputComponent::UAkSubmixInputComponent(const class FObjectInitializer& ObjectInitializer) :
 	UAkAudioInputComponent(ObjectInitializer)
@@ -36,7 +39,7 @@ Audio::FMixerDevice* UAkSubmixInputComponent::GetAudioMixerDevice()
 
 	if (FAudioDevice* AudioDevice = ThisWorld->GetAudioDevice().GetAudioDevice())
 	{
-		if (!AudioDevice->IsAudioMixerEnabled())
+		if (!AudioDevice->bAudioMixerModuleLoaded)
 		{
 			return nullptr;
 		}
@@ -65,7 +68,8 @@ int32 UAkSubmixInputComponent::PostAssociatedAudioInputEvent()
 		}
 		else
 		{
-			UE_LOG(LogAkAudio, Log, TEXT("AkSubmixInputComponent (%s): No Audio Mixer Device available, AkSubMixInputComponent cannot work."), *GetOwner()->GetName());
+			UE_LOG(LogAkAudio, Warning, TEXT("AkSubmixInputComponent::PostAssociatedAudioInputEvent (%s): No Audio Mixer Device available, AkSubMixInputComponent cannot work."), *GetOwner()->GetName());
+			return PlayingID;
 		}
 
 		PlayingID = Super::PostAssociatedAudioInputEvent();
@@ -120,20 +124,27 @@ void UAkSubmixInputComponent::GetChannelConfig(AkAudioFormat& AudioFormat)
 	Audio::FMixerDevice* AudioMixerDevice = GetAudioMixerDevice();
 	if (!AudioMixerDevice)
 	{
-		UE_LOG(LogAkAudio, Log, TEXT("AkSubmixInputComponent (%s): No Audio Mixer Device available, AkSubMixInputComponent cannot work."), *GetOwner()->GetName());
+		UE_LOG(LogAkAudio, Error, TEXT("AkSubmixInputComponent::GetChannelConfig (%s): No Audio Mixer Device available, AkSubMixInputComponent cannot work."), *GetOwner()->GetName());
+		return;
 	}
 
     AudioFormat.uSampleRate = SampleRate;
 	switch (NumChannels)
 	{
+	case 8:
+		AudioFormat.channelConfig.SetStandard(AK_SPEAKER_SETUP_7POINT1);
+		break;
+	case 6:
+		AudioFormat.channelConfig.SetStandard(AK_SPEAKER_SETUP_5POINT1);
+		break;
 	case 2:
 		AudioFormat.channelConfig.SetStandard(AK_SPEAKER_SETUP_STEREO);
 		break;
-	default:
 	case 1:
-		NumChannels = 1;
 		AudioFormat.channelConfig.SetStandard(AK_SPEAKER_SETUP_MONO);
 		break;
+	default:
+		UE_LOG(LogAkAudio, Error, TEXT("AkSubmixInputComponent::GetChannelConfig (%s): Unknown number of channels (%" PRIu32 ")"), *GetOwner()->GetName(), NumChannels);
 	}
 }
 

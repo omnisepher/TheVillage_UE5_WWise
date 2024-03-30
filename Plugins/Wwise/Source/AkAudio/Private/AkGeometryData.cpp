@@ -1,19 +1,23 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #include "AkGeometryData.h"
+
+#include "PhysicalMaterials/PhysicalMaterial.h"
 
 void GetBasicBoxGeometryData(TArray<FVector>& Vertices, TArray<FAkTriangle>& Triangles)
 {
@@ -42,20 +46,75 @@ void GetBasicBoxGeometryData(TArray<FVector>& Vertices, TArray<FAkTriangle>& Tri
 	Triangles[11] = { 4, 6, 7, AK_INVALID_SURFACE };
 }
 
+void GetBasicXYPlaneGeometryData(TArray<FVector>& Vertices, TArray<FAkTriangle>& Triangles)
+{
+	Vertices.Init(FVector(0, 0, 0), 4);
+	Vertices[0] = FVector(-1, -1, 1);
+	Vertices[1] = FVector(-1, 1, 1);
+	Vertices[2] = FVector(1, -1, 1);
+	Vertices[3] = FVector(1, 1, 1);
+
+	Triangles.Init(FAkTriangle(), 2);
+	Triangles[0] = { 0, 1, 2, AK_INVALID_SURFACE };
+	Triangles[1] = { 1, 3, 2, AK_INVALID_SURFACE };
+}
+
+void GetBasicXZPlaneGeometryData(TArray<FVector>& Vertices, TArray<FAkTriangle>& Triangles)
+{
+	Vertices.Init(FVector(0, 0, 0), 4);
+	Vertices[0] = FVector(-1, 1, -1);
+	Vertices[1] = FVector(-1, 1, 1);
+	Vertices[2] = FVector(1, 1, -1);
+	Vertices[3] = FVector(1, 1, 1);
+
+	Triangles.Init(FAkTriangle(), 2);
+	Triangles[0] = { 0, 1, 2, AK_INVALID_SURFACE };
+	Triangles[1] = { 1, 3, 2, AK_INVALID_SURFACE };
+}
+
+void GetBasicYZPlaneGeometryData(TArray<FVector>& Vertices, TArray<FAkTriangle>& Triangles)
+{
+	Vertices.Init(FVector(0, 0, 0), 4);
+	Vertices[0] = FVector(1, -1, -1);
+	Vertices[1] = FVector(1, -1, 1);
+	Vertices[2] = FVector(1, 1, -1);
+	Vertices[3] = FVector(1, 1, 1);
+
+	Triangles.Init(FAkTriangle(), 2);
+	Triangles[0] = { 0, 1, 2, AK_INVALID_SURFACE };
+	Triangles[1] = { 1, 3, 2, AK_INVALID_SURFACE };
+}
+
 /** Taken from GetOrientedHalfSphereMesh in PrimitiveDrawingUtils.cpp. See original for adding tangents and texture coords. */
 void GenerateHalfSphereVerts(AkSurfIdx surfIdx, const FVector& Center, const FRotator& Orientation, const float Radius, int32 NumSides, int32 NumRings, float StartAngle, float EndAngle, FAkGeometryData& GeometryData)
 {
 	if (NumSides <= 0 || NumRings <= 0)
 		return;
-	// The first/last arc are on top of each other.
-	int32 numVerts = (NumSides + 1) * (NumRings + 1);
+
+	// If StartAngle is 0, the top-most ring is the top pole, and all sides will start on the same vertex.
+	const bool sidesStartAtTopPole = StartAngle < PI * 0.1f;
+
+	// Similarly, if EndAngle is PI, the bottom-most ring is the bottom pole, and all sides will end on the same vertex.
+	const bool sidesEndAtBottomPole = EndAngle >= PI * 0.9f;
+
+	int32 numPoles = 0;
+
+	if (sidesStartAtTopPole)
+		++numPoles;
+	if (sidesEndAtBottomPole)
+		++numPoles;
+
+	int32 numSquareRings = NumRings - numPoles;
+
+	int32 numVerts = (NumSides) * (numSquareRings + 1) + numPoles;
+
 	TArray<FVector> vertices;
 	vertices.AddDefaulted(numVerts);
 	TArray<FAkTriangle> triangles;
 
 	int32 BaseVertIndex = GeometryData.Vertices.Num();
 
-	// Calculate verts for one arc
+	// Calculate verts for one arc. The arc includes the pole vertices.
 	TArray<FVector> arcVertices;
 	for (int32 i = 0; i < NumRings + 1; i++)
 	{
@@ -63,35 +122,56 @@ void GenerateHalfSphereVerts(AkSurfIdx surfIdx, const FVector& Center, const FRo
 		arcVertices.Add(FVector(0.0f, FMath::Sin(angle) * Radius, FMath::Cos(angle) * Radius) + Center);
 	}
 
-	// Then rotate this arc NumSides+1 times.
-	for (int32 s = 0; s < NumSides + 1; s++)
+	int32 VIx = 0;
+	int32 acrOffset = sidesStartAtTopPole ? 1 : 0;
+	
+	// Then rotate this arc NumSides times.
+	for (int32 s = 0; s < NumSides; s++)
 	{
 		FRotator ArcRotator(0, 360.f * (float)s / NumSides, 0);
 		FRotationMatrix ArcRot(ArcRotator);
 
-		for (int32 v = 0; v < NumRings + 1; v++)
+		for (int32 v = 0; v < numSquareRings + 1; v++)
 		{
-			int32 VIx = (NumRings + 1) * s + v;
-			vertices[VIx] = ArcRot.TransformPosition(arcVertices[v]);
+			check((numSquareRings + 1) * s + v == VIx);
+			vertices[VIx] = ArcRot.TransformPosition(arcVertices[v + acrOffset]);
+			++VIx;
 		}
 	}
+
+	// Add the top and bottom pole vertices.
+	uint16 topPoleIdx = (uint16) - 1;
+	if (sidesStartAtTopPole)
+	{
+		topPoleIdx = VIx++;
+		vertices[topPoleIdx] = arcVertices[0];
+	}
+	
+	uint16 bottomPoleIdx = (uint16)-1;
+	if (sidesEndAtBottomPole)
+	{
+		bottomPoleIdx = VIx++;
+		vertices[bottomPoleIdx] = arcVertices[arcVertices.Num() - 1];
+	}
+	
+	check(VIx == numVerts);
 
 	// Add all of the vertices we generated to the geometry data.
 	for (int32 vertIdx = 0; vertIdx < numVerts; vertIdx++)
 	{
 		GeometryData.Vertices.Add(vertices[vertIdx]);
 	}
-
-	// If StartAngle is 0, the top-most ring is the top pole, and all sides will start on the same vertex.
-	const bool sidesStartAtTopPole = StartAngle < PI * 0.1f;
-	// Similarly, if EndAngle is PI, the bottom-most ring is the bottom pole, and all sides will end on the same vertex.
-	const bool sidesEndAtBottomPole = EndAngle >= PI * 0.9f;
+	
 	// Add all of the triangles we generated to the geometry data.
 	for (uint16 s = 0; s < NumSides; s++)
 	{
 		// Add triangles between consecutive sides, from the top-most ring to the bottom.
-		uint16 side0Start = (s + 0) * (NumRings + 1) + BaseVertIndex;
-		uint16 side1Start = (s + 1) * (NumRings + 1) + BaseVertIndex;
+		uint16 side0Start = (s + 0) * (numSquareRings + 1) + BaseVertIndex;
+		uint16 side1Start = (s + 1) * (numSquareRings + 1) + BaseVertIndex;
+		
+		// For the last side, wrap the vertex indices around to the start.
+		if (s == NumSides - 1)
+			side1Start = (0 + 0) * (numSquareRings + 1) + BaseVertIndex;
 
 		uint16 s0 = side0Start;
 		uint16 s1 = side1Start;
@@ -101,18 +181,13 @@ void GenerateHalfSphereVerts(AkSurfIdx surfIdx, const FVector& Center, const FRo
 		// the line from vertex s0 to vertex s1 runs along one 'ring' (from one 'side' to the other).
 		// the line from vertex s0 to vertex s1 + 1 runs diagonally down a side and along a ring.
 
-		// Add the initial triangle for this side strip (or triangles, if we're not starting on a pole)
+		// Add the initial triangle for this side strip (if we're starting on a pole)
 		if (sidesStartAtTopPole)
 		{
-			GeometryData.Triangles.Add({ s0, uint16(s1 + 1), uint16(s0 + 1), surfIdx });
-		}
-		else
-		{
-			GeometryData.Triangles.Add({ s0, s1, uint16(s0 + 1), surfIdx });
-			GeometryData.Triangles.Add({ s1, uint16(s1 + 1), uint16(s0 + 1), surfIdx });
+			GeometryData.Triangles.Add({ topPoleIdx, uint16(s1), uint16(s0), surfIdx });
 		}
 		
-		for (uint16 r = 1; r < NumRings - 1; r++)
+		for (uint16 r = 0; r < numSquareRings; r++)
 		{
 			s0 = side0Start + r;
 			s1 = side1Start + r;
@@ -120,14 +195,11 @@ void GenerateHalfSphereVerts(AkSurfIdx surfIdx, const FVector& Center, const FRo
 			GeometryData.Triangles.Add({ s1, uint16(s1 + 1), uint16(s0 + 1), surfIdx });
 		}
 
-		// Add the final triangle for this side strip (or triangles if we're not ending on a pole)
-		s0 = side0Start + (NumRings - 1);
-		s1 = side1Start + (NumRings - 1);
-		GeometryData.Triangles.Add({ s0, s1, uint16(s0 + 1), surfIdx });
-		if (!sidesEndAtBottomPole)
-		{
-			GeometryData.Triangles.Add({ s1, uint16(s1 + 1), uint16(s0 + 1), surfIdx });
-		}
+		// Add the final triangle for this side strip (if we're ending on a pole)
+ 		if (sidesEndAtBottomPole)
+ 		{
+			GeometryData.Triangles.Add({ bottomPoleIdx, uint16(s1 + 1), uint16(s0 + 1), surfIdx });
+ 		}
 	}
 }
 
@@ -190,7 +262,15 @@ void FAkGeometryData::AddBox(AkSurfIdx surfIdx, FVector center, FVector extent, 
 {
 	TArray<FVector> boxVertices;
 	TArray<FAkTriangle> boxTriangles;
-	GetBasicBoxGeometryData(boxVertices, boxTriangles);
+
+	if (extent.Z == 0.0f)
+		GetBasicXYPlaneGeometryData(boxVertices, boxTriangles);
+	else if (extent.Y == 0.0f)
+		GetBasicXZPlaneGeometryData(boxVertices, boxTriangles);
+	else if (extent.X == 0.0f)
+		GetBasicYZPlaneGeometryData(boxVertices, boxTriangles);
+	else
+		GetBasicBoxGeometryData(boxVertices, boxTriangles);
 
 	AkVertIdx initialVertIdx = Vertices.Num();
 

@@ -14,7 +14,7 @@
 // in the document
 // https://www.geometrictools.com/Documentation/ExtractLevelSurfaces.pdf
 
-namespace gte
+namespace WwiseGTE
 {
     // The image type T must be one of the integer types:  int8_t, int16_t,
     // int32_t, uint8_t, uint16_t or uint32_t.  Internal integer computations

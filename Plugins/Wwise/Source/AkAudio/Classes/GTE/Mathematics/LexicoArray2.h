@@ -7,7 +7,7 @@
 
 #pragma once
 
-namespace gte
+namespace WwiseGTE
 {
     // A template class to provide 2D array access that conforms to row-major
     // order (RowMajor = true) or column-major order (RowMajor = false).  The

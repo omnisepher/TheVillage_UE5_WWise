@@ -10,7 +10,7 @@
 #include <Mathematics/Logger.h>
 #include <vector>
 
-namespace gte
+namespace WwiseGTE
 {
     class LogToStringArray : public Logger::Listener
     {

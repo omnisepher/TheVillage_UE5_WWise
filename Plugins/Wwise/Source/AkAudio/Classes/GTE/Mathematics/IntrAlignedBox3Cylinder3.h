@@ -15,7 +15,7 @@
 
 // The query considers the cylinder and box to be solids.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, AlignedBox3<Real>, Cylinder3<Real>>

@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #pragma once
@@ -39,44 +38,62 @@ public:
     /// Constructor
 	CAkLock()
     {
+#if defined(AK_SUPPORT_THREADS)
 		pthread_mutexattr_t	mutex_attr;
 		AKVERIFY(!pthread_mutexattr_init( &mutex_attr ));
 		AKVERIFY(!pthread_mutexattr_settype( &mutex_attr, PTHREAD_MUTEX_RECURSIVE ));
 		AKVERIFY(!pthread_mutex_init( &m_mutex, &mutex_attr));
 		AKVERIFY(!pthread_mutexattr_destroy( &mutex_attr ));
+#endif
     }
 
 	/// Destructor
 	~CAkLock()
     {
+#if defined(AK_SUPPORT_THREADS)
 		AKVERIFY(!pthread_mutex_destroy( &m_mutex ));
+#endif
     }
 
     /// Lock 
     inline AKRESULT Lock( void )
 	{
+#if defined(AK_SUPPORT_THREADS)
 		if( !pthread_mutex_lock(&m_mutex) )
 		{
 			return AK_Success;
 		}
 		return AK_Fail;
+#else
+		return AK_Success;
+#endif
 	}
 
 	/// Unlock
     inline AKRESULT Unlock( void )
 	{
+#if defined(AK_SUPPORT_THREADS)
 		if( !pthread_mutex_unlock(&m_mutex) )
 		{
 			return AK_Success;
 		}
 		return AK_Fail;
+#else
+		return AK_Success;
+#endif
 	}
 
 	inline bool TryLock()
 	{
+#if defined(AK_SUPPORT_THREADS)
 		return pthread_mutex_trylock(&m_mutex);
+#else
+		return true;
+#endif
 	}
 
 private:
+#if defined(AK_SUPPORT_THREADS)
     pthread_mutex_t m_mutex;
+#endif
 };

@@ -13,7 +13,7 @@
 // The Array2 class represents a 2-dimensional array that minimizes the number
 // of new and delete calls.  The T objects are stored in a contiguous array.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename T>
     class Array2

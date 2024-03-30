@@ -10,7 +10,7 @@
 #include <Mathematics/Logger.h>
 #include <Mathematics/ParametricCurve.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class TCBSplineCurve : public ParametricCurve<N, Real>

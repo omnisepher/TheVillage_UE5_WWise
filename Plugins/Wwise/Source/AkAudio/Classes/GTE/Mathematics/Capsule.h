@@ -12,7 +12,7 @@
 // A capsule is the set of points that are equidistant from a segment, the
 // common distance called the radius.
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class Capsule

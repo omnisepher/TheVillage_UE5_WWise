@@ -17,7 +17,7 @@
 // choices).  The four corners of the frustum in the far plane are
 // E + f*D + (f/n)*(s0*u*U + s1*r*R) where |s0| = |s1| = 1 (four choices).
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class Frustum3

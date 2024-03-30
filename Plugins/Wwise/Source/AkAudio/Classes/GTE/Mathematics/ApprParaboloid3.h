@@ -45,7 +45,7 @@
 // |                                                s(1)   ||p5|   |s(z)    |
 // +-                                                     -++  +   +-      -+
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class ApprParaboloid3

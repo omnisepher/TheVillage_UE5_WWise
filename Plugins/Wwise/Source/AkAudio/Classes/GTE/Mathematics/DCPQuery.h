@@ -9,7 +9,7 @@
 
 #include <Mathematics/Math.h>
 
-namespace gte
+namespace WwiseGTE
 {
     // Distance and closest-point queries.
     template <typename Real, typename Type0, typename Type1>

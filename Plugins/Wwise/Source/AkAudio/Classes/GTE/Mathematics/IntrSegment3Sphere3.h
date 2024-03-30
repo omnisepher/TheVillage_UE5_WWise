@@ -11,7 +11,7 @@
 #include <Mathematics/IntrLine3Sphere3.h>
 #include <Mathematics/Segment.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, Segment3<Real>, Sphere3<Real>>

@@ -10,7 +10,7 @@
 #include <Mathematics/DisjointIntervals.h>
 #include <functional>
 
-namespace gte
+namespace WwiseGTE
 {
     // Compute Boolean operations of disjoint sets of half-open rectangles of
     // the form [xmin,xmax)x[ymin,ymax) with xmin < xmax and ymin < ymax.

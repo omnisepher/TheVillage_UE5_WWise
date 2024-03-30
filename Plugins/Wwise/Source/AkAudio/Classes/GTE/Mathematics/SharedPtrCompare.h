@@ -22,7 +22,7 @@
 // pointer ordering can differ.  This might be undesirable for reproducibility
 // of results between executions.
 
-namespace gte
+namespace WwiseGTE
 {
     // sp0 == sp1
     template <typename T>

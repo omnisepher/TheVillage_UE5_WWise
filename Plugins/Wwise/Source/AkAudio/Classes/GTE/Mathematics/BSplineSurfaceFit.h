@@ -14,7 +14,7 @@
 // The algorithm implemented here is based on the document
 // https://www.geometrictools.com/Documentation/BSplineSurfaceLeastSquaresFit.pdf
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class BSplineSurfaceFit

@@ -11,7 +11,7 @@
 #include <Mathematics/DistPoint3Frustum3.h>
 #include <Mathematics/Hypersphere.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, Sphere3<Real>, Frustum3<Real>>

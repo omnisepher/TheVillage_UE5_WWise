@@ -15,7 +15,7 @@
 // F[c + xBound*r] corresponds to f(x,y), where c is the index corresponding
 // to x and r is the index corresponding to y.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class IntpBilinear2

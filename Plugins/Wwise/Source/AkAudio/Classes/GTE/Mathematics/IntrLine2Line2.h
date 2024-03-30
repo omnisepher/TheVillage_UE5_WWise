@@ -13,7 +13,7 @@
 #include <Mathematics/TIQuery.h>
 #include <limits>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, Line2<Real>, Line2<Real>>

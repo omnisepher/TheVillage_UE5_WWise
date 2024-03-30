@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 // AkTypes.h
@@ -50,9 +49,87 @@ the specific language governing permissions and limitations under the License.
 	#endif
 #endif
 
+#ifndef AK_ALIGN
+#if defined(SWIG)
+#define AK_ALIGN( _declaration_, _alignment_ ) _declaration_
+#else
+#if defined(_MSC_VER)
+#define AK_ALIGN( _declaration_, _alignment_ ) __declspec( align( _alignment_ ) ) _declaration_
+#else
+#define AK_ALIGN( _declaration_, _alignment_ ) _declaration_ __attribute__( ( aligned( _alignment_ ) ) )
+#endif // _MSC_VER
+#endif // SWIG
+#endif // AK_ALIGN
+
+#define AK_ALIGN_TO_NEXT_BOUNDARY( __num__, __boundary__ ) (((__num__) + ((__boundary__)-1)) & ~((__boundary__)-1))
+
+#if !defined(AK_ENDIANNESS_LITTLE) && !defined(AK_ENDIANNESS_BIG)
+#define AK_ENDIANNESS_LITTLE
+#endif
+
+///< AK_UNALIGNED refers to the __unaligned compilation flag available on some platforms. Note that so far, on the tested platform this should always be placed before the pointer symbol *.
+#ifndef AK_UNALIGNED
+#if defined(__GNUC__)
+#define AK_UNALIGNED __attribute__((aligned(1)))
+#elif defined(_MSC_VER) && !defined(AK_CPU_X86) // __unaligned not supported on 32-bit x86
+#define AK_UNALIGNED __unaligned
+#else
+#define AK_UNALIGNED
+#endif
+#endif // AK_UNALIGNED
+
+#if (defined(__cplusplus) && __cplusplus >= 201103L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201103L)
+#define AK_CPP11
+#endif
+
+#if (defined(__cplusplus) && __cplusplus >= 201402L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201402L)
+#define AK_CPP14
+#endif
+
+#if (defined(__cplusplus) && __cplusplus >= 201703L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)
+#define AK_CPP17
+#endif
+
+#if defined(AK_CPP11)
+#define AK_FINAL		final					///< Refers to the C++11 final keyword
+#else
+#define AK_FINAL
+#endif
+
+#if defined(AK_CPP17)
+#define AK_NODISCARD     [[nodiscard]]           ///< Refers to the C++17 [[nodiscard]] keyword
+#else
+#define AK_NODISCARD
+#endif
+
+
 #if defined(AK_CPU_X86_64) || defined(AK_CPU_ARM_64)
 #define AK_POINTER_64
 #endif // #if defined(AK_CPU_X86_64) || defined(AK_CPU_ARM_64)
+
+#if !defined(AK_UNUSEDVAR)
+// use to mark variables as unused to avoid warnings
+#define AK_UNUSEDVAR(x)	((void)(x))	
+#endif
+
+#if defined(AK_SUPPORT_THREADS)
+#define AK_THREAD_LOCAL thread_local
+#else
+#define AK_THREAD_LOCAL
+#endif
+
+// Helper macro to disable optimizations in a specific file (or part of a file)
+// (no code using these macros should be checked in)
+#if defined(_MSC_VER)
+#define AK_DISABLE_OPTIMIZATIONS    __pragma(optimize("", off))
+#define AK_ENABLE_OPTIMIZATIONS     __pragma(optimize("", on))
+#elif defined(__clang__)
+#define AK_DISABLE_OPTIMIZATIONS    _Pragma("clang optimize off")
+#define AK_ENABLE_OPTIMIZATIONS     _Pragma("clang optimize on")
+#elif defined(__GNUC__)
+#define AK_DISABLE_OPTIMIZATIONS    _Pragma("GCC optimize (\"O0\")")
+#define AK_ENABLE_OPTIMIZATIONS     _Pragma("GCC optimize (\"O2\")")
+#endif
 
 typedef AkUInt32		AkUniqueID;			 		///< Unique 32-bit ID
 typedef AkUInt32		AkStateID;			 		///< State ID
@@ -78,6 +155,7 @@ typedef AkUInt32        AkSwitchStateID;	 		///< Switch ID
 typedef AkUInt32        AkRtpcID;			 		///< Real time parameter control ID
 typedef AkReal32        AkRtpcValue;		 		///< Real time parameter control value
 typedef AkUInt32        AkBankID;			 		///< Run time bank ID
+typedef AkUInt32        AkBankType;			 		///< Run time bank type
 typedef AkUInt32        AkFileID;			 		///< Integer-type file identifier
 typedef AkUInt32        AkDeviceID;			 		///< I/O device ID
 typedef AkUInt32		AkTriggerID;		 		///< Trigger ID
@@ -90,9 +168,11 @@ typedef AkUInt64		AkOutputDeviceID;			///< Audio Output device ID
 typedef AkUInt32		AkPipelineID;				///< Unique node (bus, voice) identifier for profiling.
 typedef AkUInt32		AkRayID;					///< Unique (per emitter) identifier for an emitter-listener ray.
 typedef AkUInt64		AkAudioObjectID;			///< Audio Object ID
+typedef AkUInt32		AkJobType;                  ///< Job type identifier
 
 // Constants.
 static const AkPluginID					AK_INVALID_PLUGINID					= (AkPluginID)-1;		///< Invalid FX ID
+static const AkPluginID					AK_INVALID_SHARE_SET_ID				= (AkPluginID)-1;		///< Invalid Share Set ID
 static const AkGameObjectID				AK_INVALID_GAME_OBJECT				= (AkGameObjectID)-1;	///< Invalid game object (may also mean all game objects)
 static const AkUniqueID					AK_INVALID_UNIQUE_ID				=  0;					///< Invalid unique 32-bit ID
 static const AkRtpcID					AK_INVALID_RTPC_ID					=  AK_INVALID_UNIQUE_ID;///< Invalid RTPC ID
@@ -120,7 +200,13 @@ static const AkPriority					AK_DEFAULT_BANK_IO_PRIORITY			= AK_DEFAULT_PRIORITY;
 static const AkReal32					AK_DEFAULT_BANK_THROUGHPUT			= 1*1024*1024/1000.f;	///<  Default bank load throughput (1 Mb/ms)
 
 // Bank version
-static const AkUInt32					AK_SOUNDBANK_VERSION =				140;					///<  Version of the soundbank reader
+static const AkUInt32					AK_SOUNDBANK_VERSION =				150;					///<  Version of the soundbank reader
+
+// Job types
+static const AkJobType                  AkJobType_Generic                   = 0;                    ///< Job type for general-purpose work
+static const AkJobType                  AkJobType_AudioProcessing           = 1;                    ///< Job type for DSP work
+static const AkJobType                  AkJobType_SpatialAudio              = 2;                    ///< Job type for Spatial Audio computations
+static const AkUInt32                   AK_NUM_JOB_TYPES                    = 3;                    ///< Number of possible job types recognized by the Sound Engine
 
 /// Standard function call result.
 enum AKRESULT
@@ -131,7 +217,7 @@ enum AKRESULT
     AK_PartialSuccess			= 3,	///< The operation succeeded partially.
     AK_NotCompatible			= 4,	///< Incompatible formats
     AK_AlreadyConnected			= 5,	///< The stream is already connected to another node.
-    AK_InvalidFile				= 7,	///< An unexpected value causes the file to be invalid.
+    AK_InvalidFile				= 7,	///< The provided file is the wrong format or unexpected values causes the file to be invalid.
     AK_AudioFileHeaderTooLarge	= 8,	///< The file header is too large.
     AK_MaxReached				= 9,	///< The maximum was reached.
     AK_InvalidID				= 14,	///< The ID is invalid.
@@ -141,8 +227,8 @@ enum AKRESULT
 	AK_InvalidStateGroup		= 20,	///< The StateGroup is not a valid channel.
 	AK_ChildAlreadyHasAParent	= 21,	///< The child already has a parent.
 	AK_InvalidLanguage			= 22,	///< The language is invalid (applies to the Low-Level I/O).
-	AK_CannotAddItseflAsAChild	= 23,	///< It is not possible to add itself as its own child.
-	AK_InvalidParameter			= 31,	///< Something is not within bounds.
+	AK_CannotAddItselfAsAChild = 23,	///< It is not possible to add itself as its own child.
+	AK_InvalidParameter			= 31,	///< Something is not within bounds, check the documentation of the function returning this code.
 	AK_ElementAlreadyInList		= 35,	///< The item could not be added because it was already in the list.
 	AK_PathNotFound				= 36,	///< This path is not known.
 	AK_PathNoVertices			= 37,	///< Stuff in vertices before trying to start it
@@ -193,6 +279,16 @@ enum AKRESULT
 	AK_NoDistinctListener		= 97,	///< No distinct listener provided for AddOutput
 	AK_ACP_Error				= 98,	///< Generic XMA decoder error.
 	AK_ResourceInUse			= 99,	///< Resource is in use and cannot be released.
+	AK_InvalidBankType			= 100,	///< Invalid bank type. The bank type was either supplied through a function call (e.g. LoadBank) or obtained from a bank loaded from memory.
+	AK_AlreadyInitialized		= 101,	///< Init() was called but that element was already initialized.
+	AK_NotInitialized			= 102,	///< The component being used is not initialized. Most likely AK::SoundEngine::Init() was not called yet, or AK::SoundEngine::Term was called too early.
+	AK_FilePermissionError		= 103,	///< The file access permissions prevent opening a file.
+	AK_UnknownFileError			= 104,	///< Rare file error occured, as opposed to AK_FileNotFound or AK_FilePermissionError. This lumps all unrecognized OS file system errors.
+	AK_TooManyConcurrentOperations = 105, ///< When using StdStream, file operations can be blocking or not. When not blocking, operations need to be synchronized externally properly. If not, this error occurs.
+	AK_InvalidFileSize			= 106,	///< The file requested was found and opened but is either 0 bytes long or not the expected size. This usually point toward a Low Level IO Hook implementation error.
+	AK_Deferred					= 107,	///< Returned by functions to indicate to the caller the that the operation is done asynchronously. Used by Low Level IO Hook implementations when async operation are suppored by the hardware.
+	AK_FilePathTooLong			= 108,	///< The combination of base path and file name exceeds maximum buffer lengths.
+	AK_InvalidState             = 109,  ///< This method should not be called when the object is in its current state.
 };
 
 /// Game sync group type
@@ -229,16 +325,23 @@ struct AkDeviceDescription
 };
 
 /// This structure allows the game to provide audio files to fill the external sources. See \ref AK::SoundEngine::PostEvent
-/// You can specify a streaming file or a file in-memory, regardless of the "Stream" option in the Wwise project.  
+/// You can specify a streaming file or a file in-memory, regardless of the "Stream" option in the Wwise project.
+/// The only file format accepted is a fully formed WEM file, as converted by Wwise.
 /// \akwarning
 /// Make sure that only one of szFile, pInMemory or idFile is non-null. if both idFile and szFile are set, idFile is passed to low-level IO and szFile is used as stream name (for profiling purposes).
 /// \endakwarning
+/// \akwarning
+/// When using the in-memory file (pInMemory & uiMemorySize), it is the responsibility of the game to ensure the memory stays valid for the entire duration of the playback. 
+/// You can achieve this by using the AK_EndOfEvent callback to track when the Event ends.
+/// \endakwarning
+/// \sa
+/// - AK::SoundEngine::PostEvent
 struct AkExternalSourceInfo
 {
 	AkUInt32 iExternalSrcCookie;	///< Cookie identifying the source, given by hashing the name of the source given in the project.  See \ref AK::SoundEngine::GetIDFromString. \aknote If an event triggers the playback of more than one external source, they must be named uniquely in the project therefore have a unique cookie) in order to tell them apart when filling the AkExternalSourceInfo structures. \endaknote
 	AkCodecID idCodec;				///< Codec ID for the file.  One of the audio formats defined in AkTypes.h (AKCODECID_XXX)
-	AkOSChar * szFile;				///< File path for the source.  If not NULL, the source will be streaming from disk.  Set pInMemory to NULL. If idFile is set, this field is used as stream name (for profiling purposes).
-	void* pInMemory;				///< Pointer to the in-memory file.  If not NULL, the source will be read from memory.  Set szFile and idFile to NULL.
+	AkOSChar * szFile;				///< File path for the source.  If not NULL, the source will be streaming from disk. Set pInMemory to NULL. If idFile is set, this field is used as stream name (for profiling purposes). /// The only file format accepted is a fully formed WEM file, as converted by Wwise.
+	void* pInMemory;				///< Pointer to the in-memory file.  If not NULL, the source will be read from memory. Set szFile and idFile to NULL. The only file format accepted is a fully formed WEM file, as converted by Wwise.
 	AkUInt32 uiMemorySize;			///< Size of the data pointed by pInMemory
 	AkFileID idFile;				///< File ID.  If not zero, the source will be streaming from disk.  This ID can be anything.  Note that you must override the low-level IO to resolve this ID to a real file.  See \ref streamingmanager_lowlevel for more information on overriding the Low Level IO.
 
@@ -301,7 +404,42 @@ enum AkConnectionType
 	ConnectionType_ReflectionsSend = 0x3,	///< Connection by a early reflections send.
 };
 
-/// 3D vector.
+/// 3D 64-bit vector. Intended as storage for world positions of sounds and objects, benefiting from 64-bit precision range
+struct AkVector64
+{
+	inline AkVector64 operator+(const AkVector64& b) const
+	{
+		AkVector64 v;
+
+		v.X = X + b.X;
+		v.Y = Y + b.Y;
+		v.Z = Z + b.Z;
+
+		return v;
+	}
+
+	inline AkVector64 operator-(const AkVector64& b) const
+	{
+		AkVector64 v;
+
+		v.X = X - b.X;
+		v.Y = Y - b.Y;
+		v.Z = Z - b.Z;
+
+		return v;
+	}
+
+	inline void Zero()
+	{
+		X = 0; Y = 0; Z = 0;
+	}
+
+	AkReal64		X;	///< X Position
+	AkReal64		Y;	///< Y Position
+	AkReal64		Z;	///< Z Position
+};
+
+/// 3D vector for some operations in 3D space. Typically intended only for localized calculations due to 32-bit precision
 struct AkVector
 {
 	inline AkVector operator+(const AkVector& b) const
@@ -315,18 +453,43 @@ struct AkVector
 		return v;
 	}
 
+	inline AkVector operator-(const AkVector& b) const
+	{
+		AkVector v;
+
+		v.X = X - b.X;
+		v.Y = Y - b.Y;
+		v.Z = Z - b.Z;
+
+		return v;
+	}
+
+	inline AkVector operator*(const AkReal32 f) const
+	{
+		AkVector v;
+
+		v.X = X * f;
+		v.Y = Y * f;
+		v.Z = Z * f;
+
+		return v;
+	}
+
 	inline void Zero()
 	{
 		X = 0; Y = 0; Z = 0;
 	}
+
+	// Helper for implicit conversion to AkVector64. ConvertAkVectorToAkVector64 is still preferable to make it more obvious where upconversion occurs.
+	inline operator AkVector64() const { return AkVector64{ X, Y, Z }; }
 
     AkReal32		X;	///< X Position
     AkReal32		Y;	///< Y Position
     AkReal32		Z;	///< Z Position
 };
 
-/// Position and orientation of game objects.
-class AkTransform
+/// Position and orientation of game objects in the world (i.e. supports 64-bit-precision position)
+class AkWorldTransform
 {
 public:
 	//
@@ -334,7 +497,7 @@ public:
 	//
 
 	/// Get position vector.
-	inline const AkVector & Position() const
+	inline const AkVector64 & Position() const
 	{
 		return position;
 	}
@@ -357,7 +520,7 @@ public:
 
 	/// Set position and orientation. Orientation front and top should be orthogonal and normalized.
 	inline void Set(
-		const AkVector & in_position,			///< Position vector.
+		const AkVector64 & in_position,			///< Position vector.
 		const AkVector & in_orientationFront,	///< Orientation front
 		const AkVector & in_orientationTop		///< Orientation top
 		)
@@ -369,9 +532,9 @@ public:
 
 	/// Set position and orientation. Orientation front and top should be orthogonal and normalized.
 	inline void Set(
-		AkReal32 in_positionX,					///< Position x
-		AkReal32 in_positionY,					///< Position y
-		AkReal32 in_positionZ,					///< Position z
+		AkReal64 in_positionX,					///< Position x
+		AkReal64 in_positionY,					///< Position y
+		AkReal64 in_positionZ,					///< Position z
 		AkReal32 in_orientFrontX,				///< Orientation front x
 		AkReal32 in_orientFrontY,				///< Orientation front y
 		AkReal32 in_orientFrontZ,				///< Orientation front z
@@ -393,7 +556,7 @@ public:
 	
 	/// Set position.
 	inline void SetPosition(
-		const AkVector & in_position			///< Position vector.
+		const AkVector64 & in_position			///< Position vector.
 		)
 	{
 		position = in_position;
@@ -401,9 +564,9 @@ public:
 
 	/// Set position.
 	inline void SetPosition(
-		AkReal32 in_x,							///< x
-		AkReal32 in_y,							///< y
-		AkReal32 in_z							///< z
+		AkReal64 in_x,							///< x
+		AkReal64 in_y,							///< y
+		AkReal64 in_z							///< z
 		)
 	{
 		position.X = in_x;
@@ -442,14 +605,183 @@ public:
 private:
 	AkVector		orientationFront;	///< Orientation of the listener
 	AkVector		orientationTop;		///< Top orientation of the listener
+	AkVector64		position;			///< Position of the listener
+};
+
+/// Position and orientation of objects in a "local" space
+class AkTransform
+{
+public:
+	//
+	// Getters.
+	//
+
+	/// Get position vector.
+	inline const AkVector& Position() const
+	{
+		return position;
+	}
+
+	/// Get orientation front vector.
+	inline const AkVector& OrientationFront() const
+	{
+		return orientationFront;
+	}
+
+	/// Get orientation top vector.
+	inline const AkVector& OrientationTop() const
+	{
+		return orientationTop;
+	}
+
+	//
+	// Setters.
+	//
+
+	/// Set position and orientation. Orientation front and top should be orthogonal and normalized.
+	inline void Set(
+		const AkVector& in_position,			///< Position vector.
+		const AkVector& in_orientationFront,	///< Orientation front
+		const AkVector& in_orientationTop		///< Orientation top
+	)
+	{
+		position = in_position;
+		orientationFront = in_orientationFront;
+		orientationTop = in_orientationTop;
+	}
+
+	/// Set position and orientation. Orientation front and top should be orthogonal and normalized.
+	inline void Set(
+		AkReal32 in_positionX,					///< Position x
+		AkReal32 in_positionY,					///< Position y
+		AkReal32 in_positionZ,					///< Position z
+		AkReal32 in_orientFrontX,				///< Orientation front x
+		AkReal32 in_orientFrontY,				///< Orientation front y
+		AkReal32 in_orientFrontZ,				///< Orientation front z
+		AkReal32 in_orientTopX,					///< Orientation top x
+		AkReal32 in_orientTopY,					///< Orientation top y
+		AkReal32 in_orientTopZ					///< Orientation top z
+	)
+	{
+		position.X = in_positionX;
+		position.Y = in_positionY;
+		position.Z = in_positionZ;
+		orientationFront.X = in_orientFrontX;
+		orientationFront.Y = in_orientFrontY;
+		orientationFront.Z = in_orientFrontZ;
+		orientationTop.X = in_orientTopX;
+		orientationTop.Y = in_orientTopY;
+		orientationTop.Z = in_orientTopZ;
+	}
+
+	/// Set position.
+	inline void SetPosition(
+		const AkVector& in_position			///< Position vector.
+	)
+	{
+		position = in_position;
+	}
+
+	/// Set position.
+	inline void SetPosition(
+		AkReal32 in_x,							///< x
+		AkReal32 in_y,							///< y
+		AkReal32 in_z							///< z
+	)
+	{
+		position.X = in_x;
+		position.Y = in_y;
+		position.Z = in_z;
+	}
+
+	/// Set orientation. Orientation front and top should be orthogonal and normalized.
+	inline void SetOrientation(
+		const AkVector& in_orientationFront,	///< Orientation front
+		const AkVector& in_orientationTop		///< Orientation top
+	)
+	{
+		orientationFront = in_orientationFront;
+		orientationTop = in_orientationTop;
+	}
+
+	/// Set orientation. Orientation front and top should be orthogonal and normalized.
+	inline void SetOrientation(
+		AkReal32 in_orientFrontX,				///< Orientation front x
+		AkReal32 in_orientFrontY,				///< Orientation front y
+		AkReal32 in_orientFrontZ,				///< Orientation front z
+		AkReal32 in_orientTopX,					///< Orientation top x
+		AkReal32 in_orientTopY,					///< Orientation top y
+		AkReal32 in_orientTopZ					///< Orientation top z
+	)
+	{
+		orientationFront.X = in_orientFrontX;
+		orientationFront.Y = in_orientFrontY;
+		orientationFront.Z = in_orientFrontZ;
+		orientationTop.X = in_orientTopX;
+		orientationTop.Y = in_orientTopY;
+		orientationTop.Z = in_orientTopZ;
+	}
+
+	// Helper for implicit conversion to AkWorldTransform. ConvertAkTransformToAkWorldTransform is still preferable to make it more obvious where upconversion occurs.
+	inline operator AkWorldTransform() const {
+		AkWorldTransform ret;
+		ret.Set(position, orientationFront, orientationTop);
+		return ret;
+	}
+
+private:
+	AkVector		orientationFront;	///< Orientation of the listener
+	AkVector		orientationTop;		///< Top orientation of the listener
 	AkVector		position;			///< Position of the listener
 };
 
+
+namespace AK
+{
+	// Helper functions to make transitions between 64b and 32b conversion easier
+
+	// Warning: this conversion incurs a loss of precision and range
+	inline AkVector ConvertAkVector64ToAkVector(AkVector64 in)
+	{
+		AkVector out;
+		out.X = (AkReal32)in.X;
+		out.Y = (AkReal32)in.Y;
+		out.Z = (AkReal32)in.Z;
+		return out;
+	}
+
+	// Warning: this conversion incurs a loss of precision and range in position data
+	inline AkTransform ConvertAkWorldTransformToAkTransform(AkWorldTransform in)
+	{
+		AkTransform out;
+		AkVector pos = ConvertAkVector64ToAkVector(in.Position());
+		out.Set(pos, in.OrientationFront(), in.OrientationTop());
+		return out;
+	}
+
+	inline AkVector64 ConvertAkVectorToAkVector64(AkVector in)
+	{
+		AkVector64 out;
+		out.X = (AkReal64)in.X;
+		out.Y = (AkReal64)in.Y;
+		out.Z = (AkReal64)in.Z;
+		return out;
+	}
+
+	inline AkWorldTransform ConvertAkTransformToAkWorldTransform(AkTransform in)
+	{
+		AkWorldTransform out;
+		AkVector64 pos = ConvertAkVectorToAkVector64(in.Position());
+		out.Set(pos, in.OrientationFront(), in.OrientationTop());
+		return out;
+	}
+}
+
 /// Positioning information for a sound.
-typedef AkTransform AkSoundPosition;
+typedef AkWorldTransform AkSoundPosition;
 
 /// Positioning information for a listener.
-typedef AkTransform AkListenerPosition;
+typedef AkWorldTransform AkListenerPosition;
 
 /// Obstruction/occlusion pair for a position
 struct AkObstructionOcclusionValues
@@ -461,8 +793,9 @@ struct AkObstructionOcclusionValues
 /// Positioning information for a sound, with specified subset of its channels.
 struct AkChannelEmitter
 {
-	AkTransform		position;		///< Emitter position.
-	AkChannelMask	uInputChannels;	///< Channels to which the above position applies.
+	AkWorldTransform position;         ///< Emitter position.
+	AkChannelMask    uInputChannels;   ///< Channels to which the above position applies.
+	char padding[4];                   ///< In order to preserve consistent struct size across archs, we need some padding
 };
 
 /// Polar coordinates.
@@ -497,6 +830,7 @@ public:
 		, fSpread(0.f)
 		, fAperture(100.f)
 		, fScalingFactor(1.f)
+		, fPathGain(1.f)
 		, uEmitterChannelMask(0xFFFFFFFF)
 		, id(0)
 		, m_uListenerID(0)
@@ -528,6 +862,9 @@ public:
 	/// Get the transmission loss factor for this emitter-listener pair
 	inline AkReal32 TransmissionLoss() const { return fTransmissionLoss; }
 
+	/// Get the overall path-contribution gain, used to scale the dry + gamedef + userdef gains
+	inline AkReal32 PathGain() const { return fPathGain; }
+
 	/// Get the emitter-listener-pair-specific gain (due to distance and cone attenuation), linear [0,1], for a given connection type.
 	inline AkReal32 GetGainForConnectionType(AkConnectionType in_eType) const
 	{
@@ -547,7 +884,7 @@ public:
 	/// Get listener ID associated with the emitter-listener pair.
 	inline AkGameObjectID ListenerID() const { return m_uListenerID; }
 	
-	AkTransform emitter;				///< Emitter position.
+	AkWorldTransform emitter;			///< Emitter position.
 	AkReal32 fDistance;					///< Distance between emitter and listener.
 	AkReal32 fEmitterAngle;				///< Angle between position vector and emitter orientation.
 	AkReal32 fListenerAngle;			///< Angle between position vector and listener orientation.	
@@ -557,10 +894,11 @@ public:
 	AkReal32 fOcclusion;				///< Emitter-listener-pair-specific occlusion factor
 	AkReal32 fObstruction;				///< Emitter-listener-pair-specific obstruction factor
 	AkReal32 fDiffraction;				///< Emitter-listener-pair-specific diffraction coefficient
-	AkReal32 fTransmissionLoss;				///< Emitter-listener-pair-specific transmission occlusion.
+	AkReal32 fTransmissionLoss;			///< Emitter-listener-pair-specific transmission occlusion.
 	AkReal32 fSpread;					///< Emitter-listener-pair-specific spread
 	AkReal32 fAperture;					///< Emitter-listener-pair-specific aperture
 	AkReal32 fScalingFactor;			///< Combined scaling factor due to both emitter and listener.
+	AkReal32 fPathGain;					///< Emitter-listener-pair-specific overall gain that scales fDryMixGain, fGameDefAuxMixGain and fUserDefAuxMixGain
 	AkChannelMask uEmitterChannelMask;	///< Channels of the emitter that apply to this ray.
 protected:
 	AkRayID id;							///< ID of this emitter-listener pair, unique for a given emitter.
@@ -631,6 +969,64 @@ inline AkRamp operator*(const AkRamp& in_rLhs, const AkRamp& in_rRhs)
 	return result;
 }
 
+/// Type for a point in an RTPC or Attenuation curve.
+template< class VALUE_TYPE >
+struct AkGraphPointBase
+{
+	AkGraphPointBase() = default;
+
+	AkGraphPointBase(AkReal32 in_from, VALUE_TYPE in_to, AkCurveInterpolation in_interp)
+		: From(in_from)
+		, To(in_to)
+		, Interp(in_interp)
+	{}
+
+	AkReal32				From;		///< Represents the value on the X axis.
+	VALUE_TYPE				To;	    	///< Represents the value on the Y axis.
+	AkCurveInterpolation	Interp;		///< The shape of the interpolation curve between this point and the next.
+
+	bool operator==(const AkGraphPointBase& other) const
+	{
+		return From == other.From && To == other.To && Interp == other.Interp;
+	}
+	bool operator!=(const AkGraphPointBase& other) const
+	{
+		return !(*this == other);
+	}
+};
+
+// Every point of a conversion graph
+typedef AkGraphPointBase<AkReal32> AkRTPCGraphPoint;
+
+/// Curve types of the Attenuation Editor.
+enum AkAttenuationCurveType
+{
+	AttenuationCurveID_VolumeDry = 0,       ///< The distance-driven dry volume curve.
+	AttenuationCurveID_VolumeAuxGameDef,    ///< The distance-driven game-defined auxiliary send curve.
+	AttenuationCurveID_VolumeAuxUserDef,    ///< The distance-driven user-defined auxiliary send curve.
+	AttenuationCurveID_LowPassFilter,       ///< The distance-driven low-pass filter (pre send) curve.
+	AttenuationCurveID_HighPassFilter,      ///< The distance-driven high-pass filter (pre send) curve.
+	AttenuationCurveID_Spread,              ///< The distance-driven Spread curve.
+	AttenuationCurveID_Focus,               ///< The distance-driven Focus curve.
+	AttenuationCurveID_ObstructionVolume,   ///< The obstruction-driven volume curve.
+	AttenuationCurveID_ObstructionLPF,      ///< The obstruction-driven low-pass filter curve.
+	AttenuationCurveID_ObstructionHPF,      ///< The obstruction-driven high-pass filter curve.
+	AttenuationCurveID_OcclusionVolume,     ///< The occlusion-driven volume curve.
+	AttenuationCurveID_OcclusionLPF,        ///< The occlusion-driven low-pass filter curve.
+	AttenuationCurveID_OcclusionHPF,        ///< The occlusion-driven high-pass filter curve.
+	AttenuationCurveID_DiffractionVolume,   ///< The diffraction-driven volume curve.
+	AttenuationCurveID_DiffractionLPF,      ///< The diffraction-driven low-pass filter curve.
+	AttenuationCurveID_DiffractionHPF,      ///< The diffraction-driven high-pass filter curve.
+	AttenuationCurveID_TransmissionVolume,  ///< The transmission-driven volume curve.
+	AttenuationCurveID_TransmissionLPF,     ///< The transmission-driven low-pass filter curve.
+	AttenuationCurveID_TransmissionHPF,     ///< The transmission-driven high-pass filter curve.
+
+	AttenuationCurveID_MaxCount,            ///< The maximum number of curve types.
+
+	AttenuationCurveID_Project = 254,       ///< Symbol for "Use Project".
+	AttenuationCurveID_None = 255           ///< Symbol for "None".
+};
+
 // ---------------------------------------------------------------
 // Languages
 // ---------------------------------------------------------------
@@ -683,7 +1079,6 @@ inline AkRamp operator*(const AkRamp& in_rLhs, const AkRamp& in_rRhs)
 #define AKCODECID_PCMEX					(7)		///< Standard PCM WAV file parser for Wwise Authoring
 #define AKCODECID_EXTERNAL_SOURCE       (8)		///< External Source (unknown encoding)
 #define AKCODECID_XWMA					(9)		///< xWMA encoding
-#define AKCODECID_AAC					(10)	///< AAC encoding (only available on Apple devices) -- see AkAACFactory.h
 #define AKCODECID_FILE_PACKAGE			(11)	///< File package files generated by the File Packager utility.
 #define AKCODECID_ATRAC9				(12)	///< ATRAC-9 encoding
 #define AKCODECID_VAG					(13)	///< VAG/HE-VAG encoding
@@ -695,23 +1090,26 @@ inline AkRamp operator*(const AkRamp& in_rLhs, const AkRamp& in_rRhs)
 #define AKCODECID_AKOPUS                (19)    ///< Opus encoding, 2018.1 to 2019.2
 #define AKCODECID_AKOPUS_WEM            (20)    ///< Opus encoding, wrapped in WEM
 #define AKCODECID_MEMORYMGR_DUMP        (21)    ///< Memory stats file as written through AK::MemoryMgr::DumpToFile();
+#define AKCODECID_SONY360               (22)    ///< Sony 360 encoding
+
+#define AKCODECID_BANK_EVENT			(30)    ///< Bank encoding for event banks. These banks are contained in the /event sub-folder.
+#define AKCODECID_BANK_BUS				(31)    ///< Bank encoding for bus banks. These banks are contained in the /bus sub-folder.
 
 #define AKPLUGINID_METER				(129)   ///< Meter Plugin
 #define AKPLUGINID_RECORDER				(132)   ///< Recorder Plugin
 #define AKPLUGINID_IMPACTER				(184)
 #define AKPLUGINID_SYSTEM_OUTPUT_META	(900)   ///< System output metadata
-//                                      (901)   ///< Reserved
-//                                      (902)   ///< Reserved
+#define AKPLUGINID_AUDIO_OBJECT_ATTENUATION_META (901) ///< Attenuation curve metadata
+#define AKPLUGINID_AUDIO_OBJECT_PRIORITY_META    (902) ///< Audio object priority metadata
 
 #define AKEXTENSIONID_SPATIALAUDIO		(800)	///< Spatial Audio
 #define AKEXTENSIONID_INTERACTIVEMUSIC	(801)	///< Interactive Music
-#define AKEXTENSIONID_EVENTMGRTHREAD	(900)	///< Profiling: Event Manager
+#define AKEXTENSIONID_MIDIDEVICEMGR		(802)	///< MIDI Device Manager (Authoring)
 
 //The following are internally defined
 #define	AK_WAVE_FORMAT_VAG				0xFFFB
 #define	AK_WAVE_FORMAT_AT9				0xFFFC
 #define	AK_WAVE_FORMAT_VORBIS  			0xFFFF
-#define	AK_WAVE_FORMAT_AAC				0xAAC0
 #define AK_WAVE_FORMAT_OPUSNX           0x3039
 #define AK_WAVE_FORMAT_OPUS             0x3040
 #define AK_WAVE_FORMAT_OPUS_WEM         0x3041
@@ -741,6 +1139,17 @@ struct AkCodecDescriptor
 	AkCreateGrainCodecCallback pGrainCodecCreateFunc;    // GrainCodec utility.
 };
 
+//-----------------------------------------------------------------------------
+// Banks
+//-----------------------------------------------------------------------------
+
+/// Bank types
+enum AkBankTypeEnum
+{
+	AkBankType_User		= AKCODECID_BANK,			///< User-defined bank.
+	AkBankType_Event	= AKCODECID_BANK_EVENT,		///< Bank generated for one event.
+	AkBankType_Bus		= AKCODECID_BANK_BUS,		///< Bank generated for one bus or aux bus.
+};
 
 //-----------------------------------------------------------------------------
 // Positioning
@@ -753,10 +1162,13 @@ namespace AK
 		// If you modify MultiPositionType, don't forget to modify WAAPI validation schema accordingly.
 
 		/// MultiPositionType.
+		/// \aknote
+		/// - If a sound has diffraction enabled, it is treated as <tt>MultiPositionType_MultiDirections</tt>. <tt>MultiPositionType_MultiSources</tt> is not supported in this case.
+		/// \endaknote
 		/// \sa
 		/// - AK::SoundEngine::SetMultiplePosition()
 		/// - \ref soundengine_3dpositions_multiplepos
-		enum MultiPositionType
+		enum MultiPositionType : AkUInt8 
 		{
 			MultiPositionType_SingleSource,		///< Used for normal sounds, not expected to pass to AK::SoundEngine::SetMultiplePosition() (if done, only the first position will be used).
 			MultiPositionType_MultiSources,		///< Simulate multiple sources in one sound playing, adding volumes. For instance, all the torches on your level emitting using only one sound.
@@ -767,7 +1179,7 @@ namespace AK
 
 #define AK_PANNER_NUM_STORAGE_BITS 3
 /// Speaker panning type: type of panning logic when object is not 3D spatialized (i.e. when Ak3DSpatializationMode is AK_SpatializationMode_None).
-enum AkSpeakerPanningType
+enum AkSpeakerPanningType : AkUInt8
 {
 	AK_DirectSpeakerAssignment = 0, ///< No panning: route to matching channels between input and output.
 	AK_BalanceFadeHeight       = 1, ///< Balance-Fade-Height: Traditional "box" or "car"-like panner.
@@ -776,15 +1188,24 @@ enum AkSpeakerPanningType
 
 #define AK_POSSOURCE_NUM_STORAGE_BITS 3
 /// 3D position type: defines what acts as the emitter position for computing spatialization against the listener. Used when Ak3DSpatializationMode is AK_SpatializationMode_PositionOnly or AK_SpatializationMode_PositionAndOrientation.
-enum Ak3DPositionType
+enum Ak3DPositionType : AkUInt8
 {
 	AK_3DPositionType_Emitter = 0,					///< 3D spatialization is computed directly from the emitter game object position.
 	AK_3DPositionType_EmitterWithAutomation = 1,	///< 3D spatialization is computed from the emitter game object position, translated by user-defined automation.
 	AK_3DPositionType_ListenerWithAutomation = 2	///< 3D spatialization is computed from the listener game object position, translated by user-defined automation.
 };
 
+/// Flags to independently set the position of the emitter or listener component on a game object.
+enum AkSetPositionFlags : AkUInt8
+{
+	AkSetPositionFlags_Emitter = 1 << 0,  // Only set the emitter component position.
+	AkSetPositionFlags_Listener = 1 << 1, // Only set the listener component position.
+
+	AkSetPositionFlags_Default = (AkSetPositionFlags_Emitter | AkSetPositionFlags_Listener) // Default: set both emitter and listener component positions.
+};
+
 /// Headphone / speakers panning rules
-enum AkPanningRule
+enum AkPanningRule : AkUInt8
 {
 	AkPanningRule_Speakers		= 0,	///< Left and right positioned 60 degrees apart (by default - see AK::SoundEngine::GetSpeakerAngles()).
 	AkPanningRule_Headphones 	= 1		///< Left and right positioned 180 degrees apart.
@@ -792,7 +1213,7 @@ enum AkPanningRule
 
 #define AK_SPAT_NUM_STORAGE_BITS 3
 /// 3D spatialization mode.
-enum Ak3DSpatializationMode
+enum Ak3DSpatializationMode : AkUInt8
 {
 	AK_SpatializationMode_None = 0,						///< No spatialization
 	AK_SpatializationMode_PositionOnly = 1,				///< Spatialization based on emitter position only.
@@ -800,7 +1221,7 @@ enum Ak3DSpatializationMode
 };
 
 /// Bus type bit field.
-enum AkBusHierarchyFlags
+enum AkBusHierarchyFlags : AkUInt8
 {
 	AkBusHierarchy_Primary		= 1 << 0,	///< Flag is set to indicate the primary bus hierarchy.
 	AkBusHierarchy_Secondary	= 1 << 1,	///< Flag is set to indicate the secondary bus hierarchy.
@@ -810,7 +1231,7 @@ enum AkBusHierarchyFlags
 #define AK_MAX_BITS_METERING_FLAGS	(5)	// Keep in sync with AkMeteringFlags.
 
 /// Metering flags. Used for specifying bus metering, through AK::SoundEngine::RegisterBusVolumeCallback() or AK::IAkMixerPluginContext::SetMeteringFlags().
-enum AkMeteringFlags
+enum AkMeteringFlags : AkUInt8
 {
 	AK_NoMetering				= 0,			///< No metering.
 	AK_EnableBusMeter_Peak		= 1 << 0,		///< Enable computation of peak metering.
@@ -818,13 +1239,13 @@ enum AkMeteringFlags
 	AK_EnableBusMeter_RMS		= 1 << 2,		///< Enable computation of RMS metering.
 	// 1 << 3 is reserved.
 	AK_EnableBusMeter_KPower	= 1 << 4,		///< Enable computation of K-weighted power metering (used as a basis for computing loudness, as defined by ITU-R BS.1770).
-	AK_EnableBusMeter_3DMeter = 1 << 5
+	AK_EnableBusMeter_3DMeter = 1 << 5			///< Enable computation of data necessary to render a 3D visualization of volume distribution over the surface of a sphere.
 };
 
 /// Plug-in type.
 /// \sa
 /// - AkPluginInfo
-enum AkPluginType
+enum AkPluginType : AkUInt8
 {
 	AkPluginTypeNone = 0,	///< Unknown/invalid plug-in type.
 	AkPluginTypeCodec = 1,	///< Compressor/decompressor plug-in (allows support for custom audio file types).
@@ -906,32 +1327,6 @@ namespace AkFileParser
 #pragma pack(pop)
 }
 
-#ifndef AK_ALIGN
-#if defined(SWIG)
-#define AK_ALIGN( _declaration_, _alignment_ ) _declaration_
-#else
-#if defined(_MSC_VER)
-#define AK_ALIGN( _declaration_, _alignment_ ) __declspec( align( _alignment_ ) ) _declaration_
-#else
-#define AK_ALIGN( _declaration_, _alignment_ ) _declaration_ __attribute__( ( aligned( _alignment_ ) ) )
-#endif // _MSC_VER
-#endif // SWIG
-#endif // AK_ALIGN
-
-#if !defined(AK_ENDIANNESS_LITTLE) && !defined(AK_ENDIANNESS_BIG)
-#define AK_ENDIANNESS_LITTLE
-#endif
-
-#ifndef AK_UNALIGNED
-#define AK_UNALIGNED						///< Refers to the __unaligned compilation flag available on some platforms. Note that so far, on the tested platform this should always be placed before the pointer symbol *.
-#endif
-
-#if __cplusplus <= 199711L
-#define AK_FINAL
-#else
-#define AK_FINAL		final					///< Refers to the C++11 final keyword
-#endif
-
 #ifndef AK_ASYNC_OPEN_DEFAULT
 #define AK_ASYNC_OPEN_DEFAULT	(false)				///< Refers to asynchronous file opening in default low-level IO.
 #endif
@@ -945,6 +1340,7 @@ typedef AkReal32 AkCaptureType;
 #else
 typedef AkInt16 AkCaptureType;			///< Default value: capture type is short.
 #endif
+
 #define AkRegister
 
 #endif  //_AK_DATA_TYPES_H_

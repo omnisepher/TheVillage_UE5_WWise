@@ -29,7 +29,7 @@
 // creation.
 #define GTE_MC_ENTRY(name) CT_##name, &MarchingCubes::name
 
-namespace gte
+namespace WwiseGTE
 {
     class MarchingCubes
     {

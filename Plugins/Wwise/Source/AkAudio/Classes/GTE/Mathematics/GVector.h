@@ -11,7 +11,7 @@
 #include <Mathematics/Math.h>
 #include <vector>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class GVector

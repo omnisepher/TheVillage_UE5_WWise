@@ -1,0 +1,59 @@
+Event	ID	Name			Wwise Object Path	Notes
+	38624190	TestSound			\Default Work Unit\TestSound	
+	1750343382	GameTheme			\Default Work Unit\GameTheme	
+	2179486487	Heartbeat			\Default Work Unit\Heartbeat	
+	2385628198	Footsteps			\Default Work Unit\Footsteps	
+	3731681489	IceSkill			\Default Work Unit\IceSkill	
+	3757312786	FireBase			\Default Work Unit\FireBase	
+	4114431033	Meditation			\Default Work Unit\Meditation	
+
+Switch Group	ID	Name			Wwise Object Path	Notes
+	2385628198	Footsteps			\Default Work Unit\Footsteps	
+
+Switch	ID	Name	Switch Group			Notes
+	2144363834	Rock	Footsteps			
+	4248645337	Grass	Footsteps			
+
+State Group	ID	Name			Wwise Object Path	Notes
+	1750343382	GameTheme			\Default Work Unit\GameTheme	
+
+State	ID	Name	State Group			Notes
+	748895195	None	GameTheme			
+	1160234136	Normal	GameTheme			
+	3625060726	Success	GameTheme			
+
+Game Parameter	ID	Name			Wwise Object Path	Notes
+	1351491183	IceSkillCastTime			\Default Work Unit\IceSkillCastTime	
+	3677180323	Health			\Default Work Unit\Health	
+
+Trigger	ID	Name			Wwise Object Path	Notes
+	78360149	Stinger			\Default Work Unit\Stinger	
+
+Effect plug-ins	ID	Name	Type				Notes
+	547688741	Wwise Guitar Distortion (Custom)	Wwise Guitar Distortion			
+	1042844212	Wwise Time Stretch (Custom)	Wwise Time Stretch			
+
+In Memory Audio	ID	Name	Audio source file		Wwise Object Path	Notes	Data Size
+	25432987	FootstepsRock_0-07	C:\Users\misun\Desktop\TheVillage\TheVillage_WwiseProject\.cache\PS5\SFX\FootstepsRock_0-07_818F3B66.wem		\Actor-Mixer Hierarchy\Default Work Unit\Character\Footsteps\Rock\FootstepsRock_0-07		16634
+	112367554	FootstepsRock_0-04	C:\Users\misun\Desktop\TheVillage\TheVillage_WwiseProject\.cache\PS5\SFX\FootstepsRock_0-04_818F3B66.wem		\Actor-Mixer Hierarchy\Default Work Unit\Character\Footsteps\Rock\FootstepsRock_0-04		28208
+	245397966	FootstepsRock_0-01	C:\Users\misun\Desktop\TheVillage\TheVillage_WwiseProject\.cache\PS5\SFX\FootstepsRock_0-01_818F3B66.wem		\Actor-Mixer Hierarchy\Default Work Unit\Character\Footsteps\Rock\FootstepsRock_0-01		27404
+	357953543	forest_lullaby	C:\Users\misun\Desktop\TheVillage\TheVillage_WwiseProject\.cache\PS5\SFX\forest_lullaby_FBC78EF0.wem		\Interactive Music Hierarchy\Default Work Unit\Theme\ForestTheme\forest_lullaby		24461664
+	404283777	FireBase	C:\Users\misun\Desktop\TheVillage\TheVillage_WwiseProject\.cache\PS5\SFX\FireBase_858CDEE9.wem		\Actor-Mixer Hierarchy\Default Work Unit\Environment\FireBase		997034
+	437504527	FootstepsGrass_0-03	C:\Users\misun\Desktop\TheVillage\TheVillage_WwiseProject\.cache\PS5\SFX\FootstepsGrass_0-03_76312CC1.wem		\Actor-Mixer Hierarchy\Default Work Unit\Character\Footsteps\Grass\FootstepsGrass_0-03		58418
+	508935826	Heartbeat	C:\Users\misun\Desktop\TheVillage\TheVillage_WwiseProject\.cache\PS5\SFX\Heartbeat_FBC78EF0.wem		\Actor-Mixer Hierarchy\Default Work Unit\Character\Heartbeat		356960
+	537116116	stinger	C:\Users\misun\Desktop\TheVillage\TheVillage_WwiseProject\.cache\PS5\SFX\stinger_FBC78EF0.wem		\Interactive Music Hierarchy\Default Work Unit\Theme\Stinger\stinger		2116960
+	589126567	FootstepsGrass_0-02	C:\Users\misun\Desktop\TheVillage\TheVillage_WwiseProject\.cache\PS5\SFX\FootstepsGrass_0-02_005F8CAC.wem		\Actor-Mixer Hierarchy\Default Work Unit\Character\Footsteps\Grass\FootstepsGrass_0-02		60896
+	596560865	FootstepsGrass_0-01	C:\Users\misun\Desktop\TheVillage\TheVillage_WwiseProject\.cache\PS5\SFX\FootstepsGrass_0-01_ABED0C8C.wem		\Actor-Mixer Hierarchy\Default Work Unit\Character\Footsteps\Grass\FootstepsGrass_0-01		54954
+	639494320	FootstepsRock_0-03	C:\Users\misun\Desktop\TheVillage\TheVillage_WwiseProject\.cache\PS5\SFX\FootstepsRock_0-03_818F3B66.wem		\Actor-Mixer Hierarchy\Default Work Unit\Character\Footsteps\Rock\FootstepsRock_0-03		17558
+	640964624	FootstepsRock_0-05	C:\Users\misun\Desktop\TheVillage\TheVillage_WwiseProject\.cache\PS5\SFX\FootstepsRock_0-05_818F3B66.wem		\Actor-Mixer Hierarchy\Default Work Unit\Character\Footsteps\Rock\FootstepsRock_0-05		23662
+	675718906	Meditation	C:\Users\misun\Desktop\TheVillage\TheVillage_WwiseProject\.cache\PS5\SFX\Meditation_E40B0AE7.wem		\Actor-Mixer Hierarchy\Default Work Unit\Environment\Meditation		3660840
+	684276788	FootstepsRock_0-02	C:\Users\misun\Desktop\TheVillage\TheVillage_WwiseProject\.cache\PS5\SFX\FootstepsRock_0-02_818F3B66.wem		\Actor-Mixer Hierarchy\Default Work Unit\Character\Footsteps\Rock\FootstepsRock_0-02		32414
+	689077695	FootstepsRock_0	C:\Users\misun\Desktop\TheVillage\TheVillage_WwiseProject\.cache\PS5\SFX\FootstepsRock_0_818F3B66.wem		\Actor-Mixer Hierarchy\Default Work Unit\Character\Footsteps\Rock\FootstepsRock_0		19788
+	729889432	FootstepsRock_0-06	C:\Users\misun\Desktop\TheVillage\TheVillage_WwiseProject\.cache\PS5\SFX\FootstepsRock_0-06_818F3B66.wem		\Actor-Mixer Hierarchy\Default Work Unit\Character\Footsteps\Rock\FootstepsRock_0-06		25582
+	826639005	FootstepsGrass_0-06	C:\Users\misun\Desktop\TheVillage\TheVillage_WwiseProject\.cache\PS5\SFX\FootstepsGrass_0-06_B7C92982.wem		\Actor-Mixer Hierarchy\Default Work Unit\Character\Footsteps\Grass\FootstepsGrass_0-06		56100
+	834898865	FootstepsRock_0-08	C:\Users\misun\Desktop\TheVillage\TheVillage_WwiseProject\.cache\PS5\SFX\FootstepsRock_0-08_818F3B66.wem		\Actor-Mixer Hierarchy\Default Work Unit\Character\Footsteps\Rock\FootstepsRock_0-08		19284
+	946848897	FootstepsGrass_0	C:\Users\misun\Desktop\TheVillage\TheVillage_WwiseProject\.cache\PS5\SFX\FootstepsGrass_0_8845F02D.wem		\Actor-Mixer Hierarchy\Default Work Unit\Character\Footsteps\Grass\FootstepsGrass_0		53382
+	970040310	meditation_theme	C:\Users\misun\Desktop\TheVillage\TheVillage_WwiseProject\.cache\PS5\SFX\meditation_theme_FBC78EF0.wem		\Interactive Music Hierarchy\Default Work Unit\Theme\MeditationTheme\meditation_theme		86415712
+	1018198658	Blizzard	C:\Users\misun\Desktop\TheVillage\TheVillage_WwiseProject\.cache\PS5\SFX\Blizzard_15C55F16.wem		\Actor-Mixer Hierarchy\Default Work Unit\Skill\IceSkill\Blizzard		1000160
+	1047019580	Icycle	C:\Users\misun\Desktop\TheVillage\TheVillage_WwiseProject\.cache\PS5\SFX\Icicle_F7783ABA.wem		\Actor-Mixer Hierarchy\Default Work Unit\Skill\IceSkill\Icycle		436088
+

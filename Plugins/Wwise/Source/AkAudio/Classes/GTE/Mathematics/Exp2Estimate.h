@@ -13,7 +13,7 @@
 // degree D minimizes the quantity maximum{|2^x - p(x)| : x in [0,1]}
 // over all polynomials of degree D.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class Exp2Estimate

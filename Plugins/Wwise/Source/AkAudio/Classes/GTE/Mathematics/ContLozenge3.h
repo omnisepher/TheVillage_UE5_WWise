@@ -11,7 +11,7 @@
 #include <Mathematics/DistPoint3Rectangle3.h>
 #include <Mathematics/Lozenge3.h>
 
-namespace gte
+namespace WwiseGTE
 {
     // Compute the plane of the lozenge rectangle using least-squares fit.
     // Parallel planes are chosen close enough together so that all the data

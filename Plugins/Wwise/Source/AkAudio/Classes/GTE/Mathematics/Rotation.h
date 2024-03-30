@@ -12,7 +12,7 @@
 #include <Mathematics/Matrix.h>
 #include <Mathematics/Quaternion.h>
 
-namespace gte
+namespace WwiseGTE
 {
     // Conversions among various representations of rotations.  The value of
     // N must be 3 or 4.  The latter case supports affine algebra when you use

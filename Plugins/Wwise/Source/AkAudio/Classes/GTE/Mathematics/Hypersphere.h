@@ -13,7 +13,7 @@
 // the radius.  The hypersphere is a circle for dimension 2 or a sphere for
 // dimension 3.
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class Hypersphere

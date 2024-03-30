@@ -18,7 +18,7 @@
 // corresponding to depth D has 2^D nodes, in which case the number of
 // leaf nodes (depth H) is 2^H.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class OBBTreeForPoints

@@ -17,7 +17,7 @@
 // distinct frustum normals (near and far plane have the same normal), and
 // cross products of normals, one from the box and one from the frustum.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, OrientedBox3<Real>, Frustum3<Real>>

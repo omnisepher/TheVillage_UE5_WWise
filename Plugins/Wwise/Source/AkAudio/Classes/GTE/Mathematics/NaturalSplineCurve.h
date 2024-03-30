@@ -10,7 +10,7 @@
 #include <Mathematics/GMatrix.h>
 #include <Mathematics/ParametricCurve.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class NaturalSplineCurve : public ParametricCurve<N, Real>

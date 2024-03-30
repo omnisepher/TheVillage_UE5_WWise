@@ -10,7 +10,7 @@
 #include <Mathematics/Matrix3x3.h>
 #include <Mathematics/SymmetricEigensolver3x3.h>
 
-namespace gte
+namespace WwiseGTE
 {
     // Least-squares fit of a great circle to unit-length vectors (x,y,z) by
     // using distance measurements orthogonal (and measured along great

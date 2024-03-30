@@ -21,16 +21,11 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #ifndef _AK_AKASSERT_H_
 #define _AK_AKASSERT_H_
-
-#if defined(__EMSCRIPTEN__)
-#include <assert.h>
-#endif
 
 #if defined( _DEBUG ) && !(defined AK_DISABLE_ASSERTS)
 	#ifndef AK_ENABLE_ASSERTS
@@ -56,12 +51,8 @@ the specific language governing permissions and limitations under the License.
 	#if defined( AK_ENABLE_ASSERTS )
 		extern AKSOUNDENGINE_API AkAssertHook g_pAssertHook;
 
-		#if defined(__EMSCRIPTEN__)
-		#define AKASSERT(Condition) assert(Condition)
-		#else
 		// These platforms use a built-in g_pAssertHook (and do not fall back to the regular assert macro)
 		#define AKASSERT(Condition) ((Condition) ? ((void) 0) : g_pAssertHook( #Condition, __FILE__, __LINE__) )
-		#endif
 
 		#define AKVERIFY AKASSERT
 

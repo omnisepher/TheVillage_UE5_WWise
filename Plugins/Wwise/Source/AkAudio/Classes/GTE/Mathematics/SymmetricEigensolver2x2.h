@@ -11,7 +11,7 @@
 #include <algorithm>
 #include <array>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class SymmetricEigensolver2x2

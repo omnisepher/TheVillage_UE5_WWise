@@ -25,7 +25,7 @@
 // allows the query to be applied even when it has more local information
 // than just point location.
 
-namespace gte
+namespace WwiseGTE
 {
     // Predefined site structs for convenience.
     template <int N, typename T>

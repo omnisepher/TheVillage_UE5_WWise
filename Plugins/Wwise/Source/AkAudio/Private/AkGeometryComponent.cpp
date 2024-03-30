@@ -1,58 +1,61 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #include "AkGeometryComponent.h"
+#include "AkAcousticTexture.h"
 #include "AkAudioDevice.h"
 #include "AkComponentHelpers.h"
 #include "AkReverbDescriptor.h"
-#include "AkAcousticTexture.h"
 #include "AkRoomComponent.h"
 #include "AkSettings.h"
-#include "Components/StaticMeshComponent.h"
-#include "Engine/Polys.h"
-#include "Engine/StaticMesh.h"
+#include "WwiseUEFeatures.h"
 
-#if PHYSICS_INTERFACE_PHYSX
+#if AK_USE_PHYSX
 #include "PhysXPublic.h"
 #endif
 
-#if WITH_CHAOS
-#include "Chaos/Convex.h"
-#include "Chaos/Particles.h"
-#include "Chaos/Plane.h"
-#include "Chaos/AABB.h"
-#include "Chaos/CollisionConvexMesh.h"
+#if AK_USE_CHAOS
 #include "ChaosLog.h"
+#include "Chaos/CollisionConvexMesh.h"
+#include "Chaos/Convex.h"
 #endif
-
-#include <AK/SpatialAudio/Common/AkSpatialAudio.h>
 
 #if WITH_EDITOR
 #include "Editor.h"
 #endif
 
-#include "UObject/Object.h"
+#include "RawIndexBuffer.h"
+#include "StaticMeshResources.h"
+#include "Components/StaticMeshComponent.h"
 #include "Engine/GameEngine.h"
+#include "Engine/Polys.h"
+#include "Engine/StaticMesh.h"
 #include "PhysicsEngine/BodySetup.h"
+#include "UObject/Object.h"
 
 static const float kVertexNear = 0.0001;
 
 UAkGeometryComponent::UAkGeometryComponent(const class FObjectInitializer& ObjectInitializer) :
 	Super(ObjectInitializer)
 {
-	MeshType = AkMeshType::StaticMesh;
+	// Property initialization
+	bWantsOnUpdateTransform = true;
+
+	MeshType = AkMeshType::CollisionMesh;
 	LOD = 0;
 	CollisionMeshSurfaceOverride.AcousticTexture = nullptr;
 	CollisionMeshSurfaceOverride.bEnableOcclusionOverride = false;
@@ -131,7 +134,13 @@ void UAkGeometryComponent::BeginPlayInternal()
 	for (int PosIndex = 0; PosIndex < GeometryData.Surfaces.Num(); ++PosIndex)
 	{
 		// set geometry surface names and update textures
-		GeometryData.Surfaces[PosIndex].Name = GetOwner()->GetName() + GetName() + FString::FromInt(PosIndex);
+		FString OwnerName;
+#if WITH_EDITOR
+		OwnerName = GetOwner()->GetActorLabel();
+#else
+		OwnerName = GetOwner()->GetName();
+#endif
+		GeometryData.Surfaces[PosIndex].Name = OwnerName + GetName() + FString::FromInt(PosIndex);
 
 		UPhysicalMaterial* physMat = GeometryData.ToOverrideAcousticTexture[PosIndex];
 		if (physMat)
@@ -140,7 +149,7 @@ void UAkGeometryComponent::BeginPlayInternal()
 			if (GetDefault<UAkSettings>()->GetAssociatedAcousticTexture(physMat, acousticTexture))
 			{
 				if (acousticTexture)
-					GeometryData.Surfaces[PosIndex].Texture = FAkAudioDevice::GetIDFromString(acousticTexture->GetName());
+					GeometryData.Surfaces[PosIndex].Texture =  acousticTexture->GetShortID();
 			}
 		}
 
@@ -155,8 +164,9 @@ void UAkGeometryComponent::BeginPlayInternal()
 		}
 	}
 
+	SendGeometry();
 	UpdateGeometry();
-	RecalculateHFDamping();
+	DampingEstimationNeedsUpdate = true;
 }
 
 void UAkGeometryComponent::OnRegister()
@@ -184,7 +194,15 @@ void UAkGeometryComponent::OnRegister()
 			if (MeshParent != nullptr)
 				CalculateSurfaceArea(MeshParent);
 		}
-		RecalculateHFDamping();
+		DampingEstimationNeedsUpdate = true;
+	}
+	if (AssociatedRoom != nullptr)
+	{
+		UAkRoomComponent* room = Cast<UAkRoomComponent>(AssociatedRoom->GetComponentByClass(UAkRoomComponent::StaticClass()));
+		if (room != nullptr)
+		{
+			UE_LOG(LogAkAudio, Warning, TEXT("AkGeometryComponent %s is associated to Room %s. The AssociatedRoom property is deprecated, it will be removed in a future version. We recommend not using it and leaving it set to None."), *GetOwner()->GetName(), *room->GetRoomName());
+		}
 	}
 #endif
 }
@@ -388,7 +406,7 @@ void DetermineVertsToWeld(TArray<int32>& VertRemap, TArray<int32>& UniqueVerts, 
 
 void UAkGeometryComponent::ConvertMesh()
 {
-	if (!(Parent && Parent->IsValidLowLevel()))
+	if (!(Parent && IsValid(Parent)))
 		return;
 
 	const UAkSettings* AkSettings = GetDefault<UAkSettings>();
@@ -413,7 +431,7 @@ void UAkGeometryComponent::ConvertMesh()
 void UAkGeometryComponent::ConvertStaticMesh(UStaticMeshComponent* StaticMeshComponent, const UAkSettings* AkSettings)
 {
 	UStaticMesh* mesh = StaticMeshComponent->GetStaticMesh();
-	if (!(mesh && mesh->IsValidLowLevel()))
+	if (!(mesh && IsValid(mesh)))
 		return;
 
 	if (LOD > mesh->GetNumLODs() - 1)
@@ -476,7 +494,7 @@ void UAkGeometryComponent::ConvertStaticMesh(UStaticMeshComponent* StaticMeshCom
 		}
 
 		if (surfaceOverride.AcousticTexture)
-			Surface.Texture = FAkAudioDevice::GetIDFromString(surfaceOverride.AcousticTexture->GetName());
+			Surface.Texture = surfaceOverride.AcousticTexture->GetShortID();
 
 		if (surfaceOverride.bEnableOcclusionOverride)
 			Surface.Occlusion = surfaceOverride.OcclusionValue;
@@ -579,237 +597,117 @@ struct VertexIndexByAngle
 	float Angle;
 }; 
 
-#if PHYSICS_INTERFACE_PHYSX
-void ConvertConvexMeshToGeometryData(AkSurfIdx surfIdx, UBodySetup* bodySetup, FAkGeometryData* GeometryData)
+#if AK_USE_PHYSX
+void ConvertConvexMeshToGeometryData(AkSurfIdx surfIdx, const FKConvexElem& convexHull, FAkGeometryData* GeometryData)
 {
-	int32 numComvexHulls = bodySetup->AggGeom.ConvexElems.Num();
-	for (int32 i = 0; i < numComvexHulls; i++)
+	physx::PxConvexMesh* convexMesh = convexHull.GetConvexMesh();
+
+	AkVertIdx initialVertIdx = GeometryData->Vertices.Num();
+	if (convexMesh != nullptr)
 	{
-		FKConvexElem& convexHull = bodySetup->AggGeom.ConvexElems[i];
-		physx::PxConvexMesh* convexMesh = convexHull.GetConvexMesh();
+		const PxVec3* vertices = convexMesh->getVertices();
 
-		AkVertIdx initialVertIdx = GeometryData->Vertices.Num();
-		if (convexMesh != nullptr)
+		uint32 numVerts = (uint32)convexMesh->getNbVertices();
+		for (uint32 vertIdx = 0; vertIdx < numVerts; ++vertIdx)
 		{
-			const PxVec3* vertices = convexMesh->getVertices();
+			FVector akvtx;
+			akvtx.X = vertices[vertIdx].x;
+			akvtx.Y = vertices[vertIdx].y;
+			akvtx.Z = vertices[vertIdx].z;
+			GeometryData->Vertices.Add(akvtx);
+		}
 
-			uint32 numVerts = (uint32)convexMesh->getNbVertices();
-			for (uint32 vertIdx = 0; vertIdx < numVerts; ++vertIdx)
+		const physx::PxU8* indexBuf = convexMesh->getIndexBuffer();
+
+		uint32 numPolys = (uint32)convexMesh->getNbPolygons();
+		for (uint32 polyIdx = 0; polyIdx < numPolys; polyIdx++)
+		{
+			PxHullPolygon polyData;
+			convexMesh->getPolygonData(polyIdx, polyData);
+
+			// order the vertices of the polygon
+			uint32 numVertsInPoly = (uint32)polyData.mNbVerts;
+			uint32 vertIdxOffset = (uint32)polyData.mIndexBase;
+
+			TArray<VertexIndexByAngle> orderedIndexes;
+			// first element is first vertex index
+			AkVertIdx firstVertIdx = (AkVertIdx)indexBuf[vertIdxOffset];
+			orderedIndexes.Add(VertexIndexByAngle{ firstVertIdx, 0 });
+
+			// get the center of the polygon
+			FVector center(0, 0, 0);
+			for (uint32 polyVertIdx = 0; polyVertIdx < numVertsInPoly; ++polyVertIdx)
 			{
-				FVector akvtx;
-				akvtx.X = vertices[vertIdx].x;
-				akvtx.Y = vertices[vertIdx].y;
-				akvtx.Z = vertices[vertIdx].z;
-				GeometryData->Vertices.Add(akvtx);
+				auto vertIdx = indexBuf[vertIdxOffset + polyVertIdx];
+				center.X += vertices[vertIdx].x;
+				center.Y += vertices[vertIdx].y;
+				center.Z += vertices[vertIdx].z;
+			}
+			center.X /= numVertsInPoly;
+			center.Y /= numVertsInPoly;
+			center.Z /= numVertsInPoly;
+
+			// get the vector from center to the first vertex
+			FVector v0;
+			v0.X = vertices[firstVertIdx].x - center.X;
+			v0.Y = vertices[firstVertIdx].y - center.Y;
+			v0.Z = vertices[firstVertIdx].z - center.Z;
+			v0.Normalize();
+
+			// get the normal of the plane
+			FVector n;
+			n.X = polyData.mPlane[0];
+			n.Y = polyData.mPlane[1];
+			n.Z = polyData.mPlane[2];
+			n.Normalize();
+
+			// find the angles between v0 and the other vertices of the polygon
+			for (uint32 polyVertIdx = 1; polyVertIdx < numVertsInPoly; polyVertIdx++)
+			{
+				// get the vector from center to the current vertex
+				AkVertIdx vertIdx = (AkVertIdx)indexBuf[vertIdxOffset + polyVertIdx];
+				FVector v1;
+				v1.X = vertices[vertIdx].x - center.X;
+				v1.Y = vertices[vertIdx].y - center.Y;
+				v1.Z = vertices[vertIdx].z - center.Z;
+				v1.Normalize();
+
+				// get the angle between v0 and v1
+				// to do so, we need the dot product and the determinant respectively proportional to cos and sin of the angle.
+				// atan2(sin, cos) will give us the angle
+				float dot = FVector::DotProduct(v0, v1);
+				// the determinant of two 3D vectors in the same plane can be found with the dot product of the normal with the result of
+				// a cross product between the vectors
+				float det = FVector::DotProduct(n, FVector::CrossProduct(v0, v1));
+				float angle = (float)atan2(det, dot);
+
+				orderedIndexes.Add(VertexIndexByAngle{ vertIdx, angle });
 			}
 
-			const physx::PxU8* indexBuf = convexMesh->getIndexBuffer();
+			orderedIndexes.Sort();
 
-			uint32 numPolys = (uint32)convexMesh->getNbPolygons();
-			for (uint32 polyIdx = 0; polyIdx < numPolys; polyIdx++)
+			// fan triangulation
+			for (uint32 vertIdx = 1; vertIdx < numVertsInPoly - 1; ++vertIdx)
 			{
-				PxHullPolygon polyData;
-				convexMesh->getPolygonData(polyIdx, polyData);
+				FAkTriangle tri;
+				tri.Point0 = (AkVertIdx)orderedIndexes[0].Index + initialVertIdx;
+				tri.Point1 = (AkVertIdx)orderedIndexes[vertIdx].Index + initialVertIdx;
+				tri.Point2 = (AkVertIdx)orderedIndexes[vertIdx + 1].Index + initialVertIdx;
+				tri.Surface = surfIdx;
 
-				// order the vertices of the polygon
-				uint32 numVertsInPoly = (uint32)polyData.mNbVerts;
-				uint32 vertIdxOffset = (uint32)polyData.mIndexBase;
-
-				TArray<VertexIndexByAngle> orderedIndexes;
-				// first element is first vertex index
-				AkVertIdx firstVertIdx = (AkVertIdx)indexBuf[vertIdxOffset];
-				orderedIndexes.Add(VertexIndexByAngle{ firstVertIdx, 0 });
-
-				// get the center of the polygon
-				FVector center(0, 0, 0);
-				for (uint32 polyVertIdx = 0; polyVertIdx < numVertsInPoly; ++polyVertIdx)
-				{
-					auto vertIdx = indexBuf[vertIdxOffset + polyVertIdx];
-					center.X += vertices[vertIdx].x;
-					center.Y += vertices[vertIdx].y;
-					center.Z += vertices[vertIdx].z;
-				}
-				center.X /= numVertsInPoly;
-				center.Y /= numVertsInPoly;
-				center.Z /= numVertsInPoly;
-
-				// get the vector from center to the first vertex
-				FVector v0;
-				v0.X = vertices[firstVertIdx].x - center.X;
-				v0.Y = vertices[firstVertIdx].y - center.Y;
-				v0.Z = vertices[firstVertIdx].z - center.Z;
-				v0.Normalize();
-
-				// get the normal of the plane
-				FVector n;
-				n.X = polyData.mPlane[0];
-				n.Y = polyData.mPlane[1];
-				n.Z = polyData.mPlane[2];
-				n.Normalize();
-
-				// find the angles between v0 and the other vertices of the polygon
-				for (uint32 polyVertIdx = 1; polyVertIdx < numVertsInPoly; polyVertIdx++)
-				{
-					// get the vector from center to the current vertex
-					AkVertIdx vertIdx = (AkVertIdx)indexBuf[vertIdxOffset + polyVertIdx];
-					FVector v1;
-					v1.X = vertices[vertIdx].x - center.X;
-					v1.Y = vertices[vertIdx].y - center.Y;
-					v1.Z = vertices[vertIdx].z - center.Z;
-					v1.Normalize();
-
-					// get the angle between v0 and v1
-					// to do so, we need the dot product and the determinant respectively proportional to cos and sin of the angle.
-					// atan2(sin, cos) will give us the angle
-					float dot = FVector::DotProduct(v0, v1);
-					// the determinant of two 3D vectors in the same plane can be found with the dot product of the normal with the result of
-					// a cross product between the vectors
-					float det = FVector::DotProduct(n, FVector::CrossProduct(v0, v1));
-					float angle = (float)atan2(det, dot);
-
-					orderedIndexes.Add(VertexIndexByAngle{ vertIdx, angle });
-				}
-
-				orderedIndexes.Sort();
-
-				// fan triangulation
-				for (uint32 vertIdx = 1; vertIdx < numVertsInPoly - 1; ++vertIdx)
-				{
-					FAkTriangle tri;
-					tri.Point0 = (AkVertIdx)orderedIndexes[0].Index + initialVertIdx;
-					tri.Point1 = (AkVertIdx)orderedIndexes[vertIdx].Index + initialVertIdx;
-					tri.Point2 = (AkVertIdx)orderedIndexes[vertIdx + 1].Index + initialVertIdx;
-					tri.Surface = surfIdx;
-
-					GeometryData->Triangles.Add(tri);
-				}
+				GeometryData->Triangles.Add(tri);
 			}
 		}
-		else
-		{
-			// bounding box
-			GeometryData->AddBox(surfIdx,
-				convexHull.ElemBox.GetCenter(),
-				convexHull.ElemBox.GetExtent(),
-				convexHull.GetTransform().Rotator());
-		}
+	}
+	else
+	{
+		// bounding box
+		GeometryData->AddBox(surfIdx,
+			convexHull.ElemBox.GetCenter(),
+			convexHull.ElemBox.GetExtent(),
+			convexHull.GetTransform().Rotator());
 	}
 }
-#elif WITH_CHAOS
-	void ConvertConvexMeshToGeometryData(AkSurfIdx surfIdx, UBodySetup* bodySetup, FAkGeometryData* GeometryData)
-	{
-		int32 numComvexHulls = bodySetup->AggGeom.ConvexElems.Num();
-		for (int32 i = 0; i < numComvexHulls; i++)
-		{
-			FKConvexElem* convexHull = &bodySetup->AggGeom.ConvexElems[i];
-			auto convexMesh = convexHull->GetChaosConvexMesh();
-
-			AkVertIdx initialVertIdx = GeometryData->Vertices.Num();
-			if (convexMesh.IsValid())
-			{
-				const auto& Vertices = convexMesh->GetVertices();
-
-				TArray<TArray<int32>> FaceIndices;
-				TArray<Chaos::TPlaneConcrete<Chaos::FRealSingle, 3>> Planes;
-				TArray<Chaos::TVec3<Chaos::FRealSingle>> SurfaceVertices;
-				Chaos::TAABB<Chaos::FRealSingle, 3> LocalBoundingBox;
-				Chaos::FConvexBuilder::Build(Vertices, Planes, FaceIndices, SurfaceVertices, LocalBoundingBox);
-
-
-				for (int32 vertexIdx = 0; vertexIdx < Vertices.Num(); ++vertexIdx)
-				{
-					FVector akvtx;
-					akvtx.X = Vertices[vertexIdx].X;
-					akvtx.Y = Vertices[vertexIdx].Y;
-					akvtx.Z = Vertices[vertexIdx].Z;
-					GeometryData->Vertices.Add(akvtx);
-				}
-
-				for (int32 faceIdx = 0; faceIdx < FaceIndices.Num(); faceIdx++)
-				{
-					auto face = FaceIndices[faceIdx];
-					// order the vertices of the polygon
-					uint32 numVertsInPoly = face.Num();
-
-					TArray<VertexIndexByAngle> orderedIndexes;
-					// first element is first vertex index
-					AkVertIdx firstVertIdx = face[0];
-					orderedIndexes.Add(VertexIndexByAngle{ firstVertIdx, 0 });
-
-					// get the center of the polygon
-					FVector center(0, 0, 0);
-					for (uint32 polyVertIdx = 0; polyVertIdx < numVertsInPoly; ++polyVertIdx)
-					{
-						auto vertIdx = face[polyVertIdx];
-						center.X = Vertices[vertIdx].X;
-						center.Y = Vertices[vertIdx].Y;
-						center.Z = Vertices[vertIdx].Z;
-					}
-					center.X /= numVertsInPoly;
-					center.Y /= numVertsInPoly;
-					center.Z /= numVertsInPoly;
-
-					// get the vector from center to the first vertex
-					FVector v0;
-					v0.X = Vertices[firstVertIdx].X - center.X;
-					v0.Y = Vertices[firstVertIdx].Y - center.Y;
-					v0.Z = Vertices[firstVertIdx].Z - center.Z;
-					v0.Normalize();
-
-					// get the normal of the plane
-					FVector n = FVector(Planes[faceIdx].Normal());
-					n.Normalize();
-
-					// find the angles between v0 and the other vertices of the polygon
-					for (uint32 polyVertIdx = 1; polyVertIdx < numVertsInPoly; polyVertIdx++)
-					{
-						// get the vector from center to the current vertex
-						AkVertIdx vertIdx = face[polyVertIdx];
-						FVector v1;
-						v1.X = Vertices[vertIdx].X - center.X;
-						v1.Y = Vertices[vertIdx].Y - center.Y;
-						v1.Z = Vertices[vertIdx].Z - center.Z;
-						v1.Normalize();
-
-						// get the angle between v0 and v1
-						// to do so, we need the dot product and the determinant respectively proportional to cos and sin of the angle.
-						// atan2(sin, cos) will give us the angle
-						float dot = FVector::DotProduct(v0, v1);
-						// the determinant of two 3D vectors in the same plane can be found with the dot product of the normal with the result of
-						// a cross product between the vectors
-						float det = FVector::DotProduct(n, FVector::CrossProduct(v0, v1));
-						float angle = (float)atan2(det, dot);
-
-						orderedIndexes.Add(VertexIndexByAngle{ vertIdx, angle });
-					}
-
-					orderedIndexes.Sort();
-
-					// fan triangulation
-					for (uint32 vertIdx = 1; vertIdx < numVertsInPoly - 1; ++vertIdx)
-					{
-						FAkTriangle tri;
-						tri.Point0 = (AkVertIdx)orderedIndexes[0].Index + initialVertIdx;
-						tri.Point1 = (AkVertIdx)orderedIndexes[vertIdx].Index + initialVertIdx;
-						tri.Point2 = (AkVertIdx)orderedIndexes[vertIdx + 1].Index + initialVertIdx;
-						tri.Surface = surfIdx;
-
-						GeometryData->Triangles.Add(tri);
-					}
-				}
-			}
-			else
-			{
-				// bounding box
-				GeometryData->AddBox(surfIdx,
-					convexHull->ElemBox.GetCenter(),
-					convexHull->ElemBox.GetExtent(),
-					convexHull->GetTransform().Rotator());
-			}
-		}
-	}
-#else
-#error "The Wwise Unreal integration is only compatible with PhysX or Chaos physics engines"
 #endif
 
 bool operator<(const VertexIndexByAngle& lhs, const VertexIndexByAngle& rhs)
@@ -820,7 +718,7 @@ bool operator<(const VertexIndexByAngle& lhs, const VertexIndexByAngle& rhs)
 void UAkGeometryComponent::ConvertCollisionMesh(UPrimitiveComponent* PrimitiveComponent, const UAkSettings* AkSettings)
 {
 	UBodySetup* bodySetup = PrimitiveComponent->GetBodySetup();
-	if (!(bodySetup && bodySetup->IsValidLowLevel()))
+	if (!(bodySetup && IsValid(bodySetup)))
 		return;
 
 	GeometryData.Clear();
@@ -832,14 +730,21 @@ void UAkGeometryComponent::ConvertCollisionMesh(UPrimitiveComponent* PrimitiveCo
 	FAkGeometrySurfaceOverride surfaceOverride = CollisionMeshSurfaceOverride;
 
 	if (surfaceOverride.AcousticTexture)
-		Surface.Texture = FAkAudioDevice::GetIDFromString(surfaceOverride.AcousticTexture->GetName());
+		Surface.Texture = surfaceOverride.AcousticTexture->GetShortID();
 	else
 		physMatTexture = physicalMaterial;
 
-	if (surfaceOverride.bEnableOcclusionOverride)
-		Surface.Occlusion = surfaceOverride.OcclusionValue;
+	if (bWasAddedByRoom)
+	{
+		Surface.Occlusion = 0.f;
+	}
 	else
-		physMatOcclusion = physicalMaterial;
+	{
+		if (surfaceOverride.bEnableOcclusionOverride)
+			Surface.Occlusion = surfaceOverride.OcclusionValue;
+		else
+			physMatOcclusion = physicalMaterial;
+	}
 	
 	GeometryData.ToOverrideAcousticTexture.Add(physMatTexture);
 	GeometryData.ToOverrideOcclusion.Add(physMatOcclusion);
@@ -858,16 +763,25 @@ void UAkGeometryComponent::ConvertCollisionMesh(UPrimitiveComponent* PrimitiveCo
 		extent.Y = box.Y / 2;
 		extent.Z = box.Z / 2;
 
+		if ((extent.Z == 0.0f && (extent.X == 0.0f || extent.Y == 0.0f))
+			|| (extent.Y == 0.0f && (extent.X == 0.0f || extent.Z == 0.0f))
+			|| (extent.X == 0.0f && (extent.Y == 0.0f || extent.Z == 0.0f)))
+		{
+			UE_LOG(LogAkAudio, Warning, TEXT("%s: UAkGeometryComponent::ConvertCollisionMesh: Unable to add box geometry for box index %i as the box contains no triangles. The box will be skipped."), *GetOwner()->GetName(), i);
+			continue;
+		}
+
 		GeometryData.AddBox(surfIdx, box.Center, extent, box.Rotation);
 	}
 
-	const int sides = 16;
+	const int kNumSides = 6;
+	const int kNumRings = 4;
 
 	int32 numSpheres = bodySetup->AggGeom.SphereElems.Num();
 	for (int32 i = 0; i < numSpheres; i++)
 	{
 		FKSphereElem sphere = bodySetup->AggGeom.SphereElems[i];
-		GeometryData.AddSphere(surfIdx, sphere.Center, sphere.Radius, sides, sides / 2);
+		GeometryData.AddSphere(surfIdx, sphere.Center, sphere.Radius, kNumSides, kNumRings);
 	}
 
 	int32 numCapsules = bodySetup->AggGeom.SphylElems.Num();
@@ -879,10 +793,48 @@ void UAkGeometryComponent::ConvertCollisionMesh(UPrimitiveComponent* PrimitiveCo
 		FVector Y = capsule.GetTransform().GetUnitAxis(EAxis::Y);
 		FVector Z = capsule.GetTransform().GetUnitAxis(EAxis::Z);
 
-		GeometryData.AddCapsule(surfIdx, capsule.Center, X, Y, Z, capsule.Radius, capsule.Length / 2, sides / 2);
+		GeometryData.AddCapsule(surfIdx, capsule.Center, X, Y, Z, capsule.Radius, capsule.Length / 2, kNumSides);
 	}
 
-	ConvertConvexMeshToGeometryData(surfIdx, bodySetup, &GeometryData);
+	int32 numConvexElems = bodySetup->AggGeom.ConvexElems.Num();
+	for (int32 i = 0; i < numConvexElems; i++)
+	{
+		FKConvexElem& convexElem = bodySetup->AggGeom.ConvexElems[i];
+
+		int32 numVertices = convexElem.VertexData.Num();
+		if (numVertices == 0)
+			continue;
+
+#if AK_USE_CHAOS
+		// will compute IndexData if it is empty
+		convexElem.ComputeChaosConvexIndices(false);
+#endif
+
+		int32 numTriangles = convexElem.IndexData.Num() / 3;
+		if (numTriangles == 0)
+		{
+#if AK_USE_PHYSX
+			ConvertConvexMeshToGeometryData(surfIdx, convexElem, &GeometryData);
+#endif
+			continue;
+		}
+
+		int32 vertexOffset = GeometryData.Vertices.Num();
+		for (int32 vertIdx = 0; vertIdx < numVertices; ++vertIdx)
+		{
+			GeometryData.Vertices.Add(convexElem.GetTransform().TransformPosition(convexElem.VertexData[vertIdx]));
+		}
+		for (int32 triIdx = 0; triIdx < numTriangles; ++triIdx)
+		{
+			FAkTriangle tri;
+			tri.Point0 = vertexOffset + convexElem.IndexData[3 * triIdx];
+			tri.Point1 = vertexOffset + convexElem.IndexData[3 * triIdx + 1];
+			tri.Point2 = vertexOffset + convexElem.IndexData[3 * triIdx + 2];
+			tri.Surface = surfIdx;
+
+			GeometryData.Triangles.Add(tri);
+		}
+	}
 }
 
 void UAkGeometryComponent::SendGeometry()
@@ -898,22 +850,26 @@ void UAkGeometryComponent::SendGeometry()
 			params.NumTriangles = GeometryData.Triangles.Num();
 			params.NumVertices = GeometryData.Vertices.Num();
 			
-			TUniquePtr<AkAcousticSurface[]> Surfaces; // temp surface buffer
+			TArray<AkAcousticSurface> Surfaces;
+			TArray< TSharedPtr< decltype(StringCast<ANSICHAR>(TEXT(""))) > > SurfaceNames;
+			Surfaces.SetNum(params.NumSurfaces);
+			SurfaceNames.SetNum(params.NumSurfaces);
+
 			if (params.NumSurfaces) 
 			{
-				Surfaces = MakeUnique<AkAcousticSurface[]>(params.NumSurfaces);
 				for (int i = 0; i < params.NumSurfaces; ++i)
 				{
 					Surfaces[i].transmissionLoss = GeometryData.Surfaces[i].Occlusion;
 					Surfaces[i].strName = nullptr;
 					if (!GeometryData.Surfaces[i].Name.IsEmpty())
 					{
-						Surfaces[i].strName = TCHAR_TO_ANSI(*GeometryData.Surfaces[i].Name);
+						SurfaceNames[i] = MakeShareable(new decltype(StringCast<ANSICHAR>(TEXT("")))(*GeometryData.Surfaces[i].Name));
+						Surfaces[i].strName = SurfaceNames[i].Get()->Get();
 					}
 					Surfaces[i].textureID = GeometryData.Surfaces[i].Texture;
 				}
 			}
-			params.Surfaces = Surfaces.Get();
+			params.Surfaces = Surfaces.GetData();
 
 			TUniquePtr<AkTriangle[]> Triangles = MakeUnique<AkTriangle[]>(params.NumTriangles);// temp triangle buffer
 			for (int i = 0; i < params.NumTriangles; ++i)
@@ -936,21 +892,15 @@ void UAkGeometryComponent::SendGeometry()
 			
 			params.EnableDiffraction = bEnableDiffraction;
 			params.EnableDiffractionOnBoundaryEdges = bEnableDiffractionOnBoundaryEdges;
-			params.EnableTriangles = !bWasAddedByRoom;
-
-			if (AssociatedRoom)
-			{
-				UAkRoomComponent* room = Cast<UAkRoomComponent>(AssociatedRoom->GetComponentByClass(UAkRoomComponent::StaticClass()));
-
-				if (room != nullptr)
-					params.RoomID = room->GetRoomID();
-			}
 
 			SendGeometryToWwise(params);
 		}
+		else
+		{
+			UE_LOG(LogAkAudio, Warning, TEXT("%s: UAkGeometryComponent::SendGeometry() Geometry Data is empty. Nothing was sent to Spatial Audio."), *GetOwner()->GetName());
+		}
 	}
 }
-
 
 void UAkGeometryComponent::RemoveGeometry()
 {
@@ -959,8 +909,20 @@ void UAkGeometryComponent::RemoveGeometry()
 
 void UAkGeometryComponent::UpdateGeometry()
 {
-	UpdateGeometryTransform();
-	SendGeometry();
+	if (Parent)
+	{
+		AkRoomID roomID = AkRoomID();
+
+		if (AssociatedRoom)
+		{
+			UAkRoomComponent* room = Cast<UAkRoomComponent>(AssociatedRoom->GetComponentByClass(UAkRoomComponent::StaticClass()));
+
+			if (room != nullptr)
+				roomID = room->GetRoomID();
+		}
+
+		SendGeometryInstanceToWwise(Parent->GetComponentRotation(), Parent->GetComponentLocation(), Parent->GetComponentTransform().GetScale3D(), roomID, !bWasAddedByRoom);
+	}
 }
 
 void UAkGeometryComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -985,7 +947,7 @@ void UAkGeometryComponent::PostEditChangeProperty(FPropertyChangedEvent& Propert
 		return;
 	if (AssociatedRoom && !Cast<UAkRoomComponent>(AssociatedRoom->GetComponentByClass(UAkRoomComponent::StaticClass())))
 	{
-		UE_LOG(LogAkAudio, Warning, TEXT("%s: The Surface Reflector Set's Associated Room is not of type UAkRoomComponent."), *GetOwner()->GetName());
+		UE_LOG(LogAkAudio, Warning, TEXT("%s: The Associated Room is not of type UAkRoomComponent."), *GetOwner()->GetName());
 	}
 
 	const FName memberPropertyName = (PropertyChangedEvent.MemberProperty != nullptr) ? PropertyChangedEvent.MemberProperty->GetFName() : NAME_None;
@@ -1021,18 +983,20 @@ void UAkGeometryComponent::PostEditChangeProperty(FPropertyChangedEvent& Propert
 	{
 		UnregisterTextureParamChangeCallbacks();
 		RegisterAllTextureParamCallbacks();
-		RecalculateHFDamping();
+		DampingEstimationNeedsUpdate = true;
 	}
 	if (MeshType == AkMeshType::StaticMesh &&
 		memberPropertyName == GET_MEMBER_NAME_CHECKED(UAkGeometryComponent, WeldingThreshold) &&
 		PropertyChangedEvent.ChangeType == EPropertyChangeType::ValueSet)
 	{
 		ConvertMesh();
+		SendGeometry();
 		UpdateGeometry();
 	}
 	else if (memberPropertyName == GET_MEMBER_NAME_CHECKED(UAkGeometryComponent, bEnableDiffraction) ||
 			memberPropertyName == GET_MEMBER_NAME_CHECKED(UAkGeometryComponent, bEnableDiffractionOnBoundaryEdges))
 	{
+		SendGeometry();
 		UpdateGeometry();
 	}
 }
@@ -1149,12 +1113,26 @@ void UAkGeometryComponent::GetTexturesAndSurfaceAreas(TArray<FAkAcousticTextureP
 		{
 			if (CollisionMeshSurfaceOverride.AcousticTexture != nullptr)
 			{
-				const FAkAcousticTextureParams* params = AkSettings->GetTextureParams(CollisionMeshSurfaceOverride.AcousticTexture->ShortID);
+#if WITH_EDITOR
+				// Get the most accurate absorption values from the list in the AkSettings
+				const FAkAcousticTextureParams* params = AkSettings->GetTextureParams(CollisionMeshSurfaceOverride.AcousticTexture->GetShortID());
 				if (params != nullptr)
 				{
 					textures.Add(*params);
 					surfaceAreas.Add(1.0f); // When there is only 1 acoustic texture, surface area magnitude is not important.
 				}
+#else
+				// Get the absorption values from the cooked data
+				FAkAcousticTextureParams params;
+				params.AbsorptionValues = FVector4(
+					CollisionMeshSurfaceOverride.AcousticTexture->AcousticTextureCookedData.AbsorptionLow / 100.0f,
+					CollisionMeshSurfaceOverride.AcousticTexture->AcousticTextureCookedData.AbsorptionMidLow / 100.0f,
+					CollisionMeshSurfaceOverride.AcousticTexture->AcousticTextureCookedData.AbsorptionMidHigh / 100.0f,
+					CollisionMeshSurfaceOverride.AcousticTexture->AcousticTextureCookedData.AbsorptionHigh / 100.0f
+				);
+				textures.Add(params);
+				surfaceAreas.Add(1.0f); // When there is only 1 acoustic texture, surface area magnitude is not important.
+#endif
 			}
 		}
 		else
@@ -1166,35 +1144,33 @@ void UAkGeometryComponent::GetTexturesAndSurfaceAreas(TArray<FAkAcousticTextureP
 				for (auto it = StaticMeshSurfaceOverride.CreateConstIterator(); it; ++it)
 				{
 					surfaceArea = GetSurfaceAreaSquaredMeters(surfIdx);
-					FAkGeometrySurfaceOverride surface = it.Value();
 					surfaceAreas.Add(surfaceArea);
+
+					FAkAcousticTextureParams params;
+					FAkGeometrySurfaceOverride surface = it.Value();
 					if (surface.AcousticTexture != nullptr)
 					{
-						const FAkAcousticTextureParams* params = AkSettings->GetTextureParams(surface.AcousticTexture->ShortID);
-						if (params != nullptr)
+#if WITH_EDITOR
+						// Get the most accurate absorption values from the list in the AkSettings
+						const FAkAcousticTextureParams* paramsFound = AkSettings->GetTextureParams(surface.AcousticTexture->GetShortID());
+						if (paramsFound != nullptr)
 						{
-							textures.Add(*params);
+							params = *paramsFound;
 						}
+#else
+						params.AbsorptionValues = FVector4(
+							surface.AcousticTexture->AcousticTextureCookedData.AbsorptionLow / 100.0f,
+							surface.AcousticTexture->AcousticTextureCookedData.AbsorptionMidLow / 100.0f,
+							surface.AcousticTexture->AcousticTextureCookedData.AbsorptionMidHigh / 100.0f,
+							surface.AcousticTexture->AcousticTextureCookedData.AbsorptionHigh / 100.0f
+						);
+#endif
 					}
-					else
-					{
-						textures.Add(FAkAcousticTextureParams());
-					}
+					textures.Add(params);
 					++surfIdx;
 				}
 			}
 		}
-	}
-}
-void UAkGeometryComponent::UpdateGeometryTransform()
-{
-	FTransform ParentToWorld = FTransform::Identity;
-	if (Parent != nullptr)
-		ParentToWorld = Parent->GetComponentTransform();
-
-	for (auto& vertex : GeometryData.Vertices)
-	{
-		vertex = ParentToWorld.TransformPosition(vertex);
 	}
 }
 
@@ -1214,7 +1190,7 @@ void UAkGeometryComponent::HandleObjectsReplaced(const TMap<UObject*, UObject*>&
 				if (MeshParent != nullptr)
 					CalculateSurfaceArea(MeshParent);
 			}
-			RecalculateHFDamping();
+			DampingEstimationNeedsUpdate = true;
 		}
 	}
 }
@@ -1224,7 +1200,7 @@ bool UAkGeometryComponent::ContainsTexture(const FGuid& textureID)
 	if (MeshType == AkMeshType::CollisionMesh)
 	{
 		if (CollisionMeshSurfaceOverride.AcousticTexture != nullptr)
-			return CollisionMeshSurfaceOverride.AcousticTexture->ID == textureID;
+			return CollisionMeshSurfaceOverride.AcousticTexture->AcousticTextureInfo.WwiseGuid == textureID;
 	}
 	else
 	{
@@ -1232,7 +1208,7 @@ bool UAkGeometryComponent::ContainsTexture(const FGuid& textureID)
 		{
 			if (it.Value().AcousticTexture != nullptr)
 			{
-				if (it.Value().AcousticTexture->ID == textureID)
+				if (it.Value().AcousticTexture->AcousticTextureInfo.WwiseGuid == textureID)
 					return true;
 			}
 		}
@@ -1245,7 +1221,7 @@ void UAkGeometryComponent::RegisterAllTextureParamCallbacks()
 	if (MeshType == AkMeshType::CollisionMesh)
 	{
 		if (CollisionMeshSurfaceOverride.AcousticTexture != nullptr)
-			RegisterTextureParamChangeCallback(CollisionMeshSurfaceOverride.AcousticTexture->ID);
+			RegisterTextureParamChangeCallback(CollisionMeshSurfaceOverride.AcousticTexture->AcousticTextureInfo.WwiseGuid);
 	}
 	else
 	{
@@ -1253,7 +1229,7 @@ void UAkGeometryComponent::RegisterAllTextureParamCallbacks()
 		{
 			if (it.Value().AcousticTexture != nullptr)
 			{
-				RegisterTextureParamChangeCallback(it.Value().AcousticTexture->ID);
+				RegisterTextureParamChangeCallback(it.Value().AcousticTexture->AcousticTextureInfo.WwiseGuid);
 			}
 		}
 	}

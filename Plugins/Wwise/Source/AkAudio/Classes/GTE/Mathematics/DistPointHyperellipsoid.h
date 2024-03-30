@@ -34,7 +34,7 @@
 //   Real distance = result.distance;
 //   Vector3<Real> closestEllipsoidPoint = result.closest;
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class DCPQuery<Real, Vector<N, Real>, Hyperellipsoid<N, Real>>

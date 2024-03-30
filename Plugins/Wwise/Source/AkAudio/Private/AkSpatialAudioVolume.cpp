@@ -1,18 +1,19 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
-
 
 /*=============================================================================
 	AkSpatialAudioVolume.cpp:
@@ -24,23 +25,29 @@ Copyright (c) 2021 Audiokinetic Inc.
 #include "AkLateReverbComponent.h"
 #include "AkRoomComponent.h"
 #include "AkSurfaceReflectorSetComponent.h"
+#include "AkAcousticPortal.h"
+#include "AkSettings.h"
+
+#include "WwiseUnrealDefines.h"
+#include "WwiseUnrealEngineHelper.h"
+#include "WwiseUnrealObjectHelper.h"
+
 #include "Components/BrushComponent.h"
 #include "Model.h"
 #include "Engine/BrushBuilder.h"
 
-#include "AkAcousticPortal.h"
-#include "AkSettings.h"
 
 // Geometric Tools
 #if WITH_EDITOR
 #include "AkAudioStyle.h"
-#include <Mathematics/Math.h>
-#include <Mathematics/UIntegerAP32.h>
-#include <Mathematics/BSRational.h>
-#include <Mathematics/MinimumVolumeBox3.h>
+#include "Mathematics/Math.h"
+#include "Mathematics/UIntegerAP32.h"
+#include "Mathematics/BSRational.h"
+#include "Mathematics/MinimumVolumeBox3.h"
+#if UE_5_1_OR_LATER
+#include "Misc/TransactionObjectEvent.h"
 #endif
-
-#include <algorithm>
+#endif
 
 static const float kScaleEpsilon = 0.001;
 static const float kConvexHullEpsilon = 0.001;
@@ -58,16 +65,16 @@ bool IntersectPlanes(FVector n0, float d0, FVector n1, float d1, FVector n2, flo
 	return true;
 }
 
-gte::Vector3< float > ToGTEVector(FVector& In)
+WwiseGTE::Vector3< float > ToGTEVector(FVector& In)
 {
-	gte::Vector3< float > Out;
+	WwiseGTE::Vector3< float > Out;
 	Out[0] = In.X;
 	Out[1] = In.Y;
 	Out[2] = In.Z;
 	return Out;
 }
 
-FVector ToFVector(gte::Vector3< float >& In)
+FVector ToFVector(WwiseGTE::Vector3< float >& In)
 {
 	return FVector(In[0], In[1], In[2]);
 }
@@ -106,15 +113,7 @@ AAkSpatialAudioVolume::AAkSpatialAudioVolume(const class FObjectInitializer& Obj
 	BrushColor = FColor(109, 187, 255, 255);
 
 #if WITH_EDITOR
-	const UAkSettings* AkSettings = GetDefault<UAkSettings>();
-	if (AkSettings)
-	{
-		CollisionChannel = AkSettings->DefaultFitToGeometryCollisionChannel;
-	}
-	else
-	{
-		CollisionChannel = ECollisionChannel::ECC_WorldStatic;
-	}
+	CollisionChannel = EAkCollisionChannel::EAKCC_UseIntegrationSettingsDefault;
 
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
@@ -123,9 +122,14 @@ AAkSpatialAudioVolume::AAkSpatialAudioVolume(const class FObjectInitializer& Obj
 }
 
 #if WITH_EDITOR
+ECollisionChannel AAkSpatialAudioVolume::GetCollisionChannel()
+{
+	return UAkSettings::ConvertFitToGeomCollisionChannel(CollisionChannel.GetValue());
+}
+
 void AAkSpatialAudioVolume::FitRaycast()
 {
-	UWorld* World = GEngine->GetWorldFromContextObjectChecked(this);
+	UWorld* World = GetWorld();
 	if (!World)
 		return;
 
@@ -156,11 +160,11 @@ void AAkSpatialAudioVolume::FitRaycast()
 
 		TArray< FHitResult > OutHits;
 		OutHits.Empty();
-		World->LineTraceMultiByObjectType(OutHits, RaycastOrigin, to, (int)CollisionChannel, CollisionParams);
+		World->LineTraceMultiByObjectType(OutHits, RaycastOrigin, to, (int)GetCollisionChannel(), CollisionParams);
 
 		for (auto& res : OutHits)
 		{
-			AActor* HitActor = AkSpatialAudioHelper::GetActorFromHitResult(res);
+			AActor* HitActor = WwiseUnrealHelper::GetActorFromHitResult(res);
 			if (HitActor != nullptr)
 			{
 				UAkPortalComponent* PortalComponent = (UAkPortalComponent*)HitActor->FindComponentByClass(UAkPortalComponent::StaticClass());
@@ -230,11 +234,11 @@ void AAkSpatialAudioVolume::PostRebuildBrush()
 
 	FAkAudioDevice* AkAudioDevice = FAkAudioDevice::Get();
 	if (AkAudioDevice != nullptr)
-		AkAudioDevice->UpdateRoomsForPortals(GetWorld());
+		AkAudioDevice->PortalsNeedRoomUpdate(GetWorld());
 
 	if (SurfaceReflectorSet != nullptr)
 	{
-		SurfaceReflectorSet->UpdatePolys(true);
+		SurfaceReflectorSet->UpdatePolys();
 		SurfaceReflectorSet->UpdateSurfaceReflectorSet();
 	}
 
@@ -353,9 +357,9 @@ void AAkSpatialAudioVolume::FitBox(bool bPreviewOnly)
 
 	static const float kExtent = 100.f;
 
-	using MinimumVolumeBox3 = gte::MinimumVolumeBox3<float, ::gte::BSRational<::gte::UIntegerAP32>>;
-	using OBB = gte::OrientedBox3 < float >;
-	using Vector3 = gte::Vector3< float >;
+	using MinimumVolumeBox3 = WwiseGTE::MinimumVolumeBox3<float, ::WwiseGTE::BSRational<::WwiseGTE::UIntegerAP32>>;
+	using OBB = WwiseGTE::OrientedBox3 < float >;
+	using Vector3 = WwiseGTE::Vector3< float >;
 
 	PreviewOutline.Empty();
 	const float kNormalAgreement = 0.866f; // ~30 degrees
@@ -542,8 +546,8 @@ void AAkSpatialAudioVolume::FitBox(bool bPreviewOnly)
 		static const float kDotEpsilon = 0.1f;	// To determine if points are infront/behind a given plane.
 		static const float kDotThreshold = 0.866f; //~ 30 degrees, enough for a polygonal cross section with 12 sides. Used for comparing normals.
 
-		using ConvexHull3 = ::gte::ConvexHull3<float, ::gte::BSRational<::gte::UIntegerAP32>>;
-		using ETManifoldMesh = ::gte::ETManifoldMesh;
+		using ConvexHull3 = ::WwiseGTE::ConvexHull3<float, ::WwiseGTE::BSRational<::WwiseGTE::UIntegerAP32>>;
+		using ETManifoldMesh = ::WwiseGTE::ETManifoldMesh;
 
 		FVector Origin = GetActorLocation();
 
@@ -852,12 +856,12 @@ void AAkSpatialAudioVolume::PostEditChangeProperty(FPropertyChangedEvent& Proper
 			FitBox();
 		}
 
-		if (PropertyChangedEvent.MemberProperty->GetFName() == FName(FString("RelativeLocation"))
-			|| PropertyChangedEvent.MemberProperty->GetFName() == FName(FString("RelativeRotation"))
-			|| PropertyChangedEvent.MemberProperty->GetFName() == FName(FString("RelativeScale3D")))
+		if (PropertyChangedEvent.Property->GetFName() == "ActorLabel")
 		{
-			if (SurfaceReflectorSet != nullptr)
-				SurfaceReflectorSet->SkipNextTexturesUpdate();
+			if (Room != nullptr)
+			{
+				Room->OnParentNameChanged();
+			}
 		}
 	}
 }

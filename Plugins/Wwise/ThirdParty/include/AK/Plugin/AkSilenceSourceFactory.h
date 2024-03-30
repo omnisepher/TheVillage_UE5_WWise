@@ -21,15 +21,14 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #pragma once
 /// \file
-/// Plug-in function necessary to link the Wwise Silence plug-in in the sound engine.
+/// Plug-in function necessary to link the Silence plug-in in the sound engine.
 /// <b>WARNING</b>: Include this file only if you wish to link statically with the plugins.  Dynamic Libaries (DLL, so, etc) are automatically detected and do not need this include file.
-/// <br><b>Wwise plugin name:</b>  Wwise Silence
+/// <br><b>Wwise plugin name:</b> Silence
 /// <br><b>Library file:</b> AkSilenceSource.lib
 
 

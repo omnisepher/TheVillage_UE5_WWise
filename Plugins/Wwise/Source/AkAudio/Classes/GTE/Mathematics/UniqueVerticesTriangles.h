@@ -28,7 +28,7 @@
 // have two VertexType objects with the same position but different colors,
 // there is no guarantee which color will occur in the final result.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename VertexType>
     class UniqueVerticesTriangles

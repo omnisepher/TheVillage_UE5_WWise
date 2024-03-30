@@ -9,7 +9,7 @@
 
 #include <Mathematics/Polyhedron3.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class ExtremalQuery3

@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 // AkSinkFactory.h
@@ -45,7 +44,7 @@ the specific language governing permissions and limitations under the License.
 /// <br><b>Library file:</b> AkSink.lib
 
 const unsigned long AKEFFECTID_SINK = 152;
-#if (defined AK_WIN && !defined AK_USE_UWP_API)
+#if defined(AK_WIN)
 AK_STATIC_LINK_PLUGIN(AkSink)
 #endif
 

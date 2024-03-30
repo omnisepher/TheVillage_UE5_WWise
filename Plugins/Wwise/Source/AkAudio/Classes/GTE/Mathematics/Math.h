@@ -505,7 +505,7 @@
 // These functions are convenient for some applications.  The classes
 // BSNumber, BSRational and IEEEBinary16 have implementations that
 // (for now) use typecasting to call the 'float' or 'double' versions.
-namespace gte
+namespace WwiseGTE
 {
     inline float atandivpi(float x)
     {
@@ -621,7 +621,7 @@ namespace gte
 
 // Type traits to support std::enable_if conditional compilation for
 // numerical computations.
-namespace gte
+namespace WwiseGTE
 {
     // The trait is_arbitrary_precision<T> for type T of float, double or
     // long double generates is_arbitrary_precision<T>::value of false.  The

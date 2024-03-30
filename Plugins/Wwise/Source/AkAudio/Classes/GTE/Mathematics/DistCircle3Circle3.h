@@ -18,7 +18,7 @@
 // https://www.geometrictools.com/Documentation/DistanceToCircle3.pdf
 // The notation used in the code matches that of the document.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class DCPQuery<Real, Circle3<Real>, Circle3<Real>>

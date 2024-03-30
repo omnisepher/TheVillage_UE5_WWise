@@ -12,7 +12,7 @@
 // The VETManifoldMesh class represents an edge-triangle manifold mesh
 // but additionally stores vertex adjacency information.
 
-namespace gte
+namespace WwiseGTE
 {
     class VETManifoldMesh : public ETManifoldMesh
     {

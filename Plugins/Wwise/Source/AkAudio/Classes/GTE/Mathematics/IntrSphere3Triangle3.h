@@ -13,7 +13,7 @@
 #include <Mathematics/Vector3.h>
 #include <Mathematics/QFNumber.h>
 
-namespace gte
+namespace WwiseGTE
 {
     // Currently, only a dynamic query is supported.  A static query will
     // need to compute the intersection set of triangle and sphere.

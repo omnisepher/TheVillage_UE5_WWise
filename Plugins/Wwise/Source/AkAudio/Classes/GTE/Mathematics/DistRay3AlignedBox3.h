@@ -10,7 +10,7 @@
 #include <Mathematics/DistLine3AlignedBox3.h>
 #include <Mathematics/Ray.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class DCPQuery<Real, Ray3<Real>, AlignedBox3<Real>>

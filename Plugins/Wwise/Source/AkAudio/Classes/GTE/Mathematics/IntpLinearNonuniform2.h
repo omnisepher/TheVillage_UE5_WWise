@@ -21,7 +21,7 @@
 //       std::array<Real, 3>&) const;
 //   int GetContainingTriangle(Vector2<Real> const&) const;
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real, typename TriangleMesh>
     class IntpLinearNonuniform2

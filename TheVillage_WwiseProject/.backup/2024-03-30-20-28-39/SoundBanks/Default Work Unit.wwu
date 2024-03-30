@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WwiseDocument Type="WorkUnit" ID="{FA006691-4861-4837-92F2-0AD5F6239EDD}" SchemaVersion="103">
+	<SoundBanks>
+		<WorkUnit Name="Default Work Unit" ID="{FA006691-4861-4837-92F2-0AD5F6239EDD}" PersistMode="Standalone">
+			<ChildrenList>
+				<SoundBank Name="Main" ID="{5DA71B20-A6BC-46A1-831F-25AB6394F299}">
+					<ObjectInclusionList>
+						<ObjectRef Name="Heartbeat" ID="{3FF918C6-8C48-461D-86E2-5A3135CF12D4}" WorkUnitID="{356907E4-944A-4278-8FD1-D59BFD4F4E7D}" Origin="Manual" Filter="7"/>
+						<ObjectRef Name="GameTheme" ID="{E5DEFE67-BD9D-48EB-8A47-BF49D1DC7ADB}" WorkUnitID="{356907E4-944A-4278-8FD1-D59BFD4F4E7D}" Origin="Manual" Filter="7"/>
+						<ObjectRef Name="IceSkill" ID="{FD61AE50-E26A-4998-946F-5E1F4FF33916}" WorkUnitID="{356907E4-944A-4278-8FD1-D59BFD4F4E7D}" Origin="Manual" Filter="7"/>
+						<ObjectRef Name="Meditation" ID="{AADFD8F1-33ED-4B6F-8457-D30E615D9BE5}" WorkUnitID="{356907E4-944A-4278-8FD1-D59BFD4F4E7D}" Origin="Manual" Filter="7"/>
+						<ObjectRef Name="TestSound" ID="{158E83B7-EE45-4C36-805A-5797E7D87BD6}" WorkUnitID="{356907E4-944A-4278-8FD1-D59BFD4F4E7D}" Origin="Manual" Filter="7"/>
+						<ObjectRef Name="FireBase" ID="{F67B1B74-ED1F-4EAB-A96A-32F9DD10E6E2}" WorkUnitID="{356907E4-944A-4278-8FD1-D59BFD4F4E7D}" Origin="Manual" Filter="7"/>
+						<ObjectRef Name="Footsteps" ID="{4BAB6B63-5D60-4FAC-8F6D-CDB9B4875450}" WorkUnitID="{356907E4-944A-4278-8FD1-D59BFD4F4E7D}" Origin="Manual" Filter="7"/>
+					</ObjectInclusionList>
+					<ObjectExclusionList/>
+					<GameSyncExclusionList/>
+				</SoundBank>
+			</ChildrenList>
+		</WorkUnit>
+	</SoundBanks>
+</WwiseDocument>

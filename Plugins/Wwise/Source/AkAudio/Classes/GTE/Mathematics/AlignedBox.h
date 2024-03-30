@@ -15,7 +15,7 @@
 // boxes.  The center is C and the extents are the half-lengths in each
 // coordinate-axis direction.
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class AlignedBox

@@ -18,7 +18,7 @@
 // increasing order. An oriented box is used to store the mean, axes and
 // extents.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class ApprGaussian3 : public ApprQuery<Real, Vector3<Real>>

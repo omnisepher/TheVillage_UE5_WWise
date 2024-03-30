@@ -11,7 +11,7 @@
 #include <Mathematics/LexicoArray2.h>
 #include <vector>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class BandedMatrix

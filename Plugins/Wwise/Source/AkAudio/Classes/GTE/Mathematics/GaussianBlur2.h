@@ -9,7 +9,7 @@
 
 #include <Mathematics/PdeFilter2.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class GaussianBlur2 : public PdeFilter2<Real>

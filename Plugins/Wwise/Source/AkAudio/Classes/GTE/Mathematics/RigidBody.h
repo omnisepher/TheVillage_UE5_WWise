@@ -11,7 +11,7 @@
 #include <Mathematics/Rotation.h>
 #include <functional>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class RigidBody

@@ -57,7 +57,7 @@
 //    float      | BSRational   | 12302
 //    double     | BSRational   | 92827
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename InputType, typename ComputeType>
     class Delaunay2

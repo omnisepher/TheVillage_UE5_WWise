@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 // AkBytesMem.h
@@ -112,6 +111,8 @@ namespace AK
 
 		AKSOUNDENGINE_API void SetMemPool( AkMemPoolId in_pool );
 
+		AKSOUNDENGINE_API bool HasValidMemPool();
+
 		// Reserves space for writing in_cBytes and returns the location, advancing the write pointer.
 		AkUInt8* GetWritePtr(AkInt32 in_cBytes)
 		{
@@ -125,6 +126,13 @@ namespace AK
 			}
 			else
 				return nullptr;
+		}
+
+		template<class T>
+		T* GetWritePtr()
+		{
+			static_assert(alignof(T) == 1, "T must have an alignment of 1 to avoid crashes due to unaligned writes on 32-bit ARM targets. Use Write<T> instead.");
+			return reinterpret_cast<T*>(GetWritePtr(sizeof(T)));
 		}
 
 		template<class T>

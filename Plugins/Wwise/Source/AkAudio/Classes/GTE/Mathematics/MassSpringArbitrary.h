@@ -10,7 +10,7 @@
 #include <Mathematics/ParticleSystem.h>
 #include <set>
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class MassSpringArbitrary : public ParticleSystem<N, Real>

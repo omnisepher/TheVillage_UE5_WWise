@@ -22,7 +22,7 @@
 // nonnull pointers for C and Y and pass K to numCols.  In all cases, pass
 // N to numRows.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class GaussianElimination
@@ -38,7 +38,7 @@ namespace gte
                 || ((C != nullptr) != (Y != nullptr))
                 || (C != nullptr && numCols < 1))
             {
-                LogError("Invalid input.");
+                GTE_LogError("Invalid input.");
             }
 
             int numElements = numRows * numRows;

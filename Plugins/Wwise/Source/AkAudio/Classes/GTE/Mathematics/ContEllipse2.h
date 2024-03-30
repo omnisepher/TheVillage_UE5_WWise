@@ -11,7 +11,7 @@
 #include <Mathematics/Hyperellipsoid.h>
 #include <Mathematics/Projection.h>
 
-namespace gte
+namespace WwiseGTE
 {
     // The input points are fit with a Gaussian distribution.  The center C of
     // the ellipse is chosen to be the mean of the distribution.  The axes of

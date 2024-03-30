@@ -1,22 +1,24 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
-
 
 #pragma once
 
 #include "AkInclude.h"
+#include "WwiseUnrealDefines.h"
 #include "AkRtpc.h"
 #include "Curves/RichCurve.h"
 #include "MovieSceneSection.h"
@@ -58,11 +60,7 @@ public:
 	void SetRTPC(UAkRtpc* InRTPC) { RTPC = InRTPC; }
 
 #if WITH_EDITOR
-#if UE_4_25_OR_LATER
 	virtual void PreEditChange(FProperty* PropertyAboutToChange) override;
-#else
-	virtual void PreEditChange(UProperty* PropertyAboutToChange) override;
-#endif
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
 
@@ -78,9 +76,7 @@ protected:
 	UPROPERTY()
 	FRichCurve FloatCurve;
 
-	// Enabled serialization of RTPCChannel when 4.24 support was added. We will be able to get rid of 
-	// FloatChannelSerializationHelper when we remove 4.21 support. Tagging UE_4_21_OR_LATER so we catch
-	// this when removing 4.21 support
+	// Enabled serialization of RTPCChannel when 4.24 support was added. 
 	UPROPERTY()
 	FMovieSceneFloatChannelSerializationHelper FloatChannelSerializationHelper;
 

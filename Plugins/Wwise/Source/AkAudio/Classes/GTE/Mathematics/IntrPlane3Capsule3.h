@@ -11,7 +11,7 @@
 #include <Mathematics/DistPoint3Plane3.h>
 #include <Mathematics/Capsule.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, Plane3<Real>, Capsule3<Real>>

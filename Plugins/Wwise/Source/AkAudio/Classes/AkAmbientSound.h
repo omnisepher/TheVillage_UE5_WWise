@@ -1,18 +1,19 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
-
 
 /*=============================================================================
 	AkAmbientSound.h:
@@ -28,24 +29,26 @@ Copyright (c) 2021 Audiokinetic Inc.
 UCLASS(config=Engine, hidecategories=Audio, AutoExpandCategories=AkAmbientSound, BlueprintType)
 class AKAUDIO_API AAkAmbientSound : public AActor
 {
-	GENERATED_UCLASS_BODY()
+	GENERATED_BODY()
 
+public:
+	AAkAmbientSound(const class FObjectInitializer& ObjectInitializer);
 
 	/** AkAudioEvent to play. Deprecated as UE4.7 integration: Use AkComponent->AkAudioEvent instead */
 	UPROPERTY()
-	class UAkAudioEvent * AkAudioEvent_DEPRECATED;
+	class UAkAudioEvent * AkAudioEvent_DEPRECATED = nullptr;
 
 	/** AkComponent to handle playback */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=AkAmbientSound, meta=(ShowOnlyInnerProperties) )
-	class UAkComponent* AkComponent;
+	class UAkComponent* AkComponent = nullptr;
 	
 	/** Stop playback if the owner is destroyed */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AkAmbientSound, SimpleDisplay)
-	bool StopWhenOwnerIsDestroyed;
+	bool StopWhenOwnerIsDestroyed = false;
 
 	/** Automatically post the associated AkAudioEvent on BeginPlay */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AkAmbientSound, SimpleDisplay)
-	bool AutoPost;
+	bool AutoPost = false;
 
 	/*
 	 * Start an Ak ambient sound.

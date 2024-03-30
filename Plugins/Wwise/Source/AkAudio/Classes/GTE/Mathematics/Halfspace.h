@@ -13,7 +13,7 @@
 // normal vector, c is the plane constant, and X is any point in space.
 // The user must ensure that the normal vector is unit length.
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class Halfspace

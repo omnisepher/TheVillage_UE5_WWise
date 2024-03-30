@@ -11,7 +11,7 @@
 #include <Mathematics/Ray.h>
 #include <Mathematics/Segment.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class DCPQuery<Real, Ray<N, Real>, Segment<N, Real>>

@@ -10,7 +10,7 @@
 #include <mutex>
 #include <queue>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Element>
     class ThreadSafeQueue

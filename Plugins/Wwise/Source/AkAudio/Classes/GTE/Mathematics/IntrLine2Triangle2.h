@@ -15,7 +15,7 @@
 
 // The queries consider the triangle to be a solid.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, Line2<Real>, Triangle2<Real>>

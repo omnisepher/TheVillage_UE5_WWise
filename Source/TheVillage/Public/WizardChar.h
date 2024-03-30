@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "../Plugins/Wwise/Source/AkAudio/Classes/AkGameplayStatics.h"
+#include "../Plugins/Wwise/Source/WwiseSoundEngine/Public/Wwise/API/WwiseSoundEngineAPI.h"
 #include "Components/InputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Character.h"
@@ -78,5 +79,8 @@ public:
 		void StartSpellEffect();
 	UFUNCTION(BlueprintImplementableEvent)
 		void StopSpellEffect();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+		UAkAudioEvent* m_IceSkillEvent;
 
 };

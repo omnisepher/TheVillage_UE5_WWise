@@ -33,7 +33,7 @@
 // topological distance order, leading to fast convergence for large numbers
 // of vertices.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class GenerateMeshUV

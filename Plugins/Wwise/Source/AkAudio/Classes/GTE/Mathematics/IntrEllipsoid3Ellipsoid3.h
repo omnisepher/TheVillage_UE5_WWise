@@ -15,7 +15,7 @@
 #include <Mathematics/RootsPolynomial.h>
 #include <Mathematics/SymmetricEigensolver3x3.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, Ellipsoid3<Real>, Ellipsoid3<Real>>

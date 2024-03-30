@@ -14,7 +14,7 @@
 #include <map>
 #include <vector>
 
-namespace gte
+namespace WwiseGTE
 {
     class ETNonmanifoldMesh
     {

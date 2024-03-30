@@ -10,7 +10,7 @@
 #include <Mathematics/Vector.h>
 #include <Mathematics/GaussianElimination.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <int NumRows, int NumCols, typename Real>
     class Matrix

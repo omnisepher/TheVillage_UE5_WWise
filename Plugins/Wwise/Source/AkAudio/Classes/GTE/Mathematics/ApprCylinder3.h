@@ -23,7 +23,7 @@
 // t-interval [tmin,tmax] for the projections, and sets the cylinder center
 // to C + 0.5*(tmin+tmax)*W and the cylinder height to tmax-tmin.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class ApprCylinder3

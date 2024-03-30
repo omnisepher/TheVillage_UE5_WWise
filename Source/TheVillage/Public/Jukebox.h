@@ -28,4 +28,9 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+		UAkAudioEvent* m_HeartBeat;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+		UAkAudioEvent* m_GameTheme;
+
 };

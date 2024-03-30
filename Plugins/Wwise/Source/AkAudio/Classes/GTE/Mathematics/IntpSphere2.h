@@ -16,7 +16,7 @@
 // points are angles (theta,phi) from spherical coordinates.  The domains of
 // the angles are -pi <= theta <= pi and 0 <= phi <= pi.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename InputType, typename ComputeType, typename RationalType>
     class IntpSphere2

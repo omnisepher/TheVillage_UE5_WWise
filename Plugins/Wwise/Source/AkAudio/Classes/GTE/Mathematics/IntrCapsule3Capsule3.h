@@ -11,7 +11,7 @@
 #include <Mathematics/DistSegmentSegment.h>
 #include <Mathematics/Capsule.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, Capsule3<Real>, Capsule3<Real>>

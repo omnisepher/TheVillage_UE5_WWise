@@ -21,7 +21,7 @@
 // the implementation is based on Chapter 7 (The Unsymmetric Eigenvalue
 // Problem), Section 7.5 (The Practical QR Algorithm).
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class UnsymmetricEigenvalues

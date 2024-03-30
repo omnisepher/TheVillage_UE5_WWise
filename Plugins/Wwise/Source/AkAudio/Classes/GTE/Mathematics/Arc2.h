@@ -15,7 +15,7 @@
 // counterclockwise.  The application is responsible for ensuring that end0
 // and end1 are on the circle and that they are properly ordered.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class Arc2

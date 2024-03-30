@@ -12,7 +12,7 @@
 #include <Mathematics/Ray.h>
 #include <Mathematics/Segment.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, Ray2<Real>, Segment2<Real>>

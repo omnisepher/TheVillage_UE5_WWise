@@ -21,7 +21,7 @@
 // algorithm details are found in
 // https://www.geometrictools.com/Documentation/IntersectionLineCone.pdf
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class FIQuery<Real, Line3<Real>, Cone3<Real>>

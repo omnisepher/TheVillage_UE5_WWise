@@ -14,7 +14,7 @@
 // Curiously Recurring Template Paradigm is used to allow the UInteger
 // types to share code without introducing virtual functions.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename UInteger>
     class UIntegerALU32

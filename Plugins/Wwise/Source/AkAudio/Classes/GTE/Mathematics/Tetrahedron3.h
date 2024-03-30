@@ -19,7 +19,7 @@
 //   face 2 = <V[0],V[3],V[2]>
 //   face 3 = <V[1],V[2],V[3]>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class Tetrahedron3

@@ -39,7 +39,7 @@
 // normal box1.Axis[i1], then (-1,i1) is returned.  If the axis is a cross
 // product of edges, Cross(N[i0],box1.Axis[i1]), then (i0,i1) is returned.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, OrientedBox3<Real>, OrientedBox3<Real>>

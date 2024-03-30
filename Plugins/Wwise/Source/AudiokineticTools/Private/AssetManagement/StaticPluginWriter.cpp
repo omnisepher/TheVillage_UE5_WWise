@@ -1,26 +1,29 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #include "StaticPluginWriter.h"
 
 #include "AkAudioBankGenerationHelpers.h"
-#include "AkInitBank.h"
-#include "Containers/Map.h"
-#include "Misc/FileHelper.h"
+#include "IAudiokineticTools.h"
 #include "Platforms/AkPlatformInfo.h"
 #include "Platforms/AkUEPlatform.h"
+
+#include "Containers/Map.h"
+#include "Misc/FileHelper.h"
 
 namespace StaticPluginWriter_Helper
 {
@@ -29,6 +32,7 @@ namespace StaticPluginWriter_Helper
 	{
 		Invalid = 0x0,
 
+		Ak3DAudioBedMixer = 0x00BE0003,
 		AkCompressor = 0x006C0003,
 		AkDelay = 0x006A0003,
 		AkExpander = 0x006D0003,
@@ -56,12 +60,10 @@ namespace StaticPluginWriter_Helper
 		AkHarmonizer = 0x8A0003,
 		AkMotionSink = 0x1FB0007,
 		AkMotionSource = 0x1990002,
-		AkMotionGeneratorSource = 0x1950002,
 		AkPitchShifter = 0x880003,
 		AkRecorder = 0x840003,
 		AkReflect = 0xAB0003,
 		AkSoundSeedGrain = 0xB70002,
-		AkSoundSeedImpact = 0x740003,
 		AkSoundSeedWind = 0x770002,
 		AkSoundSeedWoosh = 0x780002,
 		AkStereoDelay = 0x870003,
@@ -84,6 +86,7 @@ namespace StaticPluginWriter_Helper
 
 	const TMap<PluginID, const char*> PluginIDToStaticLibraryName =
 	{
+		{ PluginID::Ak3DAudioBedMixer, "Ak3DAudioBedMixer" },
 		{ PluginID::AkAudioInput, "AkAudioInputSource" },
 		{ PluginID::AkCompressor, "AkCompressorFX" },
 		{ PluginID::AkConvolutionReverb, "AkConvolutionReverbFX" },
@@ -97,7 +100,6 @@ namespace StaticPluginWriter_Helper
 		{ PluginID::AkMeter, "AkMeterFX" },
 		{ PluginID::AkMotionSink, "AkMotionSink" },
 		{ PluginID::AkMotionSource, "AkMotionSourceSource" },
-		{ PluginID::AkMotionGeneratorSource, "AkMotionGeneratorSource" },
 		{ PluginID::AkParametricEQ, "AkParametricEQFX" },
 		{ PluginID::AkPeakLimiter, "AkPeakLimiterFX" },
 		{ PluginID::AkPitchShifter, "AkPitchShifterFX" },
@@ -107,7 +109,6 @@ namespace StaticPluginWriter_Helper
 		{ PluginID::WwiseSilence, "AkSilenceSource" },
 		{ PluginID::SineGenerator, "AkSineSource" },
 		{ PluginID::AkSoundSeedGrain, "AkSoundSeedGrainSource" },
-		{ PluginID::AkSoundSeedImpact, "AkSoundSeedImpactFX" },
 		{ PluginID::AkSoundSeedWind, "AkSoundSeedWindSource" },
 		{ PluginID::AkSoundSeedWoosh, "AkSoundSeedWooshSource" },
 		{ PluginID::AkStereoDelay, "AkStereoDelayFX" },
@@ -144,19 +145,44 @@ namespace StaticPluginWriter_Helper
 		return PluginInfo.DLL;
 	}
 
-	TArray<FString> GetLibraryNames(UAkInitBank* InitBank, const FString& Platform)
+	TArray<FString> GetLibraryFileNames(const FString& Platform)
 	{
-		TArray<FString> result;
-
-		if (auto platformData = InitBank->FindOrAddAssetDataTyped<UAkInitBankAssetData>(Platform, FString{}))
+		TArray<FString> Result;
+		FWwiseProjectDatabase* ProjectDatabase = FWwiseProjectDatabase::Get();
+		
+		if(UNLIKELY(!ProjectDatabase))
 		{
-			for (auto& pluginInfo : platformData->PluginInfos)
+			return {};
+		}
+
+		const FWwiseDataStructureScopeLock DataStructure(*ProjectDatabase);
+
+		WwisePluginLibGlobalIdsMap PluginLibs = DataStructure.GetPluginLibs();
+		for (const auto& PluginLib: PluginLibs)
+		{
+			if(auto PluginLibName = PluginIDToStaticLibraryName.Find((PluginID)PluginLib.Value.PluginLibId()))
 			{
-				result.Add(GetLibraryName(pluginInfo));
+				Result.Add(*PluginLibName);				
 			}
 		}
 
-		return result;
+		return Result;
+	}
+	
+	TArray<FString> GetLibraryNames(const FString& Platform)
+	{
+		TArray<FString> Result;
+		FWwiseProjectDatabase* ProjectDatabase = FWwiseProjectDatabase::Get();
+		const FWwiseDataStructureScopeLock DataStructure(*ProjectDatabase);
+
+		WwisePluginLibGlobalIdsMap PluginLibs = DataStructure.GetPluginLibs();
+		for (const auto& PluginLib: PluginLibs)
+		{
+			FString PluginLibName = PluginLib.Value.PluginLibName().ToString();
+			Result.Add(PluginLibName);
+		}
+
+		return Result;
 	};
 
 	void ModifySourceCode(const TCHAR* FilePath, const FString& PlatformName, const TArray<FString>& Plugins)
@@ -165,48 +191,70 @@ namespace StaticPluginWriter_Helper
 
 		constexpr auto StaticFactoryHeaderFileTemplate = TEXT("#if PLATFORM_{0}\n{1}\n#endif\n");
 
-		TArray<FString> pluginLines;
+		TArray<FString> PluginLines;
 
-		for (auto& pluginName : Plugins)
+		for (auto& PluginName : Plugins)
 		{
-			//Don't include AkAudioInputSourceFactory.h in file because it is already linked in AkAudioInputManager
-			if (pluginName.Equals(TEXT("AkAudioInputSource")))
+			//Don't include AkAudioInputSourceFactory.h in file because it is already linked
+			if (PluginName.Equals(TEXT("AkAudioInputSource")))
 			{
 				continue;
 			}
-			pluginLines.Add(FString::Format(AkFactoryHeaderFormatString, { pluginName }));
+			PluginLines.Add(FString::Format(AkFactoryHeaderFormatString, { PluginName }));
 		}
 
-		FString staticFactoryHeaderContent = FString::Format(StaticFactoryHeaderFileTemplate, { PlatformName.ToUpper(), FString::Join(pluginLines, TEXT("\n")) });
 
-		if (FFileHelper::SaveStringToFile(staticFactoryHeaderContent, FilePath))
+		TArray<FString> Lines;
+		FFileHelper::LoadFileToStringArray(Lines, FilePath);
+
+		TArray<FString> Header;
+		for(auto& Line : Lines)
 		{
-			UE_LOG(LogAkSoundData, Display, TEXT("Modified <%s> for <%s> platform."), FilePath, *PlatformName);
+			if(Line.Len() > 0)
+			{
+				Header.Add(Line);
+			}
+			else
+			{
+				break;
+			}
+		}
+
+		FString HeaderString = FString::Join(Header, TEXT("\n"));
+		HeaderString.Append(TEXT("\n"));
+		HeaderString.Append(TEXT("\n"));
+		
+		FString StaticFactoryHeaderContent = FString::Format(StaticFactoryHeaderFileTemplate, { PlatformName.ToUpper(), FString::Join(PluginLines, TEXT("\n")) });
+
+		HeaderString.Append(StaticFactoryHeaderContent);
+		if (FFileHelper::SaveStringToFile(HeaderString, FilePath))
+		{
+			UE_LOG(LogAudiokineticTools, Display, TEXT("Modified <%s> for <%s> platform."), FilePath, *PlatformName);
 		}
 		else
 		{
-			UE_LOG(LogAkSoundData, Warning, TEXT("Could not modify <%s> for <%s> platform."), FilePath, *PlatformName);
+			UE_LOG(LogAudiokineticTools, Warning, TEXT("Could not modify <%s> for <%s> platform."), FilePath, *PlatformName);
 		}
 	}
 }
 
 namespace StaticPluginWriter
 {
-	void OutputPluginInformation(UAkInitBank* InitBank, const FString& Platform)
+	void OutputPluginInformation(const FString& Platform)
 	{
 		auto* PlatformInfo = UAkPlatformInfo::GetAkPlatformInfo(Platform);
 		if (!PlatformInfo)
 		{
-			UE_LOG(LogAkSoundData, Warning, TEXT("AkPlatformInfo class not found for <%s> platform."), *Platform);
+			UE_LOG(LogAudiokineticTools, Warning, TEXT("AkPlatformInfo class not found for <%s> platform."), *Platform);
 			return;
 		}
 
 		if (PlatformInfo->bUsesStaticLibraries)
 		{
-			const auto PluginArray = StaticPluginWriter_Helper::GetLibraryNames(InitBank, Platform);
+			const auto PluginArray = StaticPluginWriter_Helper::GetLibraryFileNames(Platform);
 
 			const FString AkPluginIncludeFileName = FString::Format(TEXT("Ak{0}Plugins.h"), { PlatformInfo->WwisePlatform });
-			const FString AkPluginIncludeFilePath = FPaths::Combine(FAkPlatform::GetWwisePluginDirectory(), TEXT("Source"), TEXT("AkAudio"), TEXT("Private"), TEXT("Generated"), AkPluginIncludeFileName);
+			const FString AkPluginIncludeFilePath = FPaths::Combine(FAkPlatform::GetWwisePluginDirectory(), TEXT("Source"), TEXT("WwiseSoundEngine"), TEXT("Public"), TEXT("Generated"), AkPluginIncludeFileName);
 
 			StaticPluginWriter_Helper::ModifySourceCode(*AkPluginIncludeFilePath, PlatformInfo->WwisePlatform, PluginArray);
 		}

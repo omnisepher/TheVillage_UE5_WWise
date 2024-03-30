@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #pragma once
@@ -37,39 +36,6 @@ the specific language governing permissions and limitations under the License.
 #include "AkGuid.h"
 
 #include <AK/SoundEngine/Common/AkTypes.h>
-
-#include <AK/Tools/Common/AkPlatformFuncs.h>
-
-namespace
-{
-	template<class destType, class srcType>
-	inline size_t AkSimpleConvertString(destType* in_pdDest, const srcType* in_pSrc, size_t in_MaxSize, size_t destStrLen(const destType *),  size_t srcStrLen(const srcType *))
-	{
-		size_t i;
-		size_t lenToCopy = srcStrLen(in_pSrc);
-
-		lenToCopy = (lenToCopy > in_MaxSize-1) ? in_MaxSize-1 : lenToCopy;
-		for(i = 0; i < lenToCopy; i++)
-		{
-			in_pdDest[i] = (destType) in_pSrc[i];
-		}
-		in_pdDest[lenToCopy] = (destType)0;
-
-		return lenToCopy;
-	}
-}
-
-// TODO: WG-59594 Implement wchar to char macros for all platforms.
-#if defined(AK_WIN)
-	#define AK_WCHAR_TO_CHAR(in_pdDest, in_pSrc, in_MaxSize) AKPLATFORM::AkWideCharToChar(in_pSrc, in_MaxSize, in_pdDest)
-	#define AK_CHAR_TO_WCHAR(in_pdDest, in_pSrc, in_MaxSize) AKPLATFORM::AkCharToWideChar(in_pSrc, in_MaxSize, in_pdDest)
-#elif defined(AK_APPLE)
-	#define AK_WCHAR_TO_CHAR(in_pdDest, in_pSrc, in_MaxSize) AKPLATFORM::AkMacConvertString<char, wchar_t>(in_pdDest, in_pSrc, in_MaxSize, strlen, &wcslen)
-	#define AK_CHAR_TO_WCHAR(in_pdDest, in_pSrc, in_MaxSize) AKPLATFORM::AkMacConvertString<wchar_t, char>(in_pdDest, in_pSrc, in_MaxSize, &wcslen, strlen)
-#else
-	#define AK_WCHAR_TO_CHAR(in_pdDest, in_pSrc, in_MaxSize) AkSimpleConvertString(in_pdDest, in_pSrc, in_MaxSize, strlen, AKPLATFORM::AkUtf16StrLen)
-	#define AK_CHAR_TO_WCHAR(in_pdDest, in_pSrc, in_MaxSize) AkSimpleConvertString(in_pdDest, in_pSrc, in_MaxSize, AKPLATFORM::AkUtf16StrLen, strlen)
-#endif
 
 namespace AK
 {
@@ -95,7 +61,6 @@ namespace AK
 			AkVariantType_bool,
 
 			AkVariantType_string,
-			AkVariantType_wstring,
 			AkVariantType_guid
 		};
 
@@ -126,7 +91,7 @@ namespace AK
 				CopyFrom(other);
 			}
 
-			inline AkVariantBase(AkVariantBase&& other)
+			inline AkVariantBase(AkVariantBase&& other) noexcept
 			{
 				Nullify();
 				CopyFrom(other);
@@ -163,17 +128,6 @@ namespace AK
 			}
 #endif
 
-			inline AkVariantBase(const wchar_t* in_val)
-			{
-				m_data = new std::wstring(in_val);
-				m_eType = AkVariantType_wstring;
-			}
-
-			inline AkVariantBase(const std::wstring& in_val)
-				: AkVariantBase(in_val.c_str())
-			{
-			}
-
 			inline AkVariantBase(const char* in_val)
 			{
 				m_data = new std::string(in_val);
@@ -191,14 +145,6 @@ namespace AK
 				m_data = new std::string(in_val);
 				m_eType = AkVariantType_string;
 			}			
-#endif
-
-#ifdef _MFC_VER
-			inline AkVariantBase(const VARIANT& in_var)
-			{
-				m_eType = AkVariantType_none;
-				*this = in_var;
-			}
 #endif
 
 			void Nullify()
@@ -227,33 +173,6 @@ namespace AK
 				return *this;
 			}
 
-#ifdef _MFC_VER
-			inline AkVariantBase& operator=(const GUID& in_val)
-			{
-				Clear();
-				m_data = new AkGuid();
-				memcpy(m_data, &in_val, sizeof(AkGuid));
-				m_eType = AkVariantType_guid;
-				return *this;
-			}
-#endif
-
-			inline AkVariantBase& operator=(const wchar_t* in_val)
-			{
-				Clear();
-				m_data = new std::wstring(in_val);
-				m_eType = AkVariantType_wstring;
-				return *this;
-			}
-
-			inline AkVariantBase& operator=(const std::wstring& in_val)
-			{
-				Clear();
-				m_data = new std::wstring(in_val);
-				m_eType = AkVariantType_wstring;
-				return *this;
-			}
-
 			inline AkVariantBase& operator=(const char* in_val)
 			{
 				Clear();
@@ -270,78 +189,7 @@ namespace AK
 				return *this;
 			}
 
-#ifdef _MFC_VER
-			inline AkVariantBase& operator=(const VARIANT& in_var)
-			{
-				switch (in_var.vt)
-				{
-					// Integer
-				case VT_UI1: operator=(static_cast<uint8_t>(in_var.bVal)); break;
-
-				case VT_UI2: operator=(static_cast<uint16_t>(in_var.uiVal)); break;
-				case VT_UI4: operator=(static_cast<uint32_t>(in_var.ulVal)); break;
-				case VT_UI8: operator=(static_cast<uint64_t>(in_var.ullVal)); break;
-				case VT_I1: operator=(static_cast<int8_t>(in_var.cVal)); break;
-				case VT_I2: operator=(static_cast<int16_t>(in_var.iVal)); break;
-				case VT_I4: operator=(static_cast<int32_t>(in_var.lVal)); break;
-				case VT_I8: operator=(static_cast<int64_t>(in_var.llVal)); break;
-
-				case VT_INT: operator=(static_cast<int32_t>(in_var.intVal)); break;
-				case VT_UINT: operator=(static_cast<uint32_t>(in_var.uintVal)); break;
-
-				case VT_R4: operator=(static_cast<float>(in_var.fltVal)); break;
-				case VT_R8: operator=(static_cast<double>(in_var.dblVal)); break;
-
-				case VT_BOOL: operator=(in_var.boolVal == VARIANT_TRUE); break;
-				case VT_BSTR: operator=(in_var.bstrVal); break;
-				case VT_EMPTY: Clear(); Nullify(); break;
-
-				default:
-					AKASSERT(!"Unsupported type");
-				}
-
-				return *this;
-			}
-#endif
-
-			// Typecast ----------------------------------------------------------------------------
-
-#ifdef _MFC_VER
-			inline operator VARIANT() const
-			{
-				switch ( m_eType )
-				{
-				case AkVariantType_uint8: return CComVariant( m_uint8 );
-				case AkVariantType_uint16: return CComVariant( m_uint16 );
-				case AkVariantType_uint32: return CComVariant( m_uint32 );
-				case AkVariantType_uint64: return CComVariant( m_uint64 );
-
-				case AkVariantType_int8: return CComVariant( m_int8 );
-				case AkVariantType_int16: return CComVariant( m_int16 );
-				case AkVariantType_int32: return CComVariant( m_int32 );
-				case AkVariantType_int64: return CComVariant( m_int64 );
-
-				case AkVariantType_real32: return CComVariant( m_real32 );
-				case AkVariantType_real64: return CComVariant( m_real64 );
-
-				case AkVariantType_bool: return CComVariant( m_boolean );
-
-				case AkVariantType_string: return CComVariant( GetString().c_str() );
-				case AkVariantType_wstring: return CComVariant( GetWString().c_str() );
-
-				case AkVariantType_guid:
-				{
-					std::wstring strTemp;
-					AkGuidToWStr( GetGuid(), strTemp );
-					return CComVariant( strTemp.c_str() );
-				}
-
-				default:
-					AKASSERT(false && "Trying to convert an AkVariant that doesn't contain a basic type");
-				}
-				return CComVariant();
-			}
-#endif
+			// Helpers ----------------------------------------------------------------------------
 
 			inline bool IsString() const
 			{
@@ -353,21 +201,16 @@ namespace AK
 				return (m_eType == AkVariantType_guid);
 			}
 
-			inline bool IsWString() const
+			const std::string& GetString() const
 			{
-				return (m_eType == AkVariantType_wstring);
-			}
+				if (m_eType == AkVariantType_guid)
+				{
+					// Safeguard to prevent a crash in case a guid (and nothing else) is provided as a string to a
+					// function that does not support guids (which would pass schema validation and crash here).
+					static const std::string empty;
+					return empty;
+				}
 
-			// Helpers ----------------------------------------------------------------------------
-
-			inline const std::wstring& GetWString() const
-			{
-				AKASSERT(m_eType == AkVariantType_wstring && "AkVariant: illegal typecast");
-				return *static_cast<const std::wstring*>(m_data);
-			}
-
-			inline const std::string& GetString() const
-			{
 				AKASSERT(m_eType == AkVariantType_string && "AkVariant: illegal typecast");
 				return *static_cast<const std::string*>(m_data);
 			}
@@ -456,15 +299,17 @@ namespace AK
 				case AkVariantType_bool: return m_boolean == rhs.m_boolean;
 
 				case AkVariantType_string: return GetString().compare(rhs.GetString()) == 0;
-				case AkVariantType_wstring: return GetWString().compare(rhs.GetWString()) == 0;
-
 				case AkVariantType_guid: return GetGuid() == rhs.GetGuid();
-				default:
-					AKASSERT(false && "Trying to convert an AkVariant that doesn't contain a basic type");
+				case AkVariantType_none: return true; // Both variants are empty
+				default: return false; // Unknown type
 				}
 				return false;
 			}
 
+			inline bool operator!=(const AkVariantBase& rhs) const
+			{
+				return !(*this == rhs);
+			}
 
 			// Typecast ----------------------------------------------------------------------------
 
@@ -593,15 +438,6 @@ namespace AK
 				return AkGuid();
 			}
 
-			inline operator std::wstring() const
-			{
-				if(m_eType == AkVariantType_wstring )
-					return *static_cast<const std::wstring*>(m_data);
-
-				AKASSERT(false && "AkVariantBase: illegal typecast");
-				return std::wstring();
-			}
-
 			inline operator std::string() const
 			{
 				if (m_eType == AkVariantType_string)
@@ -653,20 +489,6 @@ namespace AK
 			}
 
 		public:
-
-			static AkGuid AkGuidFromWStr(const std::wstring& in_wstr)
-			{
-				AkGuid guid;
-				WStrToAkGuid(in_wstr, guid);
-				return guid;
-			}
-
-			static AkGuid AkGuidFromStr(const std::string& in_str)
-			{
-				AkGuid guid;
-				StrToAkGuid(in_str, guid);
-				return guid;
-			}
 
 			static bool StrToAkGuid(const std::string& in_str, AkGuid& out_guid)
 			{
@@ -768,13 +590,6 @@ namespace AK
 				return true;
 			}
 
-			static bool WStrToAkGuid(const std::wstring& in_wstr, AkGuid& out_guid)
-			{
-				char str[AK_MAX_PATH];
-				AK_WCHAR_TO_CHAR(str, in_wstr.c_str(), AK_MAX_PATH);
-				return StrToAkGuid(str, out_guid);
-			}
-
 			static void AkGuidToStr(const AkGuid& in_guid, std::string& out_str)
 			{
 				uint8_t* pby = (uint8_t*)&in_guid;
@@ -839,17 +654,6 @@ namespace AK
 				*psz++ = '}';
 			}
 
-			static void AkGuidToWStr(const AkGuid& in_guid, std::wstring& out_wstr)
-			{
-				std::string str;
-				AkGuidToStr(in_guid, str);
-
-				wchar_t wstr[AK_MAX_PATH];
-				AK_CHAR_TO_WCHAR(wstr, str.c_str(), AK_MAX_PATH);
-				wstr[AK_MAX_PATH - 1] = '\0';
-				out_wstr = wstr;
-			}
-
 		private:
 
 			void Clear()
@@ -858,9 +662,6 @@ namespace AK
 				{
 				case AkVariantType_string:
 					delete static_cast<std::string*>(m_data);
-					break;
-				case AkVariantType_wstring:
-					delete static_cast<std::wstring*>(m_data);
 					break;
 				case AkVariantType_guid:
 					delete static_cast<AkGuid*>(m_data);
@@ -909,9 +710,6 @@ namespace AK
 					break;
 				case AkVariantType_string:
 					m_data = new std::string(*static_cast<const std::string*>(in_var.m_data));
-					break;
-				case AkVariantType_wstring:
-					m_data = new std::wstring(*static_cast<const std::wstring*>(in_var.m_data));
 					break;
 				case AkVariantType_guid:
 					m_data = new AkGuid();
@@ -998,7 +796,7 @@ namespace AK
 			// Implicit interface supporting conversion to rapidjson. Does not require rapidjson dependencies
 			// if the function is not called.
 			template<typename RapidJsonValueType, typename RapidJsonAllocator, typename RapidJsonSizeType>
-			bool toRapidJsonValue(RapidJsonValueType out_rapidJson, RapidJsonAllocator in_allocator) const
+			bool toRapidJsonValue(RapidJsonValueType& out_rapidJson, RapidJsonAllocator& in_allocator) const
 			{
 				switch (m_eType)
 				{

@@ -1,18 +1,19 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
-
 
 /*=============================================================================
 	AAkAcousticPortal.cpp:
@@ -22,16 +23,21 @@ Copyright (c) 2021 Audiokinetic Inc.
 #include "AkAudioDevice.h"
 #include "AkComponentHelpers.h"
 #include "AkSpatialAudioHelper.h"
-#include "Components/BrushComponent.h"
-#include "Model.h"
-#include "EngineUtils.h"
+#include "AkSpatialAudioDrawUtils.h"
 #include "AkRoomComponent.h"
 #include "AkComponent.h"
 #include "AkCustomVersion.h"
-#include "Kismet/KismetMathLibrary.h"
 #include "AkSpatialAudioVolume.h"
+#include "AkReverbZone.h"
+#include "AkSettingsPerUser.h"
+#include "WwiseUnrealDefines.h"
+#include "WwiseUnrealObjectHelper.h"
+#include "WwiseUnrealEngineHelper.h"
 
-#include <algorithm>
+#include "Components/BrushComponent.h"
+#include "Model.h"
+#include "EngineUtils.h"
+#include "Kismet/KismetMathLibrary.h"
 
 // A standard AAkAcousticPortal is based on a cube brush with verts at [+/-]100 X,Y,Z. 
 static const float kDefaultBrushExtents = 100.f;
@@ -41,7 +47,8 @@ static const float kMinPortalSize = 10.0f;
 
 #if WITH_EDITOR
 #include "AkDrawPortalComponent.h"
-#include "AkSettings.h"
+#include "AkAudioStyle.h"
+#include "LevelEditorViewport.h"
 #endif
 
 UAkPortalComponent::UAkPortalComponent(const class FObjectInitializer& ObjectInitializer) :
@@ -50,19 +57,25 @@ UAkPortalComponent::UAkPortalComponent(const class FObjectInitializer& ObjectIni
 	ObstructionRefreshInterval = 0.f;
 
 	PortalState = InitialState;
+	PortalNeedsUpdate = true;
+
+	PortalOcclusion = InitialOcclusion;
+	PortalOcclusionChanged = true;
+
 	bUseAttachParentBound = true;
 
-	FrontRoom = nullptr;
-	BackRoom = nullptr;
+	FrontRoom = TWeakObjectPtr<UAkRoomComponent>();
+	BackRoom = TWeakObjectPtr<UAkRoomComponent>();
 
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = true;
 	bTickInEditor = true;
+
 #if WITH_EDITOR
 	bWantsOnUpdateTransform = true;
 	bWantsInitializeComponent = true;
 #else
-	bWantsOnUpdateTransform = bDynamic;
+	bWantsOnUpdateTransform = false;
 #endif
 
 #if WITH_EDITOR
@@ -73,19 +86,48 @@ UAkPortalComponent::UAkPortalComponent(const class FObjectInitializer& ObjectIni
 #endif
 }
 
+void UAkPortalComponent::SetDynamic(bool bInDynamic)
+{
+	bDynamic = bInDynamic;
+#if WITH_EDITOR
+	bWantsOnUpdateTransform = true;
+
+	// If we're PIE, or somehow otherwise in a game world in editor, simulate the bDynamic behaviour.
+	UWorld* world = GetWorld();
+	if (world != nullptr && (world->WorldType == EWorldType::Type::Game || world->WorldType == EWorldType::Type::PIE))
+	{
+		bWantsOnUpdateTransform = bDynamic;
+	}
+#else
+	bWantsOnUpdateTransform = bDynamic;
+#endif
+}
+
 void UAkPortalComponent::OnRegister()
 {
 	Super::OnRegister();
-	SetRelativeTransform(FTransform::Identity);
-	InitializeParent();
-	UpdateConnectedRooms();
-
-	UWorld* world = GetWorld();
-	if (world != nullptr)
-		SetSpatialAudioPortal();
 
 #if WITH_EDITOR
-	if (GetDefault<UAkSettings>()->VisualizeRoomsAndPortals)
+	bWantsOnUpdateTransform = true;
+
+	// If we're PIE, or somehow otherwise in a game world in editor, simulate the bDynamic behaviour.
+	UWorld* world = GetWorld();
+	if (world != nullptr && (world->WorldType == EWorldType::Type::Game || world->WorldType == EWorldType::Type::PIE))
+	{
+		bWantsOnUpdateTransform = bDynamic;
+	}
+#else
+	bWantsOnUpdateTransform = bDynamic;
+#endif
+
+	SetRelativeTransform(FTransform::Identity);
+	InitializeParent();
+	UpdateConnectedRooms(true);
+
+	PortalNeedsUpdate = true;
+
+#if WITH_EDITOR
+	if (GetDefault<UAkSettingsPerUser>()->VisualizeRoomsAndPortals)
 	{
 		InitializeDrawComponent();
 	}
@@ -95,9 +137,16 @@ void UAkPortalComponent::OnRegister()
 void UAkPortalComponent::OnUnregister()
 {
 	Super::OnUnregister();
+#if WITH_EDITOR
+	if (!HasAnyFlags(RF_Transient))
+	{
+		DestroyTextVisualizers();
+	}
+#endif
 	FAkAudioDevice * Dev = FAkAudioDevice::Get();
 	if (Dev != nullptr)
 	{
+		RemovePortalConnections();
 		Dev->RemoveSpatialAudioPortal(this);
 	}
 }
@@ -114,13 +163,13 @@ void UAkPortalComponent::BeginDestroy()
 
 void UAkPortalComponent::HandleObjectsReplaced(const TMap<UObject*, UObject*>& ReplacementMap)
 {
-	if (ReplacementMap.Contains(Parent))
+	if (ReplacementMap.Contains(Parent.Get()))
 	{
 		InitializeParent();
 	}
-	if (ReplacementMap.Contains(FrontRoom) || ReplacementMap.Contains(BackRoom))
+	if (ReplacementMap.Contains(FrontRoom.Get()) || ReplacementMap.Contains(BackRoom.Get()))
 	{
-		UpdateConnectedRooms();
+		PortalRoomsNeedUpdate = true;
 	}
 }
 
@@ -144,8 +193,8 @@ void UAkPortalComponent::PostLoad()
 
 void UAkPortalComponent::OnComponentDestroyed(bool bDestroyingHierarchy)
 {
-	UAkSettings* AkSettings = GetMutableDefault<UAkSettings>();
-	AkSettings->OnShowRoomsPortalsChanged.Remove(ShowPortalsChangedHandle);
+	UAkSettingsPerUser* AkSettingsPerUser = GetMutableDefault<UAkSettingsPerUser>();
+	AkSettingsPerUser->OnShowRoomsPortalsChanged.Remove(ShowPortalsChangedHandle);
 	ShowPortalsChangedHandle.Reset();
 	DestroyDrawComponent();
 }
@@ -159,7 +208,7 @@ bool UAkPortalComponent::MoveComponentImpl(
 	EMoveComponentFlags MoveFlags,
 	ETeleportType Teleport)
 {
-	if (AkComponentHelpers::DoesMovementRecenterChild(this, Parent, Delta))
+	if (AkComponentHelpers::DoesMovementRecenterChild(this, Parent.Get(), Delta))
 		Super::MoveComponentImpl(Delta, NewRotation, bSweep, Hit, MoveFlags, Teleport);
 
 	return false;
@@ -167,7 +216,8 @@ bool UAkPortalComponent::MoveComponentImpl(
 
 void UAkPortalComponent::OnUpdateTransform(EUpdateTransformFlags UpdateTransformFlags, ETeleportType Teleport)
 {
-	PortalNeedUpdated = true;
+	PortalRoomsNeedUpdate = true;
+	PortalNeedsUpdate = true;
 }
 
 
@@ -176,10 +226,10 @@ void UAkPortalComponent::RegisterVisEnabledCallback()
 {
 	if (!ShowPortalsChangedHandle.IsValid())
 	{
-		UAkSettings* AkSettings = GetMutableDefault<UAkSettings>();
-		ShowPortalsChangedHandle = AkSettings->OnShowRoomsPortalsChanged.AddLambda([this, AkSettings]()
+		UAkSettingsPerUser* AkSettingsPerUser = GetMutableDefault<UAkSettingsPerUser>();
+		ShowPortalsChangedHandle = AkSettingsPerUser->OnShowRoomsPortalsChanged.AddLambda([this, AkSettingsPerUser]()
 		{
-			if (AkSettings->VisualizeRoomsAndPortals)
+			if (AkSettingsPerUser->VisualizeRoomsAndPortals)
 			{
 				InitializeDrawComponent();
 			}
@@ -187,6 +237,8 @@ void UAkPortalComponent::RegisterVisEnabledCallback()
 			{
 				DestroyDrawComponent();
 			}
+
+			UpdateTextVisibility();
 		});
 	}
 }
@@ -224,10 +276,16 @@ void UAkPortalComponent::InitializeParent()
 	if (SceneParent != nullptr)
 	{
 		Parent = Cast<UPrimitiveComponent>(SceneParent);
-		if (!Parent)
+		if (!Parent.IsValid())
 		{
 			AkComponentHelpers::LogAttachmentError(this, SceneParent, "UPrimitiveComponent");
 		}
+#if WITH_EDITOR
+		DestroyTextVisualizers();
+		InitTextVisualizers();
+		UpdateRoomNames();
+		UpdateTextLocRotVis();
+#endif
 	}
 }
 
@@ -237,25 +295,25 @@ void UAkPortalComponent::SetSpatialAudioPortal()
 	if (AkAudioDevice != nullptr)
 	{
 		AkAudioDevice->SetSpatialAudioPortal(this);
-		PortalNeedUpdated = false;
+		PortalNeedsUpdate = false;
 	}
 }
 
-void UAkPortalComponent::OpenPortal()
+void UAkPortalComponent::EnablePortal()
 {
 	if (PortalState == AkAcousticPortalState::Closed)
 	{
 		PortalState = AkAcousticPortalState::Open;
-		SetSpatialAudioPortal();
+		PortalNeedsUpdate = true;
 	}
 }
 
-void UAkPortalComponent::ClosePortal()
+void UAkPortalComponent::DisablePortal()
 {
 	if (PortalState == AkAcousticPortalState::Open)
 	{
 		PortalState = AkAcousticPortalState::Closed;
-		SetSpatialAudioPortal();
+		PortalNeedsUpdate = true;
 	}
 }
 
@@ -264,45 +322,109 @@ AkAcousticPortalState UAkPortalComponent::GetCurrentState() const
 	return PortalState;
 }
 
+float UAkPortalComponent::GetPortalOcclusion() const
+{
+	return PortalOcclusion;
+}
+
+void UAkPortalComponent::SetPortalOcclusion(float InPortalOcclusion)
+{
+	if (InPortalOcclusion < 0.f)
+	{
+		UE_LOG(LogAkAudio, Warning, TEXT("UAkPortalComponent %s called SetPortalOcclusion with an occlusion value lower than 0 (%.6g). It was clamped to 0."), *GetPortalName(), InPortalOcclusion);
+		InPortalOcclusion = 0.f;
+	}
+
+	if (InPortalOcclusion > 1.f)
+	{
+		UE_LOG(LogAkAudio, Warning, TEXT("UAkPortalComponent %s called SetPortalOcclusion with an occlusion value higher than 1 (%.6g). It was clamped to 1."), *GetPortalName(), InPortalOcclusion);
+		InPortalOcclusion = 1.f;
+	}
+
+	if (PortalOcclusion != InPortalOcclusion)
+	{
+		PortalOcclusion = InPortalOcclusion;
+		PortalOcclusionChanged = true;
+	}
+}
+
 void UAkPortalComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	// If we're PIE, or somehow otherwise in a game world in editor, simulate the bDynamic behaviour.
-#if WITH_EDITOR
-	UWorld* world = GetWorld();
-	if (world != nullptr && (world->WorldType == EWorldType::Type::Game || world->WorldType == EWorldType::Type::PIE))
-		bWantsOnUpdateTransform = bDynamic;
-#endif
-	UpdateConnectedRooms();
+
 	ResetPortalState();
-	FAkAudioDevice * Dev = FAkAudioDevice::Get();
-	if (Dev != nullptr)
-	{
-		ObstructionService.Init(this, ObstructionRefreshInterval);
-	}
+	ResetPortalOcclusion();
+
+	UWorld* World = GetWorld();
+	auto portalID = GetPortalID();
+	ObstructionServiceFrontRoom.Init(portalID, World, ObstructionRefreshInterval);
+	ObstructionServiceBackRoom.Init(portalID, World, ObstructionRefreshInterval);
+
+	PortalRoomsNeedUpdate = true;
 }
 
 void UAkPortalComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction * ThisTickFunction)
 {
-	if (PortalNeedUpdated)
+	if (PortalRoomsNeedUpdate)
 	{
 		UpdateConnectedRooms();
+	}
+
+	if (PortalNeedsUpdate)
+	{
 		SetSpatialAudioPortal();
 	}
 
-	if (GetCurrentState() == AkAcousticPortalState::Open)
+	UWorld* World = GetWorld();
+#if WITH_EDITOR
+	if (World && (World->WorldType == EWorldType::Editor || World->WorldType == EWorldType::PIE))
 	{
-		FAkAudioDevice* AkAudioDevice = FAkAudioDevice::Get();
-		if (AkAudioDevice)
+		// Only show the text renderer for selected actors.
+		if (GetOwner()->IsSelected() && !bWasSelected)
 		{
+			bWasSelected = true;
+			UpdateTextVisibility();
+		}
+		if (!GetOwner()->IsSelected() && bWasSelected)
+		{
+			bWasSelected = false;
+			UpdateTextVisibility();
+		}
+	}
+#endif
+
+	if (!PortalPlacementValid())
+	{
+		return;
+	}
+
+	FAkAudioDevice* AkAudioDevice = FAkAudioDevice::Get();
+	if (AkAudioDevice)
+	{
+		if (PortalOcclusionChanged)
+		{
+			AkAudioDevice->SetPortalObstructionAndOcclusion(this, 0.f, PortalOcclusion);
+			PortalOcclusionChanged = false;
+		}
+
+		if (World && AkAudioDevice->ShouldNotifySoundEngine(World->WorldType))
+		{
+			AkObstructionAndOcclusionService::ListenerMap Listeners;
 			UAkComponent* Listener = AkAudioDevice->GetSpatialAudioListener();
 			if (Listener != nullptr)
 			{
-				AkRoomID listenerRoom = Listener->GetSpatialAudioRoom();
-				UAkComponentSet set;
-				set.Add(Listener);
-				ObstructionService.Tick(set, GetOwner()->GetActorLocation(), GetOwner(), listenerRoom, ObstructionCollisionChannel, DeltaTime, ObstructionRefreshInterval);
+				AkObstructionAndOcclusionService::FListenerInfo ListenerInfo(Listener->GetPosition(), Listener->GetSpatialAudioRoomID());
+				Listeners.Add(Listener->GetAkGameObjectID(), ListenerInfo);
 			}
+
+			AkObstructionAndOcclusionService::PortalMap FrontPortals;
+			AkObstructionAndOcclusionService::PortalMap BackPortals;
+
+			AkAudioDevice->GetObsOccServicePortalMap(FrontRoom.Get(), GetWorld(), FrontPortals);
+			AkAudioDevice->GetObsOccServicePortalMap(BackRoom.Get(), GetWorld(), BackPortals);
+
+			ObstructionServiceFrontRoom.Tick(Listeners, FrontPortals, GetOwner()->GetActorLocation(), GetOwner(), GetFrontRoomID(), ObstructionCollisionChannel, DeltaTime, ObstructionRefreshInterval);
+			ObstructionServiceBackRoom.Tick(Listeners, BackPortals, GetOwner()->GetActorLocation(), GetOwner(), GetBackRoomID(), ObstructionCollisionChannel, DeltaTime, ObstructionRefreshInterval);
 		}
 	}
 }
@@ -310,35 +432,164 @@ void UAkPortalComponent::TickComponent(float DeltaTime, enum ELevelTick TickType
 void UAkPortalComponent::ResetPortalState()
 {
 	PortalState = InitialState;
-	SetSpatialAudioPortal();
+	PortalNeedsUpdate = true;
 }
 
-bool UAkPortalComponent::UpdateConnectedRooms()
+void UAkPortalComponent::ResetPortalOcclusion()
 {
+	PortalOcclusion = InitialOcclusion;
+	PortalOcclusionChanged = true;
+}
+
+bool UAkPortalComponent::UpdateConnectedRooms(bool in_bForceUpdate/* = false*/)
+{
+	FAkAudioDevice* Dev = FAkAudioDevice::Get();
+	if (UNLIKELY(!Dev || !GetWorld()))
+	{
+		return false;
+	}
+
 	/* Keep note of the rooms and validity before the update. */
-	AkRoomID previousFront = GetFrontRoom();
-	AkRoomID previousBack = GetBackRoom();
+	TWeakObjectPtr<UAkRoomComponent> pPreviousFront = FrontRoom;
+	TWeakObjectPtr<UAkRoomComponent> pPreviousBack = BackRoom;
+	AkRoomID previousFrontID = GetFrontRoomID();
+	AkRoomID previousBackID = GetBackRoomID();
 	/* Update the room connections */
-	FrontRoom = nullptr;
-	BackRoom = nullptr;
-	FAkAudioDevice * Dev = FAkAudioDevice::Get();
+	FrontRoom = TWeakObjectPtr<UAkRoomComponent>();
+	BackRoom = TWeakObjectPtr<UAkRoomComponent>();
 	FindConnectedComponents(Dev->GetRoomIndex(), FrontRoom, BackRoom);
 	LastRoomsUpdate = GetWorld()->GetTimeSeconds();
 	PreviousLocation = GetComponentLocation();
 	PreviousRotation = GetComponentRotation();
+
+	bool bRoomsChanged = false;
+	bool PortalIsValid = PortalPlacementValid();
+
+	if (in_bForceUpdate || GetFrontRoomID() != previousFrontID)
+	{
+		bRoomsChanged = true;
+
+		if (pPreviousFront.IsValid())
+		{
+			pPreviousFront->RemovePortalConnection(GetPortalID());
+		}
+		else
+		{
+			Dev->RemovePortalConnectionToOutdoors(GetWorld(), GetPortalID());
+		}
+
+		if (PortalIsValid)
+		{
+			if (FrontRoom.IsValid())
+			{
+				FrontRoom->AddPortalConnection(this);
+			}
+			else
+			{
+				Dev->AddPortalConnectionToOutdoors(GetWorld(), this);
+			}
+		}
+	}
+
+	if (in_bForceUpdate || GetBackRoomID() != previousBackID)
+	{
+		bRoomsChanged = true;
+
+		// Make sure we are not removing connections we just added in the front room condition above.
+		if (pPreviousBack != FrontRoom)
+		{
+			if (pPreviousBack.IsValid())
+			{
+				pPreviousBack->RemovePortalConnection(GetPortalID());
+			}
+			else
+			{
+				Dev->RemovePortalConnectionToOutdoors(GetWorld(), GetPortalID());
+			}
+		}
+
+		if (PortalIsValid)
+		{
+			if (BackRoom.IsValid())
+			{
+				BackRoom->AddPortalConnection(this);
+			}
+			else
+			{
+				Dev->AddPortalConnectionToOutdoors(GetWorld(), this);
+			}
+		}
+	}
+
+	if (bRoomsChanged)
+	{
+		PortalNeedsUpdate = true;
+#if WITH_EDITOR
+		UpdateRoomNames();
+#endif
+	}
+
+#if WITH_EDITOR
+	UpdateTextLocRotVis();
+#endif
+
+	PortalRoomsNeedUpdate = false;
+
 	/* Return true if any room connection has changed. */
-	return (GetFrontRoom() != previousFront || GetBackRoom() != previousBack);
+	return bRoomsChanged;
+}
+
+void UAkPortalComponent::RemovePortalConnections()
+{
+	FAkAudioDevice* Dev = FAkAudioDevice::Get();
+
+	if (FrontRoom.IsValid())
+	{
+		FrontRoom->RemovePortalConnection(GetPortalID());
+	}
+	else if (Dev != nullptr)
+	{
+		Dev->RemovePortalConnectionToOutdoors(GetWorld(), GetPortalID());
+	}
+
+	if (BackRoom != FrontRoom)
+	{
+		if (BackRoom.IsValid())
+		{
+			BackRoom->RemovePortalConnection(GetPortalID());
+		}
+		else if (Dev != nullptr)
+		{
+			Dev->RemovePortalConnectionToOutdoors(GetWorld(), GetPortalID());
+		}
+	}
 }
 
 UPrimitiveComponent* UAkPortalComponent::GetPrimitiveParent() const
 {
-	return Parent;
+	return Parent.IsValid() ? Parent.Get() : nullptr;
+}
+
+bool UAkPortalComponent::PortalPlacementValid() const
+{
+	// Front and Back Rooms cannot be the same Room.
+	bool bIsPortalPlacementValid = GetFrontRoomID() != GetBackRoomID();
+
+	// Front and Back Rooms cannot be in the same Reverb Zone hierarchy
+	if (bIsPortalPlacementValid)
+	{
+		auto FrontRootID = FrontRoom.IsValid() ? FrontRoom->GetRootID() : AK::SpatialAudio::kOutdoorRoomID;
+		auto BackRootID = BackRoom.IsValid() ? BackRoom->GetRootID() : AK::SpatialAudio::kOutdoorRoomID;
+		bIsPortalPlacementValid = FrontRootID != BackRootID;
+	}
+
+	return bIsPortalPlacementValid;
 }
 
 FVector UAkPortalComponent::GetExtent() const
 {
 	FBoxSphereBounds ComponentBounds = Bounds;
-	if (Parent != nullptr)
+	if (Parent.IsValid())
 	{
 		FTransform Transform (Parent->GetComponentTransform());
 		Transform.SetRotation(FQuat::Identity);
@@ -347,19 +598,16 @@ FVector UAkPortalComponent::GetExtent() const
 	return ComponentBounds.BoxExtent;
 }
 
-AkRoomID UAkPortalComponent::GetFrontRoom() const { return FrontRoom == nullptr ? AkRoomID() : FrontRoom->GetRoomID(); }
-AkRoomID UAkPortalComponent::GetBackRoom() const { return BackRoom == nullptr ? AkRoomID() : BackRoom->GetRoomID(); }
+AkRoomID UAkPortalComponent::GetFrontRoomID() const { return FrontRoom.IsValid() ? FrontRoom->GetRoomID() : AkRoomID(); }
+AkRoomID UAkPortalComponent::GetBackRoomID() const { return BackRoom.IsValid() ? BackRoom->GetRoomID() : AkRoomID(); }
 
-
-
-template <typename tComponent>
-void UAkPortalComponent::FindConnectedComponents(FAkEnvironmentIndex& RoomIndex, tComponent*& out_pFront, tComponent*& out_pBack)
+void UAkPortalComponent::FindConnectedComponents(FAkEnvironmentIndex& RoomIndex, TWeakObjectPtr<UAkRoomComponent>& out_pFront, TWeakObjectPtr<UAkRoomComponent>& out_pBack)
 {
-	out_pFront = nullptr;
-	out_pBack = nullptr;
+	out_pFront = TWeakObjectPtr<UAkRoomComponent>();
+	out_pBack = TWeakObjectPtr<UAkRoomComponent>();
 
 	FAkAudioDevice* pAudioDevice = FAkAudioDevice::Get();
-	if (pAudioDevice != nullptr && Parent != nullptr)
+	if (pAudioDevice != nullptr && Parent.IsValid())
 	{
 		float x = GetExtent().X;
 		FVector frontVector(x, 0.f, 0.f);
@@ -370,16 +618,228 @@ void UAkPortalComponent::FindConnectedComponents(FAkEnvironmentIndex& RoomIndex,
 		FVector frontPoint = toWorld.TransformPosition(frontVector);
 		FVector backPoint = toWorld.TransformPosition(-1 * frontVector);
 
-		TArray<tComponent*> front = RoomIndex.Query<tComponent>(frontPoint, GetWorld());
+		TArray<UAkRoomComponent*> front = RoomIndex.Query<UAkRoomComponent>(frontPoint, GetWorld());
 		if (front.Num() > 0)
 			out_pFront = front[0];
 
-		TArray<tComponent*> back = RoomIndex.Query<tComponent>(backPoint, GetWorld());
+		TArray<UAkRoomComponent*> back = RoomIndex.Query<UAkRoomComponent>(backPoint, GetWorld());
 		if (back.Num() > 0)
 			out_pBack = back[0];
 	}
 }
 
+FString UAkPortalComponent::GetPortalName()
+{
+	FString nameStr = UObject::GetName();
+
+	AActor* owner = GetOwner();
+	if (owner != nullptr)
+	{
+#if WITH_EDITOR
+		nameStr = owner->GetActorLabel();
+#else
+		nameStr = owner->GetName();
+#endif
+		if (Parent.IsValid())
+		{
+			TInlineComponentArray<UAkPortalComponent*> PortalComponents;
+			owner->GetComponents(PortalComponents);
+			if (PortalComponents.Num() > 1)
+				nameStr.Append(FString("_").Append(Parent->GetName()));
+		}
+	}
+
+	return nameStr;
+}
+
+#if WITH_EDITOR
+bool UAkPortalComponent::AreTextVisualizersInitialized() const
+{
+	return FrontRoomText != nullptr || BackRoomText != nullptr;
+}
+
+void UAkPortalComponent::InitTextVisualizers()
+{
+	if (!HasAnyFlags(RF_Transient))
+	{
+		FString NamePrefix = GetOwner()->GetName() + GetName();
+		UMaterialInterface* mat = Cast<UMaterialInterface>(FAkAudioStyle::GetAkForegroundTextMaterial());
+		FrontRoomText = NewObject<UTextRenderComponent>(GetOuter(), *(NamePrefix + "_FrontRoomName"));
+		BackRoomText = NewObject<UTextRenderComponent>(GetOuter(), *(NamePrefix + "_BackRoomName"));
+		FrontRoomText->SetText(FText::FromString(""));
+		BackRoomText->SetText(FText::FromString(""));
+		TArray<UTextRenderComponent*> TextComponents{ FrontRoomText, BackRoomText };
+		for (UTextRenderComponent* Text : TextComponents)
+		{
+			if (mat != nullptr)
+				Text->SetTextMaterial(mat);
+			Text->RegisterComponentWithWorld(GetWorld());
+			Text->AttachToComponent(this, FAttachmentTransformRules::KeepWorldTransform);
+			Text->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
+			Text->bIsEditorOnly = true;
+			Text->bSelectable = true;
+			Text->bAlwaysRenderAsText = true;
+			Text->SetHorizontalAlignment(EHTA_Center);
+			Text->SetWorldScale3D(FVector(1.0f));
+		}
+		FrontRoomText->SetVerticalAlignment(EVRTA_TextTop);
+		BackRoomText->SetVerticalAlignment(EVRTA_TextBottom);
+	}
+}
+
+void UAkPortalComponent::DestroyTextVisualizers()
+{
+	if (FrontRoomText != nullptr)
+	{
+		FrontRoomText->DestroyComponent();
+		FrontRoomText = nullptr;
+	}
+	if (BackRoomText != nullptr)
+	{
+		BackRoomText->DestroyComponent();
+		BackRoomText = nullptr;
+	}
+}
+
+void UAkPortalComponent::UpdateRoomNames()
+{
+	if (!Parent.IsValid() || HasAnyFlags(RF_Transient) || !AreTextVisualizersInitialized())
+		return;
+
+	if (FrontRoomText != nullptr)
+	{		
+		FrontRoomText->SetText(FText::FromString(""));
+		if (FrontRoom != nullptr)
+			FrontRoomText->SetText(FText::FromString(FrontRoom->GetRoomName()));
+	}
+	if (BackRoomText != nullptr)
+	{
+		BackRoomText->SetText(FText::FromString(""));
+		if (BackRoom != nullptr)
+			BackRoomText->SetText(FText::FromString(BackRoom->GetRoomName()));
+	}
+}
+
+void UAkPortalComponent::UpdateTextRotations() const
+{
+	if (!Parent.IsValid() || !AreTextVisualizersInitialized())
+		return;
+	FVector BoxExtent = Parent->CalcBounds(FTransform()).BoxExtent;
+	const FTransform T = Parent->GetComponentTransform();
+	AkDrawBounds DrawBounds(T, BoxExtent);
+	// Setup the font normal to orient the text.
+	FVector Front = DrawBounds.FLD() - DrawBounds.BLD();
+	Front.Normalize();
+	FVector Up = DrawBounds.FLU() - DrawBounds.FLD();
+	Up.Normalize();
+	if (FrontRoomText != nullptr)
+		FrontRoomText->SetVerticalAlignment(EVRTA_TextTop);
+	if (BackRoomText != nullptr)
+		BackRoomText->SetVerticalAlignment(EVRTA_TextBottom);
+	if (FVector::DotProduct(FVector::UpVector, Up) < 0.0f)
+	{
+		if (FrontRoomText != nullptr)
+			FrontRoomText->SetVerticalAlignment(EVRTA_TextBottom);
+		if (BackRoomText != nullptr)
+			BackRoomText->SetVerticalAlignment(EVRTA_TextTop);
+		Up *= -1.0f;
+	}
+	// Choose to point both text components towards the front or back of the portal, depending on the position of the camera, so that they are both always readable.
+	FVector CamToCentre;
+	if (GCurrentLevelEditingViewportClient != nullptr)
+	{
+		CamToCentre = GCurrentLevelEditingViewportClient->GetViewLocation() - Parent->Bounds.Origin;
+		if (FVector::DotProduct(CamToCentre, Front) < 0.0f)
+			Front *= -1.0f;
+	}
+	if (FrontRoomText != nullptr)
+		FrontRoomText->SetWorldRotation(UKismetMathLibrary::MakeRotFromXZ(Front, Up));
+	if (BackRoomText != nullptr)
+		BackRoomText->SetWorldRotation(UKismetMathLibrary::MakeRotFromXZ(Front, Up));
+}
+
+void UAkPortalComponent::UpdateTextVisibility()
+{
+	if (!AreTextVisualizersInitialized()) return;
+	if (GetOwner() == nullptr) return;
+
+	bool Visible = false;
+
+	if (GetDefault<UAkSettingsPerUser>()->VisualizeRoomsAndPortals)
+	{
+		Visible = true;
+	}
+	else
+	{
+		if (GetWorld() != nullptr)
+		{
+			EWorldType::Type WorldType = GetWorld()->WorldType;
+			if (WorldType == EWorldType::Editor)
+			{
+				Visible = GetOwner()->IsSelected();
+			}
+			else if (WorldType == EWorldType::EditorPreview)
+			{
+				Visible = true;
+			}
+		}
+	}
+
+	if (BackRoomText != nullptr)
+		BackRoomText->SetVisibility(Visible);
+	if (FrontRoomText != nullptr)
+		FrontRoomText->SetVisibility(Visible);
+}
+
+void UAkPortalComponent::UpdateTextLocRotVis()
+{
+	if (!Parent.IsValid() || !AreTextVisualizersInitialized())
+		return;
+	FVector BoxExtent = Parent->CalcBounds(FTransform()).BoxExtent;
+	const FTransform T = Parent->GetComponentTransform();
+	AkDrawBounds DrawBounds(T, BoxExtent);
+	float PortalWidth = 0.0f;
+	FVector Right;
+	(DrawBounds.FRD() - DrawBounds.FLD()).ToDirectionAndLength(Right, PortalWidth);
+	// Setup the font normal to orient the text.
+	FVector Front = DrawBounds.FLD() - DrawBounds.BLD();
+	FVector Up = DrawBounds.FLU() - DrawBounds.FLD();
+
+	if (FrontRoomText != nullptr)
+	{
+		FrontRoomText->SetWorldScale3D(FVector(1.0f));
+		// Get a point at the top center of the local axis-aligned bounds, to position the front room text.
+		//FVector Top = Parent->Bounds.Origin + FVector(0.0f, 0.0f, Parent->Bounds.BoxExtent.Z);
+		FVector Top = Parent->Bounds.Origin;// +Front + Up;
+		// Add a depth offset so that the text sits out at the top front of the portal
+		Top += Front * 0.5f;
+		Top += Up * 0.5f;
+		FrontRoomText->SetWorldLocation(Top);
+		const FVector FrontTextWorldSize = FrontRoomText->GetTextWorldSize();
+		const float TextWidth = FrontTextWorldSize.GetAbsMax();
+		if (TextWidth > PortalWidth && PortalWidth > 0.0f)
+			FrontRoomText->SetWorldScale3D(FVector(PortalWidth / TextWidth));
+	}
+	if (BackRoomText != nullptr)
+	{
+		BackRoomText->SetWorldScale3D(FVector(1.0f));
+		// Get a point at the bottom center of the local axis-aligned bounds, to position the back room text.
+		//FVector Bottom = Parent->Bounds.Origin - FVector(0.0f, 0.0f, Parent->Bounds.BoxExtent.Z);
+		FVector Bottom = Parent->Bounds.Origin;
+		// Add a depth offset so that the text sits out at the bottom back of the portal
+		Bottom -= Front * 0.5f;
+		Bottom -= Up * 0.5f;
+		BackRoomText->SetWorldLocation(Bottom);
+		const FVector BackTextWorldSize = BackRoomText->GetTextWorldSize();
+		const float TextWidth = BackTextWorldSize.GetAbsMax();
+		if (TextWidth > PortalWidth && PortalWidth > 0.0f)
+			BackRoomText->SetWorldScale3D(FVector(PortalWidth / TextWidth));
+	}
+	UpdateTextRotations();
+	UpdateTextVisibility();
+}
+
+#endif
 /*------------------------------------------------------------------------------------
 	AAkAcousticPortal
 ------------------------------------------------------------------------------------*/
@@ -394,8 +854,6 @@ AAkAcousticPortal::AAkAcousticPortal(const class FObjectInitializer& ObjectIniti
 	bColored = true;
 	BrushColor = FColor(255, 196, 137, 255);
 
-	InitialState = AkAcousticPortalState::Open;
-
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.TickGroup = TG_DuringPhysics;
 	PrimaryActorTick.bAllowTickOnDedicatedServer = false;
@@ -405,39 +863,31 @@ AAkAcousticPortal::AAkAcousticPortal(const class FObjectInitializer& ObjectIniti
 	Portal->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 
 #if WITH_EDITOR
-	const UAkSettings* AkSettings = GetDefault<UAkSettings>();
-	if (AkSettings)
-	{
-		CollisionChannel = AkSettings->DefaultFitToGeometryCollisionChannel;
-	}
-	else
-	{
-		CollisionChannel = ECollisionChannel::ECC_WorldStatic;
-	}
+	CollisionChannel = EAkCollisionChannel::EAKCC_UseIntegrationSettingsDefault;
 #endif
 }
 
-void AAkAcousticPortal::OpenPortal()
+void AAkAcousticPortal::EnablePortal()
 {
 	if (Portal != nullptr)
 	{
-		Portal->OpenPortal();
+		Portal->EnablePortal();
 	}
 	else
 	{
-		UE_LOG(LogAkAudio, Warning, TEXT("AAkAcousticPortal %s called OpenPortal with uninitialized portal component."), *GetName());
+		UE_LOG(LogAkAudio, Warning, TEXT("AAkAcousticPortal %s called EnablePortal with uninitialized portal component."), *GetName());
 	}
 }
 
-void AAkAcousticPortal::ClosePortal()
+void AAkAcousticPortal::DisablePortal()
 {
 	if (Portal != nullptr)
 	{
-		Portal->ClosePortal();
+		Portal->DisablePortal();
 	}
 	else
 	{
-		UE_LOG(LogAkAudio, Warning, TEXT("AAkAcousticPortal %s called ClosePortal with uninitialized portal component."), *GetName());
+		UE_LOG(LogAkAudio, Warning, TEXT("AAkAcousticPortal %s called DisablePortal with uninitialized portal component."), *GetName());
 	}
 }
 
@@ -447,22 +897,6 @@ AkAcousticPortalState AAkAcousticPortal::GetCurrentState() const
 		return Portal->GetCurrentState();
 	UE_LOG(LogAkAudio, Warning, TEXT("AAkAcousticPortal %s called GetCurrentState with uninitialized portal component."), *GetName());
 	return AkAcousticPortalState::Closed;
-}
-
-AkRoomID AAkAcousticPortal::GetFrontRoom() const
-{
-	if (Portal != nullptr)
-		return Portal->GetFrontRoom();
-	UE_LOG(LogAkAudio, Warning, TEXT("AAkAcousticPortal %s called GetFrontRoom with uninitialized portal component."), *GetName());
-	return AkRoomID();
-}
-
-AkRoomID AAkAcousticPortal::GetBackRoom() const
-{
-	if (Portal != nullptr)
-		return Portal->GetBackRoom();
-	UE_LOG(LogAkAudio, Warning, TEXT("AAkAcousticPortal %s called GetBackRoom with uninitialized portal component."), *GetName());
-	return AkRoomID();
 }
 
 void AAkAcousticPortal::PostRegisterAllComponents()
@@ -524,6 +958,10 @@ void AAkAcousticPortal::Serialize(FArchive& Ar)
 }
 
 #if WITH_EDITOR
+ECollisionChannel AAkAcousticPortal::GetCollisionChannel()
+{
+	return UAkSettings::ConvertFitToGeomCollisionChannel(CollisionChannel.GetValue());
+}
 
 void AAkAcousticPortal::FitRaycast()
 {
@@ -560,7 +998,7 @@ void AAkAcousticPortal::FitRaycast()
 		FVector to = RaycastOrigin + FVector(x, y, z) * RayLength;
 
 		OutHits.Empty();
-		World->LineTraceMultiByObjectType(OutHits, RaycastOrigin, to, (int)CollisionChannel, CollisionParams);
+		World->LineTraceMultiByObjectType(OutHits, RaycastOrigin, to, (int)GetCollisionChannel(), CollisionParams);
 
 		if (OutHits.Num() > 0)
 		{
@@ -571,7 +1009,7 @@ void AAkAcousticPortal::FitRaycast()
 			for (auto& res : OutHits)
 			{
 				if (res.IsValidBlockingHit() &&
-					!AkSpatialAudioHelper::IsAkSpatialAudioActorClass(AkSpatialAudioHelper::GetActorFromHitResult(res)))
+					!AkSpatialAudioHelper::IsAkSpatialAudioActorClass(WwiseUnrealHelper::GetActorFromHitResult(res)))
 				{
 					bHit = true;
 					ImpactPoint0 = res.ImpactPoint;
@@ -583,7 +1021,7 @@ void AAkAcousticPortal::FitRaycast()
 			if (bHit)
 			{
 				OutHits.Empty();
-				World->LineTraceMultiByObjectType(OutHits, ImpactPoint0, ImpactPoint0 + ImpactNormal0 * RayLength, (int)CollisionChannel, CollisionParams);
+				World->LineTraceMultiByObjectType(OutHits, ImpactPoint0, ImpactPoint0 + ImpactNormal0 * RayLength, (int)GetCollisionChannel(), CollisionParams);
 
 				bHit = false;
 				FVector ImpactPoint1;
@@ -592,7 +1030,7 @@ void AAkAcousticPortal::FitRaycast()
 				{
 					if (res.IsValidBlockingHit() &&
 						res.Distance > kMinPortalSize &&
-						!AkSpatialAudioHelper::IsAkSpatialAudioActorClass(AkSpatialAudioHelper::GetActorFromHitResult(res)))
+						!AkSpatialAudioHelper::IsAkSpatialAudioActorClass(WwiseUnrealHelper::GetActorFromHitResult(res)))
 					{
 						bHit = true;
 						ImpactPoint1 = res.ImpactPoint;

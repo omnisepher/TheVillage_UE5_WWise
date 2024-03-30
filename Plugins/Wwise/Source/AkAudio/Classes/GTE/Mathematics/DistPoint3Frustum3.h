@@ -10,7 +10,7 @@
 #include <Mathematics/DCPQuery.h>
 #include <Mathematics/Frustum3.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class DCPQuery<Real, Vector3<Real>, Frustum3<Real>>

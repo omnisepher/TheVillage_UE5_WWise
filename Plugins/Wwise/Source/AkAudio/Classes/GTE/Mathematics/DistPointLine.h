@@ -10,7 +10,7 @@
 #include <Mathematics/DCPQuery.h>
 #include <Mathematics/Line.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <int N, typename Real>
     class DCPQuery<Real, Vector<N, Real>, Line<N, Real>>

@@ -13,7 +13,7 @@
 #include <Mathematics/Hypersphere.h>
 #include <Mathematics/Line.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, Line3<Real>, Sphere3<Real>>

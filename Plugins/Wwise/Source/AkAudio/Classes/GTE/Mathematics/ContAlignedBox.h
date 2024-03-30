@@ -9,7 +9,7 @@
 
 #include <Mathematics/AlignedBox.h>
 
-namespace gte
+namespace WwiseGTE
 {
     // Compute the minimum size aligned bounding box of the points.  The
     // extreme values are the minima and maxima of the point coordinates.

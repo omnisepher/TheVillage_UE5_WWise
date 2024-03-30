@@ -15,7 +15,7 @@
 #include <Mathematics/RootsPolynomial.h>
 #include <Mathematics/Vector2.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class ApprParallelLines2

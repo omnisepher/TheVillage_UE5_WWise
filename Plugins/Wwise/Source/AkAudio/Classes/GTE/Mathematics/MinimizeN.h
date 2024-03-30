@@ -21,7 +21,7 @@
 // file) to understand what these mean. The input 'maxIterations' is the
 // number of iterations for the direction-set method.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class MinimizeN

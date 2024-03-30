@@ -1,18 +1,19 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
-
 
 #include "AkSettings.h"
 
@@ -20,33 +21,35 @@ Copyright (c) 2021 Audiokinetic Inc.
 #include "AkAuxBus.h"
 #include "AkAudioDevice.h"
 #include "AkAudioEvent.h"
+#include "AkAudioModule.h"
 #include "AkSettingsPerUser.h"
-#include "AkUnrealHelper.h"
-#include "AssetRegistryModule.h"
+#include "WwiseUnrealDefines.h"
+#include "AssetRegistry/AssetRegistryModule.h"
+#include "AssetRegistry/AssetData.h"
+#include "Framework/Docking/TabManager.h"
+#include "Framework/Notifications/NotificationManager.h"
 #include "StringMatchAlgos/Array2D.h"
 #include "StringMatchAlgos/StringMatching.h"
 #include "UObject/UnrealType.h"
+#include "Widgets/Notifications/SNotificationList.h"
 
 #if WITH_EDITOR
 #include "AkAudioStyle.h"
-#include "AkMediaAsset.h"
-#include "AssetTools/Public/AssetToolsModule.h"
+#include "AssetToolsModule.h"
 #if UE_5_0_OR_LATER
 #include "HAL/PlatformFileManager.h"
 #else
 #include "HAL/PlatformFilemanager.h"
 #endif
-#include "InitializationSettings/AkInitializationSettings.h"
+#include "Misc/ConfigCacheIni.h"
 #include "Misc/FileHelper.h"
 #include "Misc/MessageDialog.h"
 #include "Platforms/AkUEPlatform.h"
 #include "Settings/ProjectPackagingSettings.h"
-#include "SettingsEditor/Public/ISettingsEditorModule.h"
-#include "UnrealEd/Public/ObjectTools.h"
-#include "Widgets/Input/SButton.h"
-#include "Widgets/Input/SEditableTextbox.h"
-#include "Widgets/Layout/SSpacer.h"
-#include "Widgets/Views/SExpanderArrow.h"
+#include "ISettingsEditorModule.h"
+#include "ISourceControlModule.h"
+#include "SourceControlHelpers.h"
+#include "AkUnrealEditorHelper.h"
 
 #if AK_SUPPORT_WAAPI
 #include "AkWaapiClient.h"
@@ -169,6 +172,8 @@ bool WAAPIGetObjectOverrideColor(FGuid textureID)
 #endif // AK_SUPPORT_WAAPI
 #endif // WITH_EDITOR
 
+#define LOCTEXT_NAMESPACE "AkSettings"
+
 //////////////////////////////////////////////////////////////////////////
 // UAkSettings
 
@@ -178,7 +183,12 @@ namespace AkSettings_Helper
 	void MigrateMultiCoreRendering(bool EnableMultiCoreRendering, const FString& PlatformName)
 	{
 		FString SettingsClassName = FString::Format(TEXT("Ak{0}InitializationSettings"), { *PlatformName });
+#if UE_5_1_OR_LATER
+		SettingsClassName = "/Script/AkAudio." + SettingsClassName;
+		auto* SettingsClass = UClass::TryFindTypeSlow<UClass>(*SettingsClassName);
+#else
 		auto* SettingsClass = FindObject<UClass>(ANY_PACKAGE, *SettingsClassName);
+#endif
 		if (!SettingsClass)
 		{
 			return;
@@ -193,7 +203,7 @@ namespace AkSettings_Helper
 
 		Settings->ProcessEvent(MigrationFunction, &EnableMultiCoreRendering);
 
-		AkUnrealHelper::SaveConfigFile(Settings);
+		AkUnrealEditorHelper::SaveConfigFile(Settings);
 	}
 #endif
 
@@ -274,10 +284,6 @@ namespace AkSettings_Helper
 
 FString UAkSettings::DefaultSoundDataFolder = TEXT("WwiseAudio");
 
-#if WITH_EDITOR
-float UAkSettings::MinimumDecayKeyDistance = 0.01f;
-#endif
-
 UAkSettings::UAkSettings(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
@@ -292,7 +298,6 @@ UAkSettings::UAkSettings(const FObjectInitializer& ObjectInitializer)
 	auto& AssetRegistry = AssetRegistryModule->Get();
 	AssetRegistry.OnAssetAdded().AddUObject(this, &UAkSettings::OnAssetAdded);
 	AssetRegistry.OnAssetRemoved().AddUObject(this, &UAkSettings::OnAssetRemoved);
-	VisualizeRoomsAndPortals = false;
 #endif // WITH_EDITOR
 }
 
@@ -317,6 +322,32 @@ UAkSettings::~UAkSettings()
 	}
 #endif
 #endif
+}
+
+ECollisionChannel UAkSettings::ConvertFitToGeomCollisionChannel(EAkCollisionChannel CollisionChannel)
+{
+	if (CollisionChannel != EAkCollisionChannel::EAKCC_UseIntegrationSettingsDefault)
+		return (ECollisionChannel)CollisionChannel;
+
+	const UAkSettings* AkSettings = GetDefault<UAkSettings>();
+
+	if (AkSettings)
+		return AkSettings->DefaultFitToGeometryCollisionChannel;
+
+	return ECollisionChannel::ECC_WorldStatic;
+}
+
+ECollisionChannel UAkSettings::ConvertOcclusionCollisionChannel(EAkCollisionChannel CollisionChannel)
+{
+	if (CollisionChannel != EAkCollisionChannel::EAKCC_UseIntegrationSettingsDefault)
+		return (ECollisionChannel)CollisionChannel;
+
+	const UAkSettings* AkSettings = GetDefault<UAkSettings>();
+
+	if (AkSettings)
+		return AkSettings->DefaultOcclusionCollisionChannel;
+
+	return ECollisionChannel::ECC_WorldStatic;
 }
 
 void UAkSettings::PostInitProperties()
@@ -351,16 +382,9 @@ void UAkSettings::PostInitProperties()
 			didChanges = true;
 		}
 
-		if (EnableAutomaticAssetSynchronization_DEPRECATED)
-		{
-			AkSettingsPerUser->EnableAutomaticAssetSynchronization = true;
-			EnableAutomaticAssetSynchronization_DEPRECATED = false;
-			didChanges = true;
-		}
-
 		if (didChanges)
 		{
-			AkUnrealHelper::SaveConfigFile(this);
+			AkUnrealEditorHelper::SaveConfigFile(this);
 			AkSettingsPerUser->SaveConfig();
 		}
 	}
@@ -374,30 +398,73 @@ void UAkSettings::PostInitProperties()
 			AkSettings_Helper::MigrateMultiCoreRendering(bEnableMultiCoreRendering_DEPRECATED, *PlatformName);
 		}
 	}
+	if(RootOutputPath.Path.IsEmpty())
+	{
+		RootOutputPath = GeneratedSoundBanksFolder_DEPRECATED;
+		AkUnrealEditorHelper::SaveConfigFile(this);
+	}
 
-	PreviousDecayAuxBusMap = EnvironmentDecayAuxBusMap;
 #endif // WITH_EDITOR
 }
 
 #if WITH_EDITOR
-#if UE_4_25_OR_LATER
 void UAkSettings::PreEditChange(FProperty* PropertyAboutToChange)
-#else
-void UAkSettings::PreEditChange(UProperty* PropertyAboutToChange)
-#endif
 {
 	PreviousWwiseProjectPath = WwiseProjectPath.FilePath;
-	PreviousWwiseSoundBankFolder = WwiseSoundDataFolder.Path;
+	PreviousWwiseGeneratedSoundBankFolder = RootOutputPath.Path;
+
+	Super::PreEditChange(PropertyAboutToChange);
 }
 
-#define LOCTEXT_NAMESPACE "AkAudio"
+bool UAkSettings::UpdateGeneratedSoundBanksPath(FString Path)
+{
+	PreviousWwiseGeneratedSoundBankFolder = RootOutputPath.Path;
+	RootOutputPath.Path = Path;
+	return UpdateGeneratedSoundBanksPath();
+}
+
+bool UAkSettings::GeneratedSoundBanksPathExists() const
+{
+	return FPaths::DirectoryExists(WwiseUnrealHelper::GetSoundBankDirectory());
+}
+
+bool UAkSettings::AreSoundBanksGenerated() const
+{
+	return FPaths::FileExists(FPaths::Combine(WwiseUnrealHelper::GetSoundBankDirectory(), TEXT("ProjectInfo.json")));
+}
+
+void UAkSettings::RefreshAcousticTextureParams() const
+{
+	for (auto const& texture : AcousticTextureParamsMap)
+	{
+		OnTextureParamsChanged.Broadcast(texture.Key);
+	}
+}
+
+bool UAkSettings::UpdateGeneratedSoundBanksPath()
+{
+	bool bPathChanged = AkUnrealEditorHelper::SanitizeFolderPathAndMakeRelativeToContentDir(
+		RootOutputPath.Path, PreviousWwiseGeneratedSoundBankFolder, 
+		FText::FromString("Please enter a valid directory path"));
+			
+	if (bPathChanged)
+	{
+		OnGeneratedSoundBanksPathChanged.Broadcast();
+	}
+	else
+	{
+		UE_LOG(LogAkAudio, Log, TEXT("AkSettings: The given GeneratedSoundBanks folder was the same as the previous one."));
+	}
+	return bPathChanged;
+}
+
 void UAkSettings::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	const FName PropertyName = (PropertyChangedEvent.Property != nullptr) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
 	const FName MemberPropertyName = (PropertyChangedEvent.MemberProperty != nullptr) ? PropertyChangedEvent.MemberProperty->GetFName() : NAME_None;
 	ISettingsEditorModule& SettingsEditorModule = FModuleManager::GetModuleChecked<ISettingsEditorModule>("SettingsEditor");
 
-	if ( PropertyName == GET_MEMBER_NAME_CHECKED(UAkSettings, MaxSimultaneousReverbVolumes) )
+	if ( PropertyName == GET_MEMBER_NAME_CHECKED(UAkSettings, MaxSimultaneousReverbVolumes))
 	{
 		MaxSimultaneousReverbVolumes = FMath::Clamp<uint8>( MaxSimultaneousReverbVolumes, 0, AK_MAX_AUX_PER_OBJ );
 		FAkAudioDevice* AkAudioDevice = FAkAudioDevice::Get();
@@ -406,185 +473,34 @@ void UAkSettings::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedE
 			AkAudioDevice->SetMaxAuxBus(MaxSimultaneousReverbVolumes);
 		}
 	}
+	else if (PropertyName == GET_MEMBER_NAME_CHECKED(UAkSettings, AudioRouting))
+	{
+		OnAudioRoutingUpdate();
+	}
+	
 	else if (MemberPropertyName == GET_MEMBER_NAME_CHECKED(UAkSettings, WwiseProjectPath))
 	{
-		AkUnrealHelper::SanitizeProjectPath(WwiseProjectPath.FilePath, PreviousWwiseProjectPath, FText::FromString("Please enter a valid Wwise project"), bRequestRefresh);
+		SanitizeProjectPath(WwiseProjectPath.FilePath, PreviousWwiseProjectPath, FText::FromString("Please enter a valid Wwise project"));
 	}
-	else if (MemberPropertyName == GET_MEMBER_NAME_CHECKED(UAkSettings, WwiseSoundDataFolder))
+	else if (MemberPropertyName == GET_MEMBER_NAME_CHECKED(UAkSettings, GeometrySurfacePropertiesTable))
 	{
-		if (UseEventBasedPackaging)
-		{
-			FString oldSoundDataPackagePath = FString::Printf(TEXT("/Game/%s"), *PreviousWwiseSoundBankFolder);
-			FString newSoundDataPackagePath = FString::Printf(TEXT("/Game/%s"), *WwiseSoundDataFolder.Path);
-
-			OnSoundDataFolderChanged.Broadcast(oldSoundDataPackagePath, newSoundDataPackagePath);
-
-			UProjectPackagingSettings* PackagingSettings = GetMutableDefault<UProjectPackagingSettings>();
-
-			FDirectoryPath newPath;
-			newPath.Path = newSoundDataPackagePath;
-			PackagingSettings->DirectoriesToAlwaysCook.Add(newPath);
-
-			RemoveSoundDataFromAlwaysCook(oldSoundDataPackagePath);
-			AkUnrealHelper::SaveConfigFile(PackagingSettings);
-		}
-
-		SettingsEditorModule.OnApplicationRestartRequired();
+		InitGeometrySurfacePropertiesTable();
 	}
-	else if (MemberPropertyName == GET_MEMBER_NAME_CHECKED(UAkSettings, UseEventBasedPackaging))
+	else if (MemberPropertyName == GET_MEMBER_NAME_CHECKED(UAkSettings, ReverbAssignmentTable))
 	{
-		bool RestartRequired = true;
-		if (UseEventBasedPackaging)
+		InitReverbAssignmentTable();
+		if (ReverbAssignmentTable.IsValid() && !ReverbAssignmentTableChangedHandle.IsValid())
 		{
-			auto YesDelegate = FOnButtonClickedMigration::CreateLambda([this]() -> FReply {
-				EnsureSoundDataPathIsInAlwaysCook();
-				RemoveSoundDataFromAlwaysStageAsUFS(WwiseSoundDataFolder.Path);
-				AkUnrealHelper::DeleteOldSoundBanks();
-				OnActivatedNewAssetManagement.Broadcast();
-				return FReply::Handled();
-			});
-
-			auto NoDelegate = FOnButtonClickedMigration::CreateLambda([this, &RestartRequired]() -> FReply {
-				UseEventBasedPackaging = false;
-				RestartRequired = false;
-				return FReply::Handled();
-			});
-
-			AkUnrealHelper::ShowEventBasedPackagingMigrationDialog(YesDelegate, NoDelegate);
-		}
-		else
-		{
-			TArray<FAssetData> AssetsFound;
-			FString AssetPath = FString(TEXT("/Game")) / WwiseSoundDataFolder.Path;
-			AssetRegistryModule->Get().GetAssetsByPath(FName(*AssetPath), AssetsFound, true);
-			if (AssetsFound.Num() > 0)
-			{
-				FText NewSoundDataFolder;
-
-				TSharedPtr<SWindow> Dialog = SNew(SWindow)
-					.Title(LOCTEXT("DisableEBPTitle", "Disable Event-Based Packaging"))
-					.SupportsMaximize(false)
-					.SupportsMinimize(false)
-					.FocusWhenFirstShown(true)
-					.SizingRule(ESizingRule::Autosized);
-
-				TSharedRef<SWidget> DialogContent = 
-					SNew(SBorder)
-					.BorderImage(FEditorStyle::GetBrush("ToolPanel.GroupBorder"))
-					.Padding(4.0f)
-					[
-						SNew(SVerticalBox)
-						+ SVerticalBox::Slot()
-						.FillHeight(0.45f)
-						[
-							SNew(SSpacer)
-						]
-						+ SVerticalBox::Slot()
-						.HAlign(EHorizontalAlignment::HAlign_Left)
-						.AutoHeight()
-						[
-							SNew(STextBlock)
-							.Text(LOCTEXT("AssetsInSoundData", "Assets found in the Sound Data folder. Please choose a new destination folder for your SoundBanks."))
-						]
-						+ SVerticalBox::Slot()
-						.FillHeight(0.1f)
-						[
-							SNew(SSpacer)
-						]
-						+SVerticalBox::Slot()
-						.AutoHeight()
-						[
-							SNew(SHorizontalBox)
-							+ SHorizontalBox::Slot()
-							.AutoWidth()
-							.Padding(2, 2, 6, 2)
-							[
-								SNew(STextBlock)
-								.Text(LOCTEXT("SoundDataFolder", "Sound Data Folder:"))
-							]
-							+ SHorizontalBox::Slot()
-							.AutoWidth()
-							.Padding(2, 0, 2, 0)
-							[
-								SNew(SEditableTextBox)
-								.HintText(LOCTEXT("SoundDataFolderHint", "Name of the Sound Data Folder"))
-								.OnTextCommitted_Lambda([&NewSoundDataFolder, &Dialog](const FText& InText, ETextCommit::Type InCommitType) {
-									if (!InText.IsEmpty())
-									{
-										NewSoundDataFolder = InText;
-										Dialog->RequestDestroyWindow();
-									}
-								})
-								.MinDesiredWidth(200)
-								.RevertTextOnEscape(true)
-							]
-							+ SHorizontalBox::Slot()
-							.AutoWidth()
-							.Padding(2, 0, 2, 0)
-							[
-								SNew(SButton)
-								.OnClicked_Lambda([Dialog]() -> FReply { Dialog->RequestDestroyWindow(); return FReply::Handled(); })
-								.Text(LOCTEXT("OkButtonLabel", "OK"))
-							]
-						]
-						+ SVerticalBox::Slot()
-						.FillHeight(0.45f)
-						[
-							SNew(SSpacer)
-						]
-					];
-
-				Dialog->SetContent(DialogContent);
-				FSlateApplication::Get().AddModalWindow(Dialog.ToSharedRef(), nullptr);
-				WwiseSoundDataFolder.Path = NewSoundDataFolder.ToString();
-				AkUnrealHelper::SaveConfigFile(this);
-			}
-
-			AddSoundDataToAlwaysStageAsUFS();
-			RemoveSoundDataFromAlwaysCook(FString::Printf(TEXT("/Game/%s"), *PreviousWwiseSoundBankFolder));
-		}
-
-		if (RestartRequired)
-		{
-			SettingsEditorModule.OnApplicationRestartRequired();
-		}
-	}
-	else if (MemberPropertyName == GET_MEMBER_NAME_CHECKED(UAkSettings, AkGeometryMap))
-	{
-		if (PropertyName == GET_MEMBER_NAME_CHECKED(FAkGeometrySurfacePropertiesToMap, AcousticTexture))
-		{
-			for (auto& elem : AkGeometryMap)
-			{
-				PhysicalMaterialAcousticTextureMap[elem.Key.LoadSynchronous()] = elem.Value.AcousticTexture.LoadSynchronous();
-			}
-		}
-		else if (PropertyName == GET_MEMBER_NAME_CHECKED(FAkGeometrySurfacePropertiesToMap, OcclusionValue))
-		{
-			for (auto& elem : AkGeometryMap)
-			{
-				PhysicalMaterialOcclusionMap[elem.Key.LoadSynchronous()] = elem.Value.OcclusionValue;
-			}
-		}
-	}
-	else if (MemberPropertyName == GET_MEMBER_NAME_CHECKED(UAkSettings, VisualizeRoomsAndPortals))
-	{
-		OnShowRoomsPortalsChanged.Broadcast();
-	}
-	else if (MemberPropertyName == GET_MEMBER_NAME_CHECKED(UAkSettings, EnvironmentDecayAuxBusMap))
-	{
-		if (PropertyChangedEvent.ChangeType != EPropertyChangeType::Interactive)
-		{
-			DecayAuxBusMapChanged();
-			OnAuxBusAssignmentMapChanged.Broadcast();
+			ReverbAssignmentTableChangedHandle = ReverbAssignmentTable->OnDataTableChanged().AddUObject(this, &UAkSettings::OnReverbAssignmentTableChanged);
 		}
 	}
 	else if (MemberPropertyName == GET_MEMBER_NAME_CHECKED(UAkSettings, GlobalDecayAbsorption))
 	{
-		OnAuxBusAssignmentMapChanged.Broadcast();
+		OnGlobalDecayAbsorptionChanged.Broadcast();
 	}
 	else if (MemberPropertyName == GET_MEMBER_NAME_CHECKED(UAkSettings, DefaultReverbAuxBus))
 	{
-		OnAuxBusAssignmentMapChanged.Broadcast();
+		OnReverbAssignmentChanged.Broadcast();
 	}
 	else if (MemberPropertyName == GET_MEMBER_NAME_CHECKED(UAkSettings, HFDampingName)
 			|| MemberPropertyName == GET_MEMBER_NAME_CHECKED(UAkSettings, DecayEstimateName)
@@ -595,144 +511,192 @@ void UAkSettings::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedE
 	{
 		OnReverbRTPCChanged.Broadcast();
 	}
-	else if (MemberPropertyName == GET_MEMBER_NAME_CHECKED(UAkSettings, SplitMediaPerFolder))
+	else if (MemberPropertyName == GET_MEMBER_NAME_CHECKED(UAkSettings, WwiseStagingDirectory))
 	{
-		SplitOrMergeMedia();
+		FAkAudioModule::AkAudioModuleInstance->UpdateWwiseResourceLoaderSettings();
+	}
+	else if (MemberPropertyName == GET_MEMBER_NAME_CHECKED(UAkSettings, RootOutputPath))
+	{
+		UpdateGeneratedSoundBanksPath();
 	}
 
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 }
-#undef LOCTEXT_NAMESPACE
 
-void UAkSettings::FillAkGeometryMap(
+void UAkSettings::UpdateGeometrySurfacePropertiesTable(
 	const TArray<FAssetData>& PhysicalMaterialAssets,
 	const TArray<FAssetData>& AcousticTextureAssets)
 {
+	auto GeometryTable = GeometrySurfacePropertiesTable.LoadSynchronous();
+	if (GeometryTable == nullptr)
+	{
+		return;
+	}
+
 	TArray<int32> assignments;
 	assignments.Init(-1, PhysicalMaterialAssets.Num());
-
 	AkSettings_Helper::MatchAcousticTextureNamesToPhysMaterialNames(PhysicalMaterialAssets, AcousticTextureAssets, assignments);
 
 	for (int i = 0; i < PhysicalMaterialAssets.Num(); i++)
 	{
 		auto physicalMaterial = Cast<UPhysicalMaterial>(PhysicalMaterialAssets[i].GetAsset());
-		if (!PhysicalMaterialAcousticTextureMap.Contains(physicalMaterial))
+		FWwiseGeometrySurfacePropertiesRow GeometrySurfaceProperties;
+
+		FName Key = FName(physicalMaterial->GetPathName());
+		auto GeometrySurfacePropertiesFound = GeometryTable->FindRow<FWwiseGeometrySurfacePropertiesRow>(Key, TEXT("Find Physical Material"), false);
+
+		if (!GeometrySurfacePropertiesFound)
 		{
 			if (assignments[i] != -1)
 			{
 				int32 acousticTextureIdx = assignments[i];
-				auto acousticTexture = Cast<UAkAcousticTexture>(AcousticTextureAssets[acousticTextureIdx].GetAsset());
-				PhysicalMaterialAcousticTextureMap.Add(physicalMaterial, acousticTexture);
+				GeometrySurfaceProperties.AcousticTexture = Cast<UAkAcousticTexture>(AcousticTextureAssets[acousticTextureIdx].GetAsset());
+				GeometryTable->AddRow(Key, GeometrySurfaceProperties);
 			}
 			else
 			{
-				PhysicalMaterialAcousticTextureMap.Add(physicalMaterial);
+				GeometryTable->AddRow(Key, GeometrySurfaceProperties);
 			}
 		}
 		else
 		{
 			if (assignments[i] != -1)
 			{
-				if (!PhysicalMaterialAcousticTextureMap[physicalMaterial])
+				if (GeometrySurfacePropertiesFound->AcousticTexture == nullptr)
 				{
 					int32 acousticTextureIdx = assignments[i];
-					auto acousticTexture = Cast<UAkAcousticTexture>(AcousticTextureAssets[acousticTextureIdx].GetAsset());
-					PhysicalMaterialAcousticTextureMap[physicalMaterial] = acousticTexture;
+					GeometrySurfaceProperties.AcousticTexture = Cast<UAkAcousticTexture>(AcousticTextureAssets[acousticTextureIdx].GetAsset());
+					GeometryTable->AddRow(Key, GeometrySurfaceProperties);
 				}
 			}
 		}
-
-		if (!PhysicalMaterialOcclusionMap.Contains(physicalMaterial))
-			PhysicalMaterialOcclusionMap.Add(physicalMaterial, 1.f);
 	}
-
-	UpdateAkGeometryMap();
 }
 
-void UAkSettings::UpdateAkGeometryMap()
+void UAkSettings::InitGeometrySurfacePropertiesTable()
 {
-	AkGeometryMap.Empty();
-	for (auto& elem : PhysicalMaterialAcousticTextureMap)
+	auto GeometryTable = GeometrySurfacePropertiesTable.LoadSynchronous();
+
+	if (GeometryTable != nullptr)
 	{
-		TSoftObjectPtr<class UPhysicalMaterial> physMatPtr(elem.Key);
-		TSoftObjectPtr<class UAkAcousticTexture> acousticTexPtr(elem.Value);
-		FAkGeometrySurfacePropertiesToMap props;
-		props.AcousticTexture = acousticTexPtr;
-		props.OcclusionValue = PhysicalMaterialOcclusionMap[elem.Key];
-		AkGeometryMap.Emplace(physMatPtr, props);
+		if (GeometryTable->RowStruct->GetStructCPPName() != "FWwiseGeometrySurfacePropertiesRow")
+		{
+			UE_LOG(LogAkAudio, Log, TEXT("GeometrySurfacePropertiesTable cannot be assigned to %s. It must be assigned to a Data Table with FWwiseGeometrySurfacePropertiesRow type rows."), *GeometryTable->GetPathName());
+
+			GeometryTable = nullptr;
+			GeometrySurfacePropertiesTable = nullptr;
+		}
 	}
 
-	AkGeometryMap.KeySort([](const TSoftObjectPtr<class UPhysicalMaterial>& Lhs, const TSoftObjectPtr<class UPhysicalMaterial>& Rhs) {
-		UPhysicalMaterial* lhs = Lhs.Get();
-		UPhysicalMaterial* rhs = Rhs.Get();
-		if (lhs && rhs)
-		{
-#if UE_4_23_OR_LATER
-			return Lhs.Get()->GetFName().LexicalLess(Rhs.Get()->GetFName());
+	if (GeometryTable == nullptr)
+	{
+		// find a valid GeometrySurfacePropertiesTable
+		TArray<FAssetData> TableAssets;
+#if UE_5_1_OR_LATER
+		AssetRegistryModule->Get().GetAssetsByClass(UDataTable::StaticClass()->GetClassPathName(), TableAssets);
 #else
-			return Lhs.Get()->GetFName() < Rhs.Get()->GetFName();
+		AssetRegistryModule->Get().GetAssetsByClass(UDataTable::StaticClass()->GetFName(), TableAssets);
 #endif
-		}
-		else
+		for (const auto& TableAsset : TableAssets)
 		{
-			return !lhs ? true : false;
+			auto Table = Cast<UDataTable>(TableAsset.GetAsset());
+			// verify it has the correct structure
+			if (Table && Table->RowStruct && Table->RowStruct->GetStructCPPName() == "FWwiseGeometrySurfacePropertiesRow")
+			{
+				UE_LOG(LogAkAudio, Log, TEXT("No GeometrySurfacePropertiesTable is assigned in the Integration Settings. Assigning %s."), *Table->GetPathName());
+				GeometryTable = Table;
+				GeometrySurfacePropertiesTable = TSoftObjectPtr<UDataTable>(Table);
+				AkUnrealEditorHelper::SaveConfigFile(this);
+				break;
+			}
 		}
-	});
-}
-
-void UAkSettings::InitAkGeometryMap()
-{
-	PhysicalMaterialAcousticTextureMap.Empty();
-	PhysicalMaterialOcclusionMap.Empty();
-
-	// copy everything from the ini file
-	for (auto& elem : AkGeometryMap)
-	{
-		auto physMat = elem.Key.LoadSynchronous();
-		auto surfaceProps = elem.Value;
-		PhysicalMaterialAcousticTextureMap.Add(physMat, surfaceProps.AcousticTexture.LoadSynchronous());
-		PhysicalMaterialOcclusionMap.Add(physMat, surfaceProps.OcclusionValue);
 	}
-	bAkGeometryMapInitialized = true;
 
-	// Obtain the 2 list of children we want to match
-	TArray<FAssetData> PhysicalMaterials, AcousticTextures;
-	AssetRegistryModule->Get().GetAssetsByClass(UPhysicalMaterial::StaticClass()->GetFName(), PhysicalMaterials);
-	AssetRegistryModule->Get().GetAssetsByClass(UAkAcousticTexture::StaticClass()->GetFName(), AcousticTextures);
-
-	FillAkGeometryMap(PhysicalMaterials, AcousticTextures);
-}
-
-void UAkSettings::ClearAkRoomDecayAuxBusMap()
-{
-	EnvironmentDecayAuxBusMap.Empty();
-	PreviousDecayAuxBusMap = EnvironmentDecayAuxBusMap;
-}
-
-void UAkSettings::InsertDecayKeyValue(const float& decayKey)
-{
-	if (decayKey < 0.0f)
+	if (GeometryTable == nullptr)
 	{
-		UE_LOG(LogAkAudio, Warning, TEXT("AkSettings: Reverb Assignment Map: Decay key values must be positive."));
+		// create a new asset
+		auto& AssetToolsModule = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
+		auto NewTable = Cast<UDataTable>(AssetToolsModule.CreateAsset(TEXT("DefaultGeometrySurfacePropertiesTable"), DefaultAssetCreationPath, UDataTable::StaticClass(), nullptr));
+		NewTable->RowStruct = FWwiseGeometrySurfacePropertiesRow::StaticStruct();
+		GeometryTable = NewTable;
+		GeometrySurfacePropertiesTable = TSoftObjectPtr<UDataTable>(NewTable);
+		AkUnrealEditorHelper::SaveConfigFile(this);
+	}
+
+	if (GeometryTable == nullptr)
+	{
+		UE_LOG(LogAkAudio, Log, TEXT("No GeometrySurfacePropertiesTable is assigned in the Integration Settings. Couldn't find a corresponding asset or create a new one."));
 		return;
 	}
-	// Refuse key value if it is too close to an existing key value (within MinimumDecayKeyDistance).
-	TArray<float> decayKeys;
-	EnvironmentDecayAuxBusMap.GetKeys(decayKeys);
-	for (int i = 0; i < decayKeys.Num(); ++i)
+
+	// Migrate the old AkGeometryMap if it exists
+	if (AkGeometryMap.Num() != 0)
 	{
-		if (FMath::Abs(decayKeys[i] - decayKey) < MinimumDecayKeyDistance)
+		UE_LOG(LogAkAudio, Log, TEXT("AkGeometryMap is deprecated. Its contents will be moved to the asset assigned to the GeometrySurfacePropertiesTable Integration Setting."));
+		for (const auto& MapElement : AkGeometryMap)
 		{
-			UE_LOG(LogAkAudio, Warning, TEXT("AkSettings: Reverb Assignment Map: New decay key too close to existing key. Must be +- %f from any existing key."), MinimumDecayKeyDistance);
-			return;
+			auto PhysicalMaterial = MapElement.Key.LoadSynchronous();
+			auto GeometrySurfacePropeties = MapElement.Value;
+			
+			GeometryTable->AddRow(FName(PhysicalMaterial->GetPathName()), FWwiseGeometrySurfacePropertiesRow(GeometrySurfacePropeties.AcousticTexture, GeometrySurfacePropeties.OcclusionValue));
 		}
-		// Keys are reverse sorted. If the new key value is larger enough than the current index, we have found a valid insert space.
-		// (There will be no other keys larger than the current index to check against).
-		if (decayKey - decayKeys[i] > MinimumDecayKeyDistance)
-			break;
+		VerifyAndUpdateGeometrySurfacePropertiesTable();
+		AkGeometryMap.Empty();
+		AkUnrealEditorHelper::SaveConfigFile(this);
+	} 
+
+	FillGeometrySurfacePropertiesTable();
+
+	bGeometrySurfacePropertiesTableInitialized = true;
+}
+
+void UAkSettings::FillGeometrySurfacePropertiesTable()
+{
+	// Fill the table with existing physical materials and acoustic textures
+	TArray<FAssetData> PhysicalMaterialAssets, AcousticTextureAssets;
+#if UE_5_1_OR_LATER
+	AssetRegistryModule->Get().GetAssetsByClass(UPhysicalMaterial::StaticClass()->GetClassPathName(), PhysicalMaterialAssets);
+	AssetRegistryModule->Get().GetAssetsByClass(UAkAcousticTexture::StaticClass()->GetClassPathName(), AcousticTextureAssets);
+#else
+	AssetRegistryModule->Get().GetAssetsByClass(UPhysicalMaterial::StaticClass()->GetFName(), PhysicalMaterialAssets);
+	AssetRegistryModule->Get().GetAssetsByClass(UAkAcousticTexture::StaticClass()->GetFName(), AcousticTextureAssets);
+#endif
+	UpdateGeometrySurfacePropertiesTable(PhysicalMaterialAssets, AcousticTextureAssets);
+}
+
+void UAkSettings::VerifyAndUpdateGeometrySurfacePropertiesTable()
+{
+	// do not allow rows with invalid physical materials
+	TSet<FName> ToRemove;
+
+	auto GeometryTable = GeometrySurfacePropertiesTable.LoadSynchronous();
+	if (GeometryTable == nullptr)
+	{
+		return;
 	}
-	EnvironmentDecayAuxBusMap.Add(decayKey, nullptr);
-	SortDecayKeys();
+
+	GeometryTable->ForeachRow<FWwiseGeometrySurfacePropertiesRow>("Verify GeometrySurfacePropertiesTable contents",
+		[this, &ToRemove](const FName& Key, const FWwiseGeometrySurfacePropertiesRow& Value)
+		{
+#if UE_5_1_OR_LATER
+			auto PhysicalMaterialAsset = AssetRegistryModule->Get().GetAssetByObjectPath(FSoftObjectPath(Key.ToString()));
+#else
+			auto PhysicalMaterialAsset = AssetRegistryModule->Get().GetAssetByObjectPath(Key);
+#endif
+			if (PhysicalMaterialAsset == nullptr)
+			{
+				ToRemove.Add(Key);
+			}
+		}
+	);
+
+	for (const auto& Key : ToRemove)
+	{
+		UE_LOG(LogAkAudio, Log, TEXT("GeometrySurfacePropertiesTable: Invalid row '%s' will be removed."), *Key.ToString());
+		GeometryTable->RemoveRow(Key);
+	}
+
+	FillGeometrySurfacePropertiesTable();
 }
 
 void UAkSettings::SetAcousticTextureParams(const FGuid& textureID, const FAkAcousticTextureParams& params)
@@ -947,14 +911,18 @@ void UAkSettings::UpdateTextureColor(const FGuid& textureID)
 void UAkSettings::SetTextureColor(FGuid textureID, int colorIndex)
 {
 	TArray<FAssetData> AcousticTextures;
+#if UE_5_1_OR_LATER
+	AssetRegistryModule->Get().GetAssetsByClass(UAkAcousticTexture::StaticClass()->GetClassPathName(), AcousticTextures);
+#else
 	AssetRegistryModule->Get().GetAssetsByClass(UAkAcousticTexture::StaticClass()->GetFName(), AcousticTextures);
+#endif
 
 	FLinearColor color = FAkAudioStyle::GetWwiseObjectColor(colorIndex);
 	for (FAssetData& textureAsset : AcousticTextures)
 	{
 		if (UAkAcousticTexture* texture = Cast<UAkAcousticTexture>(textureAsset.GetAsset()))
 		{
-			if (texture->ID == textureID && texture->EditColor != color)
+			if (texture->AcousticTextureInfo.WwiseGuid == textureID && texture->EditColor != color)
 			{
 				texture->Modify();
 				texture->EditColor = color;
@@ -966,129 +934,63 @@ void UAkSettings::SetTextureColor(FGuid textureID, int colorIndex)
 
 #endif // AK_SUPPORT_WAAPI
 
-void UAkSettings::DecayAuxBusMapChanged()
-{
-	// If a key has been moved beyond its neighbours, restrict it between neighbouring key values
-
-	// Removal - nothing to restrict
-	if (PreviousDecayAuxBusMap.Num() > EnvironmentDecayAuxBusMap.Num())
-	{
-		PreviousDecayAuxBusMap = EnvironmentDecayAuxBusMap;
-		return;
-	}
-	// Addition - when the insert button is used, restrictions will already be handled.
-	// If the stock Unreal '+' button is used, a 0-nullptr entry will be added at the end of the map. In this case,
-	// remove it and insert it using the InsertDecayKeyValue so it can be properly restricted and placed.
-	if (PreviousDecayAuxBusMap.Num() < EnvironmentDecayAuxBusMap.Num())
-	{
-		if (EnvironmentDecayAuxBusMap.Num() > 1)
-		{
-			TArray<float> keys;
-			EnvironmentDecayAuxBusMap.GetKeys(keys);
-			if (keys.Last() == 0.0f && EnvironmentDecayAuxBusMap[0.0f] == nullptr)
-			{
-				EnvironmentDecayAuxBusMap.Remove(0.0f);
-				InsertDecayKeyValue(0.0f);
-			}
-		}
-		PreviousDecayAuxBusMap = EnvironmentDecayAuxBusMap;
-		return;
-	}
-
-	// Find key that has changed
-	int changedKeyIndex = -1;
-	const int numKeys = PreviousDecayAuxBusMap.Num();
-	TArray<float> previousKeys;
-	TArray<float> newKeys;
-	PreviousDecayAuxBusMap.GetKeys(previousKeys);
-	EnvironmentDecayAuxBusMap.GetKeys(newKeys);
-	for (int i = 0; i < numKeys; ++i)
-	{
-		if (!FMath::IsNearlyEqual(previousKeys[i], newKeys[i], 1.0e-06F)) // Floating point property values have a tendancy to gradually wander in UE.
-		{
-			changedKeyIndex = i;
-			break;
-		}
-	}
-	// If no key values have changed, an aux bus has been changed. Nothing to restrict.
-	if (changedKeyIndex == -1)
-		return;
-	// check key value
-	float newKeyValue = newKeys[changedKeyIndex];
-	float restrictedKeyValue = newKeyValue;
-	FString restrictionInfoString;
-	// Keys are sorted in reverse order such that they are ordered vertically from smallest to largest, in the UI.
-	// So, check newKeyValue <= newKeys[changedKeyIndex + 1] and newKeyValue >= newKeys[changedKeyIndex - 1].
-	const bool changedKeyIsSmallest = changedKeyIndex == numKeys - 1;
-	float lowerLimit = changedKeyIsSmallest ? 0.0f : newKeys[changedKeyIndex + 1];
-	if (newKeyValue <= lowerLimit)
-	{
-		restrictedKeyValue = changedKeyIsSmallest ? 0.0f : lowerLimit + MinimumDecayKeyDistance;
-		restrictionInfoString = FString("Decay key value limited by next lowest value.");
-	}
-	else if (changedKeyIndex > 0 && newKeyValue >= newKeys[changedKeyIndex - 1])
-	{
-		restrictedKeyValue = newKeys[changedKeyIndex - 1] - MinimumDecayKeyDistance;
-		restrictionInfoString = FString("Decay key value limited by next highest value.");
-	}
-	// If key value needs to be restricted, remove and replace the entry in the map.
-	if (restrictedKeyValue != newKeyValue)
-	{
-		FAkAudioStyle::DisplayEditorMessgae(FText::FromString(restrictionInfoString));
-		TSoftObjectPtr<UAkAuxBus> auxBusToMove = EnvironmentDecayAuxBusMap[newKeyValue];
-		EnvironmentDecayAuxBusMap.Remove(newKeyValue);
-		EnvironmentDecayAuxBusMap.Add(restrictedKeyValue, auxBusToMove);
-		SortDecayKeys();
-	}
-	else // No restriction to apply, but still keep track of the new key values. 
-	{
-		PreviousDecayAuxBusMap = EnvironmentDecayAuxBusMap;
-	}
-}
-
-void UAkSettings::SortDecayKeys()
-{
-	// high to low decay ('large' to 'small' environment structure)
-	EnvironmentDecayAuxBusMap.KeySort([](const float& left, const float& right) {return left > right; });
-	PreviousDecayAuxBusMap = EnvironmentDecayAuxBusMap;
-}
-
 void UAkSettings::OnAssetAdded(const FAssetData& NewAssetData)
 {
-	if (!bAkGeometryMapInitialized)
+	if (!bGeometrySurfacePropertiesTableInitialized)
+	{
 		return;
+	}
 
+#if UE_5_1_OR_LATER
+	if (NewAssetData.AssetClassPath == UPhysicalMaterial::StaticClass()->GetClassPathName())
+#else
 	if (NewAssetData.AssetClass == UPhysicalMaterial::StaticClass()->GetFName())
+#endif
 	{
 		if (auto physicalMaterial = Cast<UPhysicalMaterial>(NewAssetData.GetAsset()))
 		{
 			TArray<FAssetData> PhysicalMaterials, AcousticTextures;
 			PhysicalMaterials.Add(NewAssetData);
+#if UE_5_1_OR_LATER
+			AssetRegistryModule->Get().GetAssetsByClass(UAkAcousticTexture::StaticClass()->GetClassPathName(), AcousticTextures);
+#else
 			AssetRegistryModule->Get().GetAssetsByClass(UAkAcousticTexture::StaticClass()->GetFName(), AcousticTextures);
+#endif
 
-			FillAkGeometryMap(PhysicalMaterials, AcousticTextures);
+			UpdateGeometrySurfacePropertiesTable(PhysicalMaterials, AcousticTextures);
 		}
 	} 
+#if UE_5_1_OR_LATER
+	else if (NewAssetData.AssetClassPath == UAkAcousticTexture::StaticClass()->GetClassPathName())
+#else
 	else if (NewAssetData.AssetClass == UAkAcousticTexture::StaticClass()->GetFName())
+#endif
 	{
 		if (auto acousticTexture = Cast<UAkAcousticTexture>(NewAssetData.GetAsset()))
 		{
 			TArray<FAssetData> PhysicalMaterials, AcousticTextures;
+#if UE_5_1_OR_LATER
+			AssetRegistryModule->Get().GetAssetsByClass(UPhysicalMaterial::StaticClass()->GetClassPathName(), PhysicalMaterials);
+#else
 			AssetRegistryModule->Get().GetAssetsByClass(UPhysicalMaterial::StaticClass()->GetFName(), PhysicalMaterials);
+#endif
 			AcousticTextures.Add(NewAssetData);
 
-			FillAkGeometryMap(PhysicalMaterials, AcousticTextures);
-#if AK_SUPPORT_WAAPI
+			UpdateGeometrySurfacePropertiesTable(PhysicalMaterials, AcousticTextures);
 			FAkAcousticTextureParams params;
-			bool paramsExist = AcousticTextureParamsMap.Contains(acousticTexture->ID);
+			bool paramsExist = AcousticTextureParamsMap.Contains(acousticTexture->AcousticTextureInfo.WwiseGuid);
 			if (paramsExist)
-				params = *AcousticTextureParamsMap.Find(acousticTexture->ID);
-			bool paramsSet = WAAPIGetTextureParams(acousticTexture->ID, params);
+			{
+				params = *AcousticTextureParamsMap.Find(acousticTexture->AcousticTextureInfo.WwiseGuid);
+				params.shortID = acousticTexture->AcousticTextureInfo.WwiseShortId;
+			}
+#if AK_SUPPORT_WAAPI
+			bool paramsSet = WAAPIGetTextureParams(acousticTexture->AcousticTextureInfo.WwiseGuid, params);
 			if (paramsSet && !paramsExist)
-				AcousticTextureParamsMap.Add(acousticTexture->ID, params);
-			RegisterWaapiTextureCallback(acousticTexture->ID);
+				AcousticTextureParamsMap.Add(acousticTexture->AcousticTextureInfo.WwiseGuid, params);
+			RegisterWaapiTextureCallback(acousticTexture->AcousticTextureInfo.WwiseGuid);
 			int colorIndex = -1;
-			if (WAAPIGetObjectColorIndex(acousticTexture->ID, colorIndex))
+			if (WAAPIGetObjectColorIndex(acousticTexture->AcousticTextureInfo.WwiseGuid, colorIndex))
 			{
 				acousticTexture->EditColor = FAkAudioStyle::GetWwiseObjectColor(colorIndex);
 			}
@@ -1099,22 +1001,32 @@ void UAkSettings::OnAssetAdded(const FAssetData& NewAssetData)
 
 void UAkSettings::OnAssetRemoved(const struct FAssetData& AssetData)
 {
+#if UE_5_1_OR_LATER
+	if (AssetData.AssetClassPath == UPhysicalMaterial::StaticClass()->GetClassPathName())
+#else
 	if (AssetData.AssetClass == UPhysicalMaterial::StaticClass()->GetFName())
+#endif
 	{
 		if (auto physicalMaterial = Cast<UPhysicalMaterial>(AssetData.GetAsset()))
 		{
-			PhysicalMaterialAcousticTextureMap.Remove(physicalMaterial);
-			PhysicalMaterialOcclusionMap.Remove(physicalMaterial);
-			UpdateAkGeometryMap();
+			auto GeometryTable = GeometrySurfacePropertiesTable.LoadSynchronous();
+			if (GeometryTable != nullptr)
+		{
+				GeometryTable->RemoveRow(FName(physicalMaterial->GetPathName()));
+			}
 		}
 	}
+#if UE_5_1_OR_LATER
+	else if(AssetData.AssetClassPath == UAkAcousticTexture::StaticClass()->GetClassPathName())
+#else
 	else if(AssetData.AssetClass == UAkAcousticTexture::StaticClass()->GetFName())
+#endif
 	{
 		if(auto acousticTexture = Cast<UAkAcousticTexture>(AssetData.GetAsset()))
 		{
-			AcousticTextureParamsMap.Remove(acousticTexture->ID);
+			AcousticTextureParamsMap.Remove(acousticTexture->AcousticTextureInfo.WwiseGuid);
 #if AK_SUPPORT_WAAPI
-			UnregisterWaapiTextureCallback(acousticTexture->ID);
+			UnregisterWaapiTextureCallback(acousticTexture->AcousticTextureInfo.WwiseGuid);
 #endif
 		}
 	}
@@ -1140,58 +1052,6 @@ void UAkSettings::InitWaapiSync()
 }
 #endif
 
-void UAkSettings::EnsureSoundDataPathIsInAlwaysCook() const
-{
-	if (!UseEventBasedPackaging)
-	{
-		return;
-	}
-
-	UProjectPackagingSettings* PackagingSettings = GetMutableDefault<UProjectPackagingSettings>();
-
-	bool packageSettingsNeedUpdate = false;
-	FString soundDataGamePath = FString::Printf(TEXT("/Game/%s"), *WwiseSoundDataFolder.Path);
-
-	if (!PackagingSettings->DirectoriesToAlwaysCook.ContainsByPredicate([soundDataGamePath](FDirectoryPath PathInArray) { return PathInArray.Path == soundDataGamePath; }))
-	{
-		FDirectoryPath newPath;
-		newPath.Path = soundDataGamePath;
-
-		PackagingSettings->DirectoriesToAlwaysCook.Add(newPath);
-		packageSettingsNeedUpdate = true;
-	}
-
-	for (int32 i = PackagingSettings->DirectoriesToAlwaysCook.Num() - 1; i >= 0; --i)
-	{
-		FString ContentPath = PackagingSettings->DirectoriesToAlwaysCook[i].Path;
-		if (ContentPath.IsEmpty()) 
-		{
-			continue;
-		}
-
-		if (ContentPath.StartsWith(TEXT("/"), ESearchCase::CaseSensitive))
-		{
-			// If this starts with /, this includes a root like /engine
-			ContentPath = FPackageName::LongPackageNameToFilename(ContentPath / TEXT(""));
-		}
-		else
-		{
-			ContentPath = FPackageName::LongPackageNameToFilename(ContentPath);
-		}
-		
-		if (!FPaths::DirectoryExists(ContentPath))
-		{
-			PackagingSettings->DirectoriesToAlwaysCook.RemoveAt(i);
-			packageSettingsNeedUpdate = true;
-		}
-	}
-
-	if (packageSettingsNeedUpdate)
-	{
-		AkUnrealHelper::SaveConfigFile(PackagingSettings);
-	}
-}
-
 void UAkSettings::EnsurePluginContentIsInAlwaysCook() const
 {
 	UProjectPackagingSettings* PackagingSettings = GetMutableDefault<UProjectPackagingSettings>();
@@ -1214,10 +1074,9 @@ void UAkSettings::EnsurePluginContentIsInAlwaysCook() const
 
 	if (packageSettingsNeedUpdate)
 	{
-		AkUnrealHelper::SaveConfigFile(PackagingSettings);
+		AkUnrealEditorHelper::SaveConfigFile(PackagingSettings);
 	}
 }
-
 
 void UAkSettings::RemoveSoundDataFromAlwaysCook(const FString& SoundDataPath)
 {
@@ -1237,47 +1096,224 @@ void UAkSettings::RemoveSoundDataFromAlwaysCook(const FString& SoundDataPath)
 
 	if (changed)
 	{
-		AkUnrealHelper::SaveConfigFile(PackagingSettings);
+		AkUnrealEditorHelper::SaveConfigFile(PackagingSettings);
 	}
 }
 
-void UAkSettings::AddSoundDataToAlwaysStageAsUFS()
+void UAkSettings::SanitizeProjectPath(FString& Path, const FString& PreviousPath, const FText& DialogMessage)
 {
-	UProjectPackagingSettings* PackagingSettings = GetMutableDefault<UProjectPackagingSettings>();
+	WwiseUnrealHelper::TrimPath(Path);
 
-	bool foundPackageDirectory = false;
-	bool packageSettingsNeedUpdate = false;
+	FString TempPath = IFileManager::Get().ConvertToAbsolutePathForExternalAppForWrite(*Path);
 
-	for (int32 i = 0; i < PackagingSettings->DirectoriesToAlwaysStageAsUFS.Num(); i++)
+	FText FailReason;
+	if (!FPaths::ValidatePath(TempPath, &FailReason))
 	{
-		if (PackagingSettings->DirectoriesToAlwaysStageAsUFS[i].Path == WwiseSoundDataFolder.Path)
+		if (EAppReturnType::Ok == FMessageDialog::Open(EAppMsgType::Ok, FailReason))
 		{
-			foundPackageDirectory = true;
-			break;
+			Path = PreviousPath;
+			return;
 		}
 	}
 
-	if (!foundPackageDirectory)
+	auto ProjectDirectory = WwiseUnrealHelper::GetProjectDirectory();
+	if (!FPaths::FileExists(TempPath))
 	{
-		PackagingSettings->DirectoriesToAlwaysStageAsUFS.Add(WwiseSoundDataFolder);
-		packageSettingsNeedUpdate = true;
-	}
+		// Path might be a valid one (relative to game) entered manually. Check that.
+		TempPath = FPaths::ConvertRelativePathToFull(ProjectDirectory, Path);
 
-	if (!PreviousWwiseSoundBankFolder.IsEmpty())
-	{
-		for (int i = 0; i < PackagingSettings->DirectoriesToAlwaysStageAsUFS.Num(); i++)
+		if (!FPaths::FileExists(TempPath))
 		{
-			if (PackagingSettings->DirectoriesToAlwaysStageAsUFS[i].Path == PreviousWwiseSoundBankFolder)
+			if (EAppReturnType::Ok == FMessageDialog::Open(EAppMsgType::Ok, DialogMessage))
 			{
-				PackagingSettings->DirectoriesToAlwaysStageAsUFS.RemoveAt(i);
-				packageSettingsNeedUpdate = true;
+				Path = PreviousPath;
+				return;
 			}
 		}
 	}
 
-	if (packageSettingsNeedUpdate)
+	// Make the path relative to the game dir
+	FPaths::MakePathRelativeTo(TempPath, *ProjectDirectory);
+	Path = TempPath;
+
+	if (Path != PreviousPath)
 	{
-		AkUnrealHelper::SaveConfigFile(PackagingSettings);
+#if UE_4_26_OR_LATER
+		auto WwiseBrowserTab = FGlobalTabmanager::Get()->TryInvokeTab(FName("WwiseBrowser"));
+#else
+		TSharedRef<SDockTab> WwiseBrowserTab = FGlobalTabmanager::Get()->InvokeTab(FName("WwiseBrowser"));
+#endif
+		bRequestRefresh = true;
+	}
+}
+
+void UAkSettings::OnAudioRoutingUpdate()
+{
+	// Calculate what is expected
+	bool bExpectedCustom = false;
+	bool bExpectedSeparate = false;
+	bool bExpectedUsingAudioMixer = false;
+	bool bExpectedAudioModuleOverride = true;
+	bool bExpectedWwiseSoundEngineEnabled = true;
+	bool bExpectedWwiseAudioLinkEnabled = false;
+	bool bExpectedAkAudioMixerEnabled = false;
+	FString ExpectedAudioDeviceModuleName;
+	FString ExpectedAudioMixerModuleName;
+	switch (AudioRouting)
+	{
+	case EAkUnrealAudioRouting::Custom:
+		UE_LOG(LogAkAudio, VeryVerbose, TEXT("OnAudioRoutingUpdate: Setting for Custom"));
+		bExpectedCustom = true;
+		break;
+
+	case EAkUnrealAudioRouting::Separate:
+		UE_LOG(LogAkAudio, VeryVerbose, TEXT("OnAudioRoutingUpdate: Setting for Separate"));
+		bExpectedSeparate = true;
+		bExpectedUsingAudioMixer = true;
+		bExpectedAudioModuleOverride = false;
+		break;
+
+	case EAkUnrealAudioRouting::EnableWwiseOnly:
+		UE_LOG(LogAkAudio, VeryVerbose, TEXT("OnAudioRoutingUpdate: Setting for DisableUnreal"));
+		bExpectedUsingAudioMixer = false;
+		ExpectedAudioDeviceModuleName = TEXT("");
+		ExpectedAudioMixerModuleName = TEXT("");
+		break;
+
+	case EAkUnrealAudioRouting::EnableUnrealOnly:
+		UE_LOG(LogAkAudio, VeryVerbose, TEXT("OnAudioRoutingUpdate: Setting for DisableWwise"));
+		bExpectedSeparate = true;
+		bExpectedUsingAudioMixer = true;
+		bExpectedAudioModuleOverride = false;
+		bExpectedWwiseSoundEngineEnabled = false;
+		break;
+
+	case EAkUnrealAudioRouting::AudioMixer:
+		UE_LOG(LogAkAudio, VeryVerbose, TEXT("OnAudioRoutingUpdate: Setting for AudioMixer"));
+		bExpectedUsingAudioMixer = true;
+		bExpectedAkAudioMixerEnabled = true;
+		ExpectedAudioDeviceModuleName = TEXT("AkAudioMixer");
+		ExpectedAudioMixerModuleName = TEXT("AkAudioMixer");
+		break;
+
+	case EAkUnrealAudioRouting::AudioLink:
+		UE_LOG(LogAkAudio, VeryVerbose, TEXT("OnAudioRoutingUpdate: Setting for AudioLink"));
+		bExpectedSeparate = true;
+		bExpectedUsingAudioMixer = true;
+		bExpectedWwiseAudioLinkEnabled = true;
+		bExpectedAudioModuleOverride = false;
+		break;
+
+	default:
+		UE_LOG(LogAkAudio, Warning, TEXT("OnAudioRoutingUpdate: Unknown AudioRouting"));
+		return;
+	}
+
+	//
+	// Actually update the files
+	//
+
+	UE_LOG(LogAkAudio, Verbose, TEXT("OnAudioRoutingUpdate: Updating system settings."));
+
+	{
+		bWwiseSoundEngineEnabled = bExpectedWwiseSoundEngineEnabled;
+		UE_LOG(LogAkAudio, Log, TEXT("OnAudioRoutingUpdate: Wwise SoundEngine Enabled: %s"), bExpectedWwiseSoundEngineEnabled ? TEXT("true") : TEXT("false"));
+
+		bWwiseAudioLinkEnabled = bExpectedWwiseAudioLinkEnabled;
+		UE_LOG(LogAkAudio, Log, TEXT("OnAudioRoutingUpdate: Wwise AudioLink Enabled: %s"), bExpectedWwiseAudioLinkEnabled ? TEXT("true") : TEXT("false"));
+
+		bAkAudioMixerEnabled = bExpectedAkAudioMixerEnabled;
+		UE_LOG(LogAkAudio, Log, TEXT("OnAudioRoutingUpdate: Wwise AudioMixer Enabled: %s"), bExpectedAkAudioMixerEnabled ? TEXT("true") : TEXT("false"));
+#if UE_5_0_OR_LATER
+		TryUpdateDefaultConfigFile();
+#else
+		UpdateDefaultConfigFile();
+#endif
+	}
+
+	TArray<FString> IniPlatformNames;
+
+#if UE_5_0_OR_LATER
+	for (const auto& PlatformInfo : FDataDrivenPlatformInfoRegistry::GetAllPlatformInfos())
+	{
+		if (!PlatformInfo.Value.bIsFakePlatform)
+		{
+			IniPlatformNames.Add(PlatformInfo.Value.IniPlatformName.ToString());
+		}
+	}
+#else
+	for (const auto& Platform : GetTargetPlatformManagerRef().GetTargetPlatforms())
+	{
+		IniPlatformNames.Add(Platform->IniPlatformName());
+	}
+#endif
+	for (const auto& IniPlatformName : IniPlatformNames)
+	{
+		const auto RelativePlatformEnginePath = FString::Printf(TEXT("%s/%sEngine.ini"), *IniPlatformName, *IniPlatformName);
+		auto PlatformEnginePath = FString::Printf(TEXT("%s%s"), *FPaths::SourceConfigDir(), *RelativePlatformEnginePath);
+
+#if UE_5_1_OR_LATER
+		PlatformEnginePath = FConfigCacheIni::NormalizeConfigIniPath(PlatformEnginePath);
+#else
+		FPaths::RemoveDuplicateSlashes(PlatformEnginePath);
+		PlatformEnginePath = FPaths::CreateStandardFilename(PlatformEnginePath);
+#endif
+
+		const FString FullPlatformEnginePath = FPaths::ConvertRelativePathToFull(PlatformEnginePath);
+
+		if (FPlatformFileManager::Get().GetPlatformFile().FileExists(*FullPlatformEnginePath))
+		{
+			FText ErrorMessage;
+
+			if (ISourceControlModule::Get().IsEnabled())
+			{
+				if (SourceControlHelpers::CheckoutOrMarkForAdd(FullPlatformEnginePath, FText::FromString(FullPlatformEnginePath), NULL, ErrorMessage))
+				{
+					ErrorMessage = FText();
+				}
+			}
+			else if (!FPlatformFileManager::Get().GetPlatformFile().SetReadOnly(*FullPlatformEnginePath, false))
+			{
+				ErrorMessage = FText::Format(LOCTEXT("FailedToMakeWritable", "Could not make {0} writable."), FText::FromString(FullPlatformEnginePath));
+			}
+
+			if (!ErrorMessage.IsEmpty())
+			{
+				FNotificationInfo Info(ErrorMessage);
+				Info.ExpireDuration = 3.0;
+
+				FSlateNotificationManager::Get().AddNotification(Info);
+				continue;
+			}
+		}
+
+		if (bExpectedUsingAudioMixer)
+		{
+			UE_LOG(LogAkAudio, Log, TEXT("%s: Removing UseAudioMixer override"), *RelativePlatformEnginePath);
+			GConfig->RemoveKey(TEXT("Audio"), TEXT("UseAudioMixer"), PlatformEnginePath);
+		}
+		else
+		{
+			UE_LOG(LogAkAudio, Log, TEXT("%s: Updating UseAudioMixer to: %s"), *RelativePlatformEnginePath, bExpectedUsingAudioMixer ? TEXT("true") : TEXT("false"));
+			GConfig->SetBool(TEXT("Audio"), TEXT("UseAudioMixer"), bExpectedUsingAudioMixer, PlatformEnginePath);
+		}
+
+		if (bExpectedAudioModuleOverride)
+		{
+			UE_LOG(LogAkAudio, Log, TEXT("%s: Updating AudioDeviceModuleName: %s"), *RelativePlatformEnginePath, ExpectedAudioDeviceModuleName.IsEmpty() ? TEXT("[empty]") : *ExpectedAudioDeviceModuleName);
+			UE_LOG(LogAkAudio, Log, TEXT("%s: Updating AudioMixerModuleName: %s"), *RelativePlatformEnginePath, ExpectedAudioMixerModuleName.IsEmpty() ? TEXT("[empty]") : *ExpectedAudioMixerModuleName);
+			GConfig->SetString(TEXT("Audio"), TEXT("AudioDeviceModuleName"), *ExpectedAudioDeviceModuleName, PlatformEnginePath);
+			GConfig->SetString(TEXT("Audio"), TEXT("AudioMixerModuleName"), *ExpectedAudioMixerModuleName, PlatformEnginePath);
+		}
+		else
+		{
+			UE_LOG(LogAkAudio, Log, TEXT("%s: Removing AudioDeviceModuleName override"), *RelativePlatformEnginePath);
+			UE_LOG(LogAkAudio, Log, TEXT("%s: Removing AudioMixerModuleName override"), *RelativePlatformEnginePath);
+			GConfig->RemoveKey(TEXT("Audio"), TEXT("AudioDeviceModuleName"), PlatformEnginePath);
+			GConfig->RemoveKey(TEXT("Audio"), TEXT("AudioMixerModuleName"), PlatformEnginePath);
+		}
+
+		GConfig->Flush(false, PlatformEnginePath);
 	}
 }
 
@@ -1299,43 +1335,85 @@ void UAkSettings::RemoveSoundDataFromAlwaysStageAsUFS(const FString& SoundDataPa
 
 	if (changed)
 	{
-		AkUnrealHelper::SaveConfigFile(PackagingSettings);
+		AkUnrealEditorHelper::SaveConfigFile(PackagingSettings);
 	}
 }
 
-void UAkSettings::SplitOrMergeMedia()
+void UAkSettings::InitReverbAssignmentTable()
 {
-	TArray<FAssetData> MediaList;
-	AssetRegistryModule->Get().GetAssetsByClass(UAkMediaAsset::StaticClass()->GetFName(), MediaList, false);
-
-	auto& AssetToolModule = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools");
-
-	TArray<FAssetRenameData> assetsToRename;
-
-	for (auto& entry : MediaList)
+	auto DecayTable = ReverbAssignmentTable.LoadSynchronous();
+	if (DecayTable && DecayTable->RowStruct)
 	{
-		if (auto mediaAsset = Cast<UAkMediaAsset>(entry.GetAsset()))
+		if (DecayTable->RowStruct->GetStructCPPName() != "FWwiseDecayAuxBusRow")
 		{
-			auto id = mediaAsset->Id;
-			FString stringId = FString::Printf(TEXT("%u"), id);
-
-			FString subFolder;
-
-			if (SplitMediaPerFolder)
-			{
-				subFolder = FString::Printf(TEXT("%02x/%02x"), (id >> 24) & 0xFF, (id >> 16) & 0xFF);
-			}
-
-			FString mediaNewPath = ObjectTools::SanitizeObjectPath(FPaths::Combine(AkUnrealHelper::GetBaseAssetPackagePath(), AkUnrealHelper::MediaFolderName, subFolder, stringId + TEXT(".") + stringId));
-
-			assetsToRename.Emplace(FSoftObjectPath(entry.ObjectPath.ToString()), FSoftObjectPath(mediaNewPath));
+			UE_LOG(LogAkAudio, Log, TEXT("ReverbAssignmentTable cannot be assigned to %s. It must be assigned to a Data Table with FWwiseDecayAuxBusRow type rows."), *DecayTable->GetPathName());
+			DecayTable = nullptr;
+			ReverbAssignmentTable = nullptr;
 		}
 	}
 
-	AssetToolModule.Get().RenameAssets(assetsToRename);
+	if (DecayTable == nullptr)
+	{
+		// find a valid ReverbAssignmentTable
+		TArray<FAssetData> TableAssets;
+#if UE_5_1_OR_LATER
+		AssetRegistryModule->Get().GetAssetsByClass(UDataTable::StaticClass()->GetClassPathName(), TableAssets);
+#else
+		AssetRegistryModule->Get().GetAssetsByClass(UDataTable::StaticClass()->GetFName(), TableAssets);
+#endif
+		for (const auto& TableAsset : TableAssets)
+		{
+			auto Table = Cast<UDataTable>(TableAsset.GetAsset());
+			// verify it has the correct structure
+			if (Table && Table->RowStruct && Table->RowStruct->GetStructCPPName() == "FWwiseDecayAuxBusRow")
+			{
+				UE_LOG(LogAkAudio, Log, TEXT("No ReverbAssignmentTable is assigned in the Integration Settings. Assigning %s."), *Table->GetPathName());
+				DecayTable = Table;
+				ReverbAssignmentTable = TSoftObjectPtr<UDataTable>(Table);
+				AkUnrealEditorHelper::SaveConfigFile(this);
+				break;
+			}
+		}
+	}
+
+	if (DecayTable == nullptr)
+	{
+		// create a new asset
+		auto& AssetToolsModule = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
+		auto NewTable = Cast<UDataTable>(AssetToolsModule.CreateAsset(TEXT("DefaultReverbAssignmentTable"), DefaultAssetCreationPath, UDataTable::StaticClass(), nullptr));
+		NewTable->RowStruct = FWwiseDecayAuxBusRow::StaticStruct();
+		DecayTable = NewTable;
+		ReverbAssignmentTable = TSoftObjectPtr<UDataTable>(NewTable);
+		AkUnrealEditorHelper::SaveConfigFile(this);
+	}
+
+	if (DecayTable == nullptr)
+	{
+		UE_LOG(LogAkAudio, Log, TEXT("No ReverbAssignmentTable is assigned in the Integration Settings. Couldn't find a corresponding asset or create a new one."));
+		return;
+	}
+
+	ReverbAssignmentTableChangedHandle = ReverbAssignmentTable->OnDataTableChanged().AddUObject(this, &UAkSettings::OnReverbAssignmentTableChanged);
+
+	// Migrate the old EnvironmentDecayAuxBusMap if it exists
+	if (EnvironmentDecayAuxBusMap.Num() != 0)
+	{
+		UE_LOG(LogAkAudio, Log, TEXT("EnvironmentDecayAuxBusMap is deprecated. Its contents will be moved to the asset assigned to the ReverbAssignmentTable Integration Setting."));
+
+		for (const auto& MapElement : EnvironmentDecayAuxBusMap)
+		{
+			DecayTable->AddRow(FName(FString::SanitizeFloat(MapElement.Key)), FWwiseDecayAuxBusRow(MapElement.Key, MapElement.Value));
+		}
+
+		EnvironmentDecayAuxBusMap.Empty();
+		AkUnrealEditorHelper::SaveConfigFile(this);
+	}
 }
 
-#endif // WITH_EDITOR
+void UAkSettings::OnReverbAssignmentTableChanged()
+{
+	OnReverbAssignmentChanged.Broadcast();
+}
 
 const FAkAcousticTextureParams* UAkSettings::GetTextureParams(const uint32& shortID) const
 {
@@ -1346,6 +1424,8 @@ const FAkAcousticTextureParams* UAkSettings::GetTextureParams(const uint32& shor
 	}
 	return nullptr;
 }
+
+#endif // WITH_EDITOR
 
 bool UAkSettings::ReverbRTPCsInUse() const
 {
@@ -1372,53 +1452,80 @@ bool UAkSettings::PredelayRTPCInUse() const
 
 bool UAkSettings::GetAssociatedAcousticTexture(const UPhysicalMaterial* physMaterial, UAkAcousticTexture*& acousticTexture) const
 {
-	TSoftObjectPtr<class UPhysicalMaterial> physMatPtr(physMaterial);
-	auto props = AkGeometryMap.Find(physMatPtr);
-
-	if (!props)
+	auto GeometryTable = GeometrySurfacePropertiesTable.LoadSynchronous();
+	if (GeometryTable == nullptr)
+	{
 		return false;
+	}
 
-	TSoftObjectPtr<class UAkAcousticTexture> texturePtr = props->AcousticTexture;
-	acousticTexture = texturePtr.LoadSynchronous();
+	FName Key = FName(physMaterial->GetPathName());
+	auto GeometrySurfacePropertiesFound = GeometryTable->FindRow<FWwiseGeometrySurfacePropertiesRow>(Key, TEXT("Find Physical Material"), false);
+
+	if (!GeometrySurfacePropertiesFound)
+	{
+		return false;
+	}
+
+	acousticTexture = GeometrySurfacePropertiesFound->AcousticTexture.LoadSynchronous();
 	return true;
 }
 
 bool UAkSettings::GetAssociatedOcclusionValue(const UPhysicalMaterial* physMaterial, float& occlusionValue) const
 {
-	TSoftObjectPtr<class UPhysicalMaterial> physMatPtr(physMaterial);
-	auto props = AkGeometryMap.Find(physMatPtr);
-
-	if (!props)
+	auto GeometryTable = GeometrySurfacePropertiesTable.LoadSynchronous();
+	if (GeometryTable == nullptr)
+	{
 		return false;
+	}
 
-	occlusionValue = props->OcclusionValue;
+	FName Key = FName(physMaterial->GetPathName());
+	auto GeometrySurfacePropertiesFound = GeometryTable->FindRow<FWwiseGeometrySurfacePropertiesRow>(Key, TEXT("Find Physical Material"), false);
+
+	if (!GeometrySurfacePropertiesFound)
+	{
+		return false;
+	}
+
+	occlusionValue = GeometrySurfacePropertiesFound->TransmissionLoss;
 	return true;
 }
 
-void UAkSettings::GetAuxBusForDecayValue(float decay, UAkAuxBus*& auxBus)
+UAkAuxBus* UAkSettings::GetAuxBusForDecayValue(float Decay)
 {
-	TArray<float> decayKeys;
-	EnvironmentDecayAuxBusMap.GetKeys(decayKeys);
-	decayKeys.Sort();
-	int numKeys = decayKeys.Num();
-	if (numKeys > 0)
+	auto DecayTable = ReverbAssignmentTable.LoadSynchronous();
+
+	if (!DecayTable)
 	{
-		int i = numKeys - 1;
-		if (decay > decayKeys[i])
+		return DefaultReverbAuxBus.LoadSynchronous();
+	}
+
+	float MinKey = FLT_MAX;
+	TSoftObjectPtr<UAkAuxBus> AuxBus;
+
+	DecayTable->ForeachRow<FWwiseDecayAuxBusRow>("Get decay values",
+		[Decay, &MinKey, &AuxBus](const FName& Key, const FWwiseDecayAuxBusRow& Value)
 		{
-			auxBus = DefaultReverbAuxBus.LoadSynchronous();
-			return;
+			if (Decay <= Value.Decay && Value.Decay < MinKey)
+			{
+				MinKey = Value.Decay;
+				AuxBus = Value.AuxBus;
+			}
 		}
-		while (i > 0 && decay <= decayKeys[i - 1])
-		{
-			--i;
-		}
-		TSoftObjectPtr<UAkAuxBus> auxBusPtr = EnvironmentDecayAuxBusMap[decayKeys[i]];
-		auxBus = auxBusPtr.LoadSynchronous();
+	);
+
+	if (MinKey == FLT_MAX)
+	{
+		return DefaultReverbAuxBus.LoadSynchronous();
+	}
+	else if (!AuxBus.IsNull())
+	{
+		auto* Result = AuxBus.LoadSynchronous();
+		UE_CLOG(UNLIKELY(!Result), LogAkAudio, Warning, TEXT("UAkSettings::GetAuxBusForDecayValue: Could not load AuxBus for Decay Value (%f)"), MinKey);
+		return Result;
 	}
 	else
 	{
-		auxBus = DefaultReverbAuxBus.LoadSynchronous();
+		return nullptr;
 	}
 }
 
@@ -1426,3 +1533,5 @@ void UAkSettings::GetAudioInputEvent(UAkAudioEvent*& OutInputEvent)
 {
 	OutInputEvent = AudioInputEvent.LoadSynchronous();
 }
+
+#undef LOCTEXT_NAMESPACE

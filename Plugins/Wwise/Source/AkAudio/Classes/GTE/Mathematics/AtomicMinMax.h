@@ -13,7 +13,7 @@
 // Implementations of atomic minimum and atomic maximum computations.  These
 // are based on std::atomic_compare_exchange_strong.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename T>
     T AtomicMin(std::atomic<T>& v0, T const& v1)

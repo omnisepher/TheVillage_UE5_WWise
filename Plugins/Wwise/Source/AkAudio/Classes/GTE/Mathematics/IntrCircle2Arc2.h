@@ -10,7 +10,7 @@
 #include <Mathematics/IntrCircle2Circle2.h>
 #include <Mathematics/Arc2.h>
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class FIQuery<Real, Circle2<Real>, Arc2<Real>>

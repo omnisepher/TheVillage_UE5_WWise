@@ -28,7 +28,7 @@
 // The area-of-intersection query is discussed in the document
 //   https://www.geometrictools.com/Documentation/AreaIntersectingEllipses.pdf
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, Ellipse2<Real>, Ellipse2<Real>>

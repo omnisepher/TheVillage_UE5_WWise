@@ -21,8 +21,7 @@ under the Apache License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 OR CONDITIONS OF ANY KIND, either express or implied. See the Apache License for
 the specific language governing permissions and limitations under the License.
 
-  Version: v2021.1.9  Build: 7847
-  Copyright (c) 2006-2022 Audiokinetic Inc.
+  Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 // AkTypes.h
@@ -32,13 +31,16 @@ the specific language governing permissions and limitations under the License.
 
 #pragma once
 
+#include <AK/SoundEngine/Common/AkNumeralTypes.h>
+
 #include <sys/types.h>
-#include <pthread.h>
 #include <semaphore.h>
 #include <stdio.h>
 #include <limits.h>
 #include <string.h>
-#include <stdint.h>
+#if defined(AK_SUPPORT_THREADS)
+#include <pthread.h>
+#endif
 
 #define AK_RESTRICT		__restrict				///< Refers to the __restrict compilation flag available on some platforms
 #define AK_EXPECT_FALSE( _x )	(_x)
@@ -51,36 +53,28 @@ the specific language governing permissions and limitations under the License.
 #define AK_ALIGN_SIMD( _declaration_ )	AK_ALIGN( _declaration_, AK_SIMD_ALIGNMENT )	///< Platform-specific alignment requirement for SIMD data
 #define AK_BUFFER_ALIGNMENT AK_SIMD_ALIGNMENT
 
-#define AK_DLLEXPORT __attribute__ ((visibility("default")))
+#define AK_ATTR_USED __attribute__ ((used))
+#define AK_DLLEXPORT __attribute__ ((visibility("default"))) 
 #define AK_DLLIMPORT
 
-typedef uint8_t			AkUInt8;				///< Unsigned 8-bit integer
-typedef uint16_t		AkUInt16;				///< Unsigned 16-bit integer
-typedef uint32_t		AkUInt32;				///< Unsigned 32-bit integer
-typedef uint64_t		AkUInt64;				///< Unsigned 64-bit integer
-typedef uintptr_t		AkUIntPtr;
-typedef int8_t			AkInt8;					///< Signed 8-bit integer
-typedef int16_t			AkInt16;				///< Signed 16-bit integer
-typedef int32_t   		AkInt32;				///< Signed 32-bit integer
-typedef int64_t			AkInt64;				///< Signed 64-bit integer
-typedef intptr_t		AkIntPtr;
-
 typedef char			AkOSChar;				///< Generic character string
+typedef AkUInt16		AkUtf16;				///< Type for 2 byte chars. Used for communication
+												///< with the authoring tool.
 
-typedef float			AkReal32;				///< 32-bit floating point
-typedef double          AkReal64;				///< 64-bit floating point
-
+#if defined(AK_SUPPORT_THREADS)
 typedef pthread_t		AkThread;				///< Thread handle
 typedef pthread_t		AkThreadID;				///< Thread ID
+#else
+typedef int AkThread;
+typedef int AkThreadID;
+#endif
 typedef void* 			(*AkThreadRoutine)(	void* lpThreadParameter	);	///< Thread routine
+
 #ifndef AK_APPLE
 typedef sem_t 			AkEvent;				///< Event handle
 typedef sem_t 			AkSemaphore;			///< Semaphore handle
 #endif
 typedef FILE*			AkFileHandle;			///< File handle
-
-typedef AkUInt16		AkUtf16;				///< Type for 2 byte chars. Used for communication
-												///< with the authoring tool.
 
 #define AK_UINT_MAX		UINT_MAX
 

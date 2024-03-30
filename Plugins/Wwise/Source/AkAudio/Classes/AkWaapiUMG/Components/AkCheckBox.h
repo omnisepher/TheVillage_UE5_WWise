@@ -1,24 +1,24 @@
 /*******************************************************************************
-The content of the files in this repository include portions of the
-AUDIOKINETIC Wwise Technology released in source code form as part of the SDK
-package.
-
-Commercial License Usage
-
-Licensees holding valid commercial licenses to the AUDIOKINETIC Wwise Technology
-may use these files in accordance with the end user license agreement provided
-with the software or, alternatively, in accordance with the terms contained in a
-written agreement between you and Audiokinetic Inc.
-
-Copyright (c) 2021 Audiokinetic Inc.
+The content of this file includes portions of the proprietary AUDIOKINETIC Wwise
+Technology released in source code form as part of the game integration package.
+The content of this file may not be used without valid licenses to the
+AUDIOKINETIC Wwise Technology.
+Note that the use of the game engine is subject to the Unreal(R) Engine End User
+License Agreement at https://www.unrealengine.com/en-US/eula/unreal
+ 
+License Usage
+ 
+Licensees holding valid licenses to the AUDIOKINETIC Wwise Technology may use
+this file in accordance with the end user license agreement provided with the
+software or, alternatively, in accordance with the terms contained
+in a written agreement between you and Audiokinetic Inc.
+Copyright (c) 2024 Audiokinetic Inc.
 *******************************************************************************/
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "UObject/ObjectMacros.h"
-#include "Layout/Margin.h"
-#include "Styling/SlateColor.h"
 #include "Styling/SlateTypes.h"
 #include "Widgets/SWidget.h"
 #include "Components/ContentWidget.h"
@@ -30,8 +30,6 @@ Copyright (c) 2021 Audiokinetic Inc.
 class SCheckBox;
 class USlateBrushAsset;
 class USlateWidgetStyleAsset;
-
-DECLARE_LOG_CATEGORY_EXTERN(LogAkCheckBoxUMG, Log, All);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam( FAkOnCheckBoxComponentStateChanged, bool, bIsChecked );
 
@@ -52,12 +50,14 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBoolPropertyDropDetected, FString
 UCLASS(config = Editor, defaultconfig)
 class AKAUDIO_API UAkCheckBox : public UContentWidget, public SCompoundWidget
 {
-	GENERATED_UCLASS_BODY()
+	GENERATED_BODY()
 
 public:
+	UAkCheckBox(const FObjectInitializer& ObjectInitializer);
+
 	/** Whether the check box is currently in a checked state */
 	UPROPERTY(EditAnywhere, Category=Appearance)
-	ECheckBoxState CheckedState;
+	ECheckBoxState CheckedState = ECheckBoxState::Undetermined;
 
 	/** A bindable delegate for the IsChecked. */
 	UPROPERTY()
@@ -70,11 +70,11 @@ public:
 
 	/** How the content of the toggle button should align within the given space */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Appearance)
-	TEnumAsByte<EHorizontalAlignment> HorizontalAlignment;
+	TEnumAsByte<EHorizontalAlignment> HorizontalAlignment = EHorizontalAlignment::HAlign_Left;
 
 	/** Sometimes a button should only be mouse-clickable and never keyboard focusable. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Interaction")
-	bool IsFocusable;
+	bool IsFocusable = false;
 
 	UPROPERTY(EditAnywhere, Category = "Audiokinetic|WAAPI|Checkbox", meta = (DisplayName = "Property to control"))
 	FAkBoolPropertyToControl ThePropertyToControl;

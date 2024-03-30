@@ -14,7 +14,7 @@
 
 //#define GTE_THROW_ON_IMAGE2_ERRORS
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename PixelType>
     class Image2 : public Image<PixelType>

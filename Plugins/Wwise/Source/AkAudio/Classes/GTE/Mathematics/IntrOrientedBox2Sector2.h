@@ -15,7 +15,7 @@
 
 // The OrientedBox2 object is considered to be a solid.
 
-namespace gte
+namespace WwiseGTE
 {
     template <typename Real>
     class TIQuery<Real, OrientedBox2<Real>, Sector2<Real>>

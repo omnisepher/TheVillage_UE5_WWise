@@ -91,6 +91,20 @@
 						</Action>
 					</ChildrenList>
 				</Event>
+				<Event Name="FireBase_Stop" ID="{AD3B11AE-F802-46CA-9950-B09AA78A85A2}">
+					<ChildrenList>
+						<Action Name="" ID="{C15E1D6A-A368-498B-A9E8-5887B897C08E}" ShortID="867823813">
+							<PropertyList>
+								<Property Name="ActionType" Type="int16" Value="2"/>
+							</PropertyList>
+							<ReferenceList>
+								<Reference Name="Target">
+									<ObjectRef Name="FireBase" ID="{421DF22A-1D0B-4A91-BA46-D68B5E2C22AF}" WorkUnitID="{1DEC10FC-2733-4CA4-8FE4-C98B0139CC79}"/>
+								</Reference>
+							</ReferenceList>
+						</Action>
+					</ChildrenList>
+				</Event>
 			</ChildrenList>
 		</WorkUnit>
 	</Events>

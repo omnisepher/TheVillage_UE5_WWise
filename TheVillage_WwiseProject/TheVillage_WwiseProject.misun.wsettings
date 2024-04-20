@@ -10,7 +10,9 @@
 				<Property Name="Event Action List\{969FCB35-F328-4A91-98A9-03BFE4015DD1}\x64_Expand States" Type="string" Value=""/>
 				<Property Name="Event Action List\{9F44F859-64A0-4BC5-8DD7-343EB6BEC608}\x64_Expand States" Type="string" Value=""/>
 				<Property Name="Event Action List\{AADFD8F1-33ED-4B6F-8457-D30E615D9BE5}\x64_Expand States" Type="string" Value=""/>
+				<Property Name="Event Action List\{AD3B11AE-F802-46CA-9950-B09AA78A85A2}\x64_Expand States" Type="string" Value=""/>
 				<Property Name="Event Action List\{E5DEFE67-BD9D-48EB-8A47-BF49D1DC7ADB}\x64_Expand States" Type="string" Value=""/>
+				<Property Name="Event Action List\{F67B1B74-ED1F-4EAB-A96A-32F9DD10E6E2}\x64_Expand States" Type="string" Value=""/>
 				<Property Name="Event Action List\{FD61AE50-E26A-4998-946F-5E1F4FF33916}\x64_Expand States" Type="string" Value=""/>
 				<Property Name="EventView\FilterMode1" Type="int32" Value="2"/>
 				<Property Name="EventView\FilterMode2" Type="int32" Value="2"/>
@@ -46,7 +48,7 @@
 				<Property Name="ObjectTabPanel\x64_CurrentObjects_{618C1FF9-37D4-45A7-AF0A-E2D511E44707}" Type="string" Value=""/>
 				<Property Name="ObjectTabPanel\x64_CurrentObjects_{826CEF9F-ACB3-45D2-8319-9C9994E4CA5C}" Type="string" Value=""/>
 				<Property Name="ObjectTabPanel\x64_CurrentObjects_{A45AAC64-78D1-46A7-88FA-F242B38651B4}" Type="string" Value=""/>
-				<Property Name="ObjectTabPanel\x64_CurrentObjects_{D5805147-985E-4C5B-B817-369AF1B7184D}" Type="string" Value="ewA1AEQAQQA3ADEAQgAyADAALQBBADYAQgBDAC0ANAA2AEEAMQAtADgAMwAxAEYALQAyADUAQQBCADYAMwA5ADQARgAyADkAOQB9AAAAAAE="/>
+				<Property Name="ObjectTabPanel\x64_CurrentObjects_{D5805147-985E-4C5B-B817-369AF1B7184D}" Type="string" Value="ewBBAEQAMwBCADEAMQBBAEUALQBGADgAMAAyAC0ANAA2AEMAQQAtADkAOQA1ADAALQBCADAAOQBBAEEANwA4AEEAOAA1AEEAMgB9AAAAAAE="/>
 				<Property Name="ObjectTabPanel\x64_CurrentObjects_{FB6925F8-3EDD-42F1-B446-654A30D756CF}" Type="string" Value=""/>
 				<Property Name="OverrideCacheFolder\Active" Type="bool" Value="False"/>
 				<Property Name="OverrideCacheFolder\Path" Type="string" Value=".cache"/>
@@ -70,7 +72,7 @@
 				<Property Name="ProjectExplorer\QueriesSelectionChannel1\ProjectExplorer2LastScrollState" Type="int32" Value="0"/>
 				<Property Name="ProjectExplorer\QueriesSelectionChannel1\x64_ProjectExplorer2LastExpandedState" Type="string" Value="4y3sI9g+gkusmZLiXy5Maw=="/>
 				<Property Name="ProjectExplorer\SelectionChannel1\CurrentSearch" Type="string" Value=""/>
-				<Property Name="ProjectExplorer\SelectionChannel1\CurrentTab" Type="int32" Value="2"/>
+				<Property Name="ProjectExplorer\SelectionChannel1\CurrentTab" Type="int32" Value="1"/>
 				<Property Name="ProjectExplorer\SessionsSelectionChannel1\ProjectExplorer2LastScrollState" Type="int32" Value="0"/>
 				<Property Name="ProjectExplorer\SessionsSelectionChannel1\x64_ProjectExplorer2LastExpandedState" Type="string" Value="i7OWTLQ9x0CRyWZVEOOJk/eqd2Rl45BJo5Llm4JLZBjN5FEXGIAsTpqKx3dk0dZT"/>
 				<Property Name="ProjectExplorer\ShareSetsSelectionChannel1\ProjectExplorer2LastScrollState" Type="int32" Value="0"/>

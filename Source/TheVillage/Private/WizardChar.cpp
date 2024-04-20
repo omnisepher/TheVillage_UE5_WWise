@@ -2,6 +2,7 @@
 
 
 #include "WizardChar.h"
+#include "../Plugins/Wwise/Source/AkAudio/Classes/AkGameObject.h"
 
 // Sets default values
 AWizardChar::AWizardChar()
@@ -31,6 +32,20 @@ void AWizardChar::BeginPlay()
 
 	ExtinguishedFlameCount = 0;
 	IceSkillCastTime = 0.f;
+}
+
+UAkGameObject* AWizardChar::GetAkGameObject()
+{
+	if (m_AkGameObject == nullptr)
+	{
+		m_AkGameObject = NewObject<UAkGameObject>();
+		if (auto* SoundEngine = IWwiseSoundEngineAPI::Get())
+		{
+			SoundEngine->RegisterGameObj(m_AkGameObject->GetAkGameObjectID());
+		}
+	}
+
+	return m_AkGameObject;
 }
 
 // Called every frame
@@ -102,6 +117,5 @@ void AWizardChar::StopSpellCasting()
 	{
 		SoundEngine->ExecuteActionOnPlayingID(AK::SoundEngine::AkActionOnEventType::AkActionOnEventType_Stop, IceSkillEventID, int32(200));
 	}
-	
 }
 

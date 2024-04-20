@@ -2,6 +2,8 @@
 
 
 #include "WizardAnimInstance.h"
+#include "AkAudio/Classes/AkAudioEvent.h"
+#include "AkAudio/Classes/AkGameObject.h"
 
 UWizardAnimInstance::UWizardAnimInstance()
 {
@@ -45,7 +47,9 @@ void UWizardAnimInstance::PlayFootsteps(AActor* StepActor)
 
 		if (auto* SoundEngine = IWwiseSoundEngineAPI::Get())
 		{
-			UAkGameplayStatics::PostEvent(m_FootstepsEvent, GetOwningActor(), int32(0), nullCallback, false);
+			//UAkGameplayStatics::PostEvent(m_FootstepsEvent, GetOwningActor(), int32(0), nullCallback, false);
+			UAkGameObject* player_ak_go = Cast<AWizardChar>(GetOwningActor())->GetAkGameObject();
+			SoundEngine->PostEvent(m_FootstepsEvent->GetShortID(), player_ak_go->GetAkGameObjectID(), int32(0));
 		}
 		
 	}
